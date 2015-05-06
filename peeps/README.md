@@ -44,7 +44,3 @@ CREATE TABLE file_history (
 	download_file(integer, integer, text, text)
 	Returns JSON of files.* info and logs download
 
-### Rack::Sendfile ?
-
-<http://www.rubydoc.info/github/rack/rack/Rack/Sendfile>
-
