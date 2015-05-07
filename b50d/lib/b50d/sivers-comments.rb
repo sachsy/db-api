@@ -41,6 +41,10 @@ module B50D
 		def add_comment(uri, name, email, html)
 			@db.js('sivers.add_comment($1, $2, $3, $4)', [uri, name, email, html])
 		end
+
+		def comments_by_person(person_id)
+			@db.js('sivers.comments_by_person($1)', [person_id])
+		end
 	end
 end
 

@@ -79,5 +79,15 @@ class TestSiversComments < Minitest::Test
 		refute @sc.add_comment(uri, name, 'bad@aol', html)
 		refute @sc.add_comment(uri, name, email, '')
 	end
+
+	def test_comments_by_person
+		x = @sc.comments_by_person(2)
+		assert_equal [1], x.map {|y| y[:id]}.sort
+		x = @sc.comments_by_person(3)
+		assert_equal [2, 3], x.map {|y| y[:id]}.sort
+		x = @sc.comments_by_person(5)
+		assert_equal [4, 5], x.map {|y| y[:id]}.sort
+	end
+
 end
 

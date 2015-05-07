@@ -89,4 +89,13 @@ class TestComment < Minitest::Test
 		assert_equal 'Not Found', @j[:title]
 	end
 
+	def test_comments_by_person
+		qry("sivers.comments_by_person(2)")
+		assert_equal [1], @j.map {|x| x[:id]}
+		qry("sivers.comments_by_person(3)")
+		assert_equal [2, 3], @j.map {|x| x[:id]}.sort
+		qry("sivers.comments_by_person(5)")
+		assert_equal [4, 5], @j.map {|x| x[:id]}.sort
+	end
+
 end

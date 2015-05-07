@@ -270,3 +270,17 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- GET %r{^/person/([0-9]+)/comments$}
+-- PARAMS: person_id
+CREATE OR REPLACE FUNCTION comments_by_person(integer, OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := json_agg(r) FROM
+		(SELECT * FROM sivers.comments WHERE person_id=$1 ORDER BY id DESC) r;
+	IF js IS NULL THEN
+		js := '[]';
+	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
