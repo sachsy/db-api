@@ -7,6 +7,8 @@ TWITTER_CONSUMER_KEY = ''
 TWITTER_CONSUMER_SECRET = ''
 TWITTER_ACCESS_TOKEN = ''
 TWITTER_ACCESS_SECRET = ''
+INP = 'https://some.url/person/%d'
+SCP = 'https://anot.her/person/%d/comments'
 PROFILES = {'derek@sivers' => {
 	pop3: {
 		address: '',
