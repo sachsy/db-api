@@ -58,4 +58,4 @@ If POST /login works, it sets the 3 needed cookies (person_id, api_key, api_pass
 # TODO:
 
 * Can a view be generated from an already-selected record, stored in a variable?  If so, the approach of one function looking up just the ids, then passing id to the view to re-select it could be replaced with that approach.  And after doing an update of a status like opened/closed, could do RETURNING * to return its values instead of selecting again.
-
+* Play with custom types <a href="http://vimeo.com/97507575">as described here</a> and <a href="http://www.sqlines.com/postgresql/how-to/create_user_defined_type">here</a>.
