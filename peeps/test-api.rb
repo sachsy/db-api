@@ -363,6 +363,8 @@ class TestPeepsAPI < Minitest::Test
 		assert_equal 'bad url', @j[:title]
 		qry("add_url(999, 'http://good.com')")
 		assert @j[:title].include? 'violates foreign key'
+		qry("add_url(1, $1)", ["http://#{'x.' * 200}"])
+		assert @j[:title].include? 'value too long'
 	end
 
 	def test_add_stat
