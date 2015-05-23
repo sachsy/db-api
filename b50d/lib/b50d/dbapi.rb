@@ -13,7 +13,7 @@ class PGP
 			end
 			my_id = @@counter
 			@@counter += 1
-			@@counter = 0 if 10 == @@counter
+			@@counter = 0 if 5 == @@counter
 			@@pool[my_id] ||= PG::Connection.new(dbname: 'd50b', user: 'd50b')
 		end
 	end
