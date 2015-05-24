@@ -42,7 +42,7 @@ module MyMail
 		end
 
 		def attachments_dir
-			'/srv/http/attachments/'
+			'/var/www/htdocs/attachments/'
 		end
 
 		# IN:
