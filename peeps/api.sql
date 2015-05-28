@@ -228,7 +228,7 @@ BEGIN
 	IF $3 IS NULL OR (regexp_replace($3, '\s', '', 'g') = '') THEN
 		RAISE 'body must not be empty';
 	END IF;
-	SELECT * INTO e FROM peeps.emails WHERE id = ok_email($1, $2);
+	SELECT * INTO e FROM peeps.emails WHERE id = $2;
 	IF e IS NULL THEN
 m4_NOTFOUND
 	ELSE
@@ -237,8 +237,7 @@ m4_NOTFOUND
 			concat('re: ', e.subject), $3, $2);
 		UPDATE peeps.emails SET answer_id=new_id, closed_at=NOW(), closed_by=$1 WHERE id=$2;
 		mime := 'application/json';
-		js := row_to_json(r) FROM
-			(SELECT * FROM peeps.email_view WHERE id = new_id) r;
+		js := json_build_object('id', new_id);
 	END IF;
 m4_ERRCATCH
 END;

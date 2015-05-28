@@ -111,6 +111,7 @@ class TestPeepsAPI < Minitest::Test
 	def test_reply_to_email
 		qry("reply_to_email(4, 8, 'Groovy, baby')")
 		assert_equal 11, @j[:id]
+		qry("get_email(4, 11)")
 		assert_equal 3, @j[:person][:id]
 		assert_match /\A[0-9]{17}\.3@sivers.org\Z/, @j[:message_id]
 		assert_equal @j[:message_id][0,12], Time.now.strftime('%Y%m%d%H%M')

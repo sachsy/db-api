@@ -144,8 +144,9 @@ class TestPeep < Minitest::Test
 		body = 'fantastic then'
 		y = @p.reply_to_email(6, body)
 		assert y[:id] > 10 
-		assert_equal 6, y[:reference_id]
-		assert y[:body].include? body
+		z = @p.open_email(y[:id])
+		assert_equal 6, z[:reference_id]
+		assert z[:body].include? body
 		x = @p.open_email(6)
 		assert_equal y[:id], x[:answer_id]
 	end
