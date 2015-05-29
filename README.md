@@ -61,3 +61,38 @@ If POST /login works, it sets the 3 needed cookies (person_id, api_key, api_pass
 * Play with custom types <a href="http://vimeo.com/97507575">as described here</a> and <a href="http://www.sqlines.com/postgresql/how-to/create_user_defined_type">here</a>.
 * Where to translate ugly errors (probably using regexp matching) into simple i18n keys for the UI to show in user's language?
 
+### TODO: emailer:
+
+* PostgreSQL function with multiple choice of WHERE queries.
+* SELECT js FROM ebulk_where('listype', 'some');
+* SELECT js FROM ebulk_where('country', 'NZ');
+* SELECT js FROM ebulk_where('statkey', 'woodegg');
+* maybe also with a 3rd argument version:
+* SELECT js FROM ebulk_where('city', 'NZ', 'Wellington');
+* SELECT js FROM ebulk_where('stat', 'woodegg', 'expand');
+
+Returns JSON array of objects with just: id, lopass, address, email
+
+Ruby shell script takes argument of ERB filename, then prompts for the rest.
+
+ruby ebulk /tmp/2015-05-29.erb
+
+````ruby
+<%= address %>, this is the subject
+
+<%= address %> -
+
+The body is here.  I'd write it in this ERB file.  Maybe save them for posterity.
+
+--
+Derek Sivers  derek@sivers.org  http://sivers.org/
+Change list settings: https://sivers.org/list/<%= id %>/<%= lopass %>
+````
+
+	What kind?  listype
+	What value? all
+	Found 36,231 people. Sending test of first 5 to your@alt.mail.  Go check it now!
+	Did you check it?  yes
+	Ready to send for real?  yes
+
+
