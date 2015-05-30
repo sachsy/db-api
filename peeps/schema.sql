@@ -1111,7 +1111,7 @@ DECLARE
 	err_context text;
 
 BEGIN
-	eid := ok_email($1, $2);
+	eid := peeps.ok_email($1, $2);
 	IF eid IS NULL THEN
 
 	mime := 'application/problem+json';
@@ -1150,7 +1150,7 @@ CREATE OR REPLACE FUNCTION delete_email(integer, integer, OUT mime text, OUT js 
 DECLARE
 	eid integer;
 BEGIN
-	eid := ok_email($1, $2);
+	eid := peeps.ok_email($1, $2);
 	IF eid IS NULL THEN
 
 	mime := 'application/problem+json';
@@ -1175,7 +1175,7 @@ CREATE OR REPLACE FUNCTION close_email(integer, integer, OUT mime text, OUT js j
 DECLARE
 	eid integer;
 BEGIN
-	eid := ok_email($1, $2);
+	eid := peeps.ok_email($1, $2);
 	IF eid IS NULL THEN
 
 	mime := 'application/problem+json';
@@ -1200,7 +1200,7 @@ CREATE OR REPLACE FUNCTION unread_email(integer, integer, OUT mime text, OUT js 
 DECLARE
 	eid integer;
 BEGIN
-	eid := ok_email($1, $2);
+	eid := peeps.ok_email($1, $2);
 	IF eid IS NULL THEN
 
 	mime := 'application/problem+json';
@@ -1225,7 +1225,7 @@ CREATE OR REPLACE FUNCTION not_my_email(integer, integer, OUT mime text, OUT js 
 DECLARE
 	eid integer;
 BEGIN
-	eid := ok_email($1, $2);
+	eid := peeps.ok_email($1, $2);
 	IF eid IS NULL THEN
 
 	mime := 'application/problem+json';
@@ -1251,6 +1251,7 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: emailer_id, email_id, body
 CREATE OR REPLACE FUNCTION reply_to_email(integer, integer, text, OUT mime text, OUT js json) AS $$
 DECLARE
+	eid integer;
 	e emails;
 	new_id integer;
 
@@ -1263,8 +1264,8 @@ BEGIN
 	IF $3 IS NULL OR (regexp_replace($3, '\s', '', 'g') = '') THEN
 		RAISE 'body must not be empty';
 	END IF;
-	SELECT * INTO e FROM peeps.emails WHERE id = $2;
-	IF e IS NULL THEN
+	eid := peeps.ok_email($1, $2);
+	IF eid IS NULL THEN
 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -1273,12 +1274,23 @@ BEGIN
 		'status', 404);
 
 	ELSE
-		-- PARAMS: emailer_id, person_id, profile, category, subject, body, reference_id 
-		SELECT * INTO new_id FROM peeps.outgoing_email($1, e.person_id, e.profile, e.profile,
-			concat('re: ', e.subject), $3, $2);
-		UPDATE peeps.emails SET answer_id=new_id, closed_at=NOW(), closed_by=$1 WHERE id=$2;
-		mime := 'application/json';
-		js := json_build_object('id', new_id);
+		SELECT * INTO e FROM peeps.emails WHERE id = eid;
+		IF e IS NULL THEN
+
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'about:blank',
+		'title', 'Not Found',
+		'status', 404);
+
+		ELSE
+			-- PARAMS: emailer_id, person_id, profile, category, subject, body, reference_id 
+			SELECT * INTO new_id FROM peeps.outgoing_email($1, e.person_id, e.profile, e.profile,
+				concat('re: ', e.subject), $3, $2);
+			UPDATE peeps.emails SET answer_id=new_id, closed_at=NOW(), closed_by=$1 WHERE id=$2;
+			mime := 'application/json';
+			js := json_build_object('id', new_id);
+		END IF;
 	END IF;
 
 EXCEPTION
