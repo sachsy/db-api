@@ -1207,3 +1207,15 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- Array of people's [[id, email, address, lopass]] for emailing
+-- PARAMS: key,val to be used in WHERE _key_ = _val_
+CREATE OR REPLACE FUNCTION ieal_where(text, text, OUT mime text, OUT js json) AS $$
+DECLARE
+BEGIN
+	mime := 'application/json';
+	EXECUTE format ('SELECT json_agg(json_build_array(id, email, address, lopass))
+		FROM peeps.people WHERE email IS NOT NULL AND %I=%L', $1, $2) INTO js;
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
