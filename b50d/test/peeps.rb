@@ -630,5 +630,16 @@ class TestPeep < Minitest::Test
 		x = @p.tables_with_person(1)
 		assert_equal ['peeps.emailers','peeps.userstats','peeps.urls','peeps.logins','peeps.api_keys'].sort, x.sort
 	end
+
+	def test_ieal_where
+		x = @p.ieal_where('listype', 'all')
+		assert_equal [[1,'derek@sivers.org','Derek','yTAy'],[4,'charlie@bucket.org','Charlie','AgA2']], x
+		x = @p.ieal_where('listype', 'some')
+		assert_equal [[2,'willy@wonka.com','Mr. Wonka','R5Gf'],[6,'augustus@gloop.de','Master Gloop','AKyv']], x
+		x = @p.ieal_where('country', 'US')
+		assert_equal [[2,'willy@wonka.com','Mr. Wonka','R5Gf'],[4,'charlie@bucket.org','Charlie','AgA2'],[5,'oompa@loompa.mm','Oompa Loompa','LYtp']], x
+		x = @p.ieal_where('country', 'XX')
+		assert_equal [], x
+	end
 end
 

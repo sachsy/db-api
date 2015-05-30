@@ -316,6 +316,10 @@ module B50D
 		def tables_with_person(id)
 			@db.js('peeps.tables_with_person($1)', [id])
 		end
+
+		def ieal_where(fieldname, fieldvalue)
+			@db.js('peeps.ieal_where($1, $2)', [fieldname, fieldvalue])
+		end
 	end
 end
 
