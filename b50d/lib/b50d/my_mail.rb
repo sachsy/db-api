@@ -1,26 +1,32 @@
 # Transform stuff from Mikel's Mail class into my PostgreSQL-ready clean data
 require_relative 'peeps.rb'
-require 'mail'
+require 'mail'  # TODO: phase out
+require 'date'
+require 'net/smtp'
 
 module MyMail
 	class << self
 
-		# hash with id, profile, their_email, subject, body, message_id, referencing
-		def send(email, smtp_hash)
-			from = smtp_hash.delete(:from)
-			Mail::Configuration.instance.delivery_method(:smtp, smtp_hash)
-			m = Mail.new
-			m.charset = 'UTF-8'
-			m.sender = smtp_hash[:user_name]
-			m.from = from
-			m.to = email[:their_email]
-			m.subject = email[:subject]
-			m.body = email[:body]
-			m.message_id = '<%s>' % email[:message_id]
+		# email = hash with id, profile, their_email, subject, body, message_id, referencing
+		# ms = PROFILES[profile][:smtp] from b50d-config.rb
+		def send(email, ms)
+			msg =  "From: %s\n" % ms[:from]
+			msg << "To: %s\n" % email[:their_email]
+			msg << "Message-ID: <%s>\n" % email[:message_id]
+			msg << "Date: %s\n" % Time.now.to_datetime.rfc2822
+			msg << "Content-Type: text/plain; charset=UTF-8\n"
+			msg << "Subject: %s\n" % email[:subject]
 			if email[:referencing]
-				m.in_reply_to = '<%s>' % email[:referencing]
+				msg << "References: <%s>\n" % email[:referencing]
+				msg << "In-Reply-To: <%s>\n" % email[:referencing]
 			end
-			m.deliver!
+			msg << "\n"
+			msg << email[:body]
+			smtp = Net::SMTP.new(ms[:address], ms[:port])
+			smtp.enable_starttls
+			smtp.start(ms[:domain], ms[:user_name], ms[:password], :login) do |s|
+				s.send_message msg, ms[:user_name], email[:their_email]
+			end
 		end
 
 		# IN:
