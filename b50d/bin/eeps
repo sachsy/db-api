@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 require 'erb'
+require 'date'
 require 'net/smtp'
 require 'b50d/peeps'
 require 'b50d-config.rb'
@@ -9,6 +10,8 @@ infile = ARGV[0] || raise('USAGE: eeps /path/to/one-template.erb')
 template = %{From: Derek Sivers <derek@sivers.org>
 To: <%= @email %>
 Message-ID: <<%= @msgid %>>
+Date: #{Time.now.to_datetime.rfc3339}
+Content-Type: text/plain; charset=UTF-8
 Subject: }
 template << File.read(infile).strip
 template << %{\n\n--
@@ -51,4 +54,5 @@ print "Check #{test_email}. To confirm, type # of people, above. "
 if list.size == STDIN.gets.to_i
 	send(template, list)
 end
+puts "DONE"
 
