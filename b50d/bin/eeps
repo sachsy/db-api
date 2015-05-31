@@ -10,7 +10,7 @@ infile = ARGV[0] || raise('USAGE: eeps /path/to/one-template.erb')
 template = %{From: Derek Sivers <derek@sivers.org>
 To: <%= @email %>
 Message-ID: <<%= @msgid %>>
-Date: #{Time.now.to_datetime.rfc3339}
+Date: #{Time.now.to_datetime.rfc2822}
 Content-Type: text/plain; charset=UTF-8
 Subject: }
 template << File.read(infile).strip
