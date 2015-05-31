@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+require 'erb'
+require 'net/smtp'
+require 'b50d/peeps'
+require 'b50d-config.rb'
+p = B50D::Peeps.new(API_KEY, API_PASS)
+
+infile = ARGV[0] || raise('USAGE: eeps /path/to/one-template.erb')
+template = %{From: Derek Sivers <derek@sivers.org>
+To: <%= @email %>
+Message-ID: <<%= @msgid %>>
+Subject: }
+template << File.read(infile).strip
+template << %{\n\n--
+Derek Sivers  derek@sivers.org  http://sivers.org/
+Change your list settings here: https://sivers.org/list/<%= @id %>/<%= @lopass %>
+}
+
+print "WHERE "
+k = STDIN.gets.strip
+
+print "WHERE #{k} = "
+v = STDIN.gets.strip
+
+list = p.ieal_where(k, v)
+print "#{list.size} people. Test email: "
+test_email = STDIN.gets.strip
+exit unless /\A\S+@\S+\.\S+\Z/ === test_email
+
+def send(template, list, test_email = nil)
+	msgid_format = Time.now.strftime('%Y%m%d%H%M%S') << '.%d@sivers.org'
+	list = list[0,5] if test_email
+	list.each do |one|
+		@id, @email, @address, @lopass = one
+		if test_email
+			@email = test_email
+		else
+			puts @email
+		end
+		@msgid = msgid_format % @id
+		message = ERB.new(template).result 
+		Net::SMTP.start('localhost') do |smtp|
+			smtp.send_message message, 'derek@sivers.org', @email
+		end
+	end
+end
+
+send(template, list, test_email)
+
+print "Check #{test_email}. To confirm, type # of people, above. "
+if list.size == STDIN.gets.to_i
+	send(template, list)
+end
+
