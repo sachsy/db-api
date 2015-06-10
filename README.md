@@ -57,8 +57,38 @@ If POST /login works, it sets the 3 needed cookies (person_id, api_key, api_pass
 
 # TODO:
 
+* Which of my plpgsql functions could be in language sql immutable strict ?
 * Can a view be generated from an already-selected record, stored in a variable?  If so, the approach of one function looking up just the ids, then passing id to the view to re-select it could be replaced with that approach.  And after doing an update of a status like opened/closed, could do RETURNING * to return its values instead of selecting again.
 * Play with custom types <a href="http://vimeo.com/97507575">as described here</a> and <a href="http://www.sqlines.com/postgresql/how-to/create_user_defined_type">here</a>.
 * Where to translate ugly errors (probably using regexp matching) into simple i18n keys for the UI to show in user's language?
 * Switch from Mail gem to <https://github.com/ktheory/maildir> once mail is local
+
+## Temporary email download
+
+What do you call that thing in spaceships that's the in-between zone between outside and inside?  De-pressure chamber?  Airlock?
+
+Thinking of other ways to delete spam besides logging into webmail.  Some way to do it here?
+
+One way is to use getmail to download the emails into Maildir format, then use the ktheory/maildir lib to access the files on the server.  yes/no/yes/yes/no.  Imported one at a time like that.
+
+Another way is a temporary emails database table.  Import ALL new emails into this, then move them over from here to the real peeps.emails table
+
+````sql
+CREATE TABLE tempemails (
+	id serial primary key,
+	their_email varchar(127),
+	their_name varchar(127),
+	subject varchar(127),
+	headers text,
+	body text,
+	message_id varchar(255) UNIQUE
+);
+-- (plus the attachments!)
+````
+
+This feels like unnecessary complication.
+
+Another way is use MyMail::import but one at a time.  POP download: yes/no?  Next POP download: yes/no?  Only question is how to store it reliably inbetween.  Would probably need this database table anyway.
+
+So far I like the Maildir on the server approach, because it lets me use MailRoute.net and my own server for email.  No POP, IMAP, etc.  The Maildir is the temporary storage.
 
