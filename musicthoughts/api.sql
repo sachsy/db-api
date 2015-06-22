@@ -1,5 +1,6 @@
 ----------------------------------------
 ------------------------- API FUNCTIONS:
+-- TODO: add language parameter to functions
 ----------------------------------------
 
 -- NOTE: all queries only show where thoughts.approved IS TRUE
