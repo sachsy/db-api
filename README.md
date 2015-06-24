@@ -57,6 +57,7 @@ If POST /login works, it sets the 3 needed cookies (person_id, api_key, api_pass
 
 # TODO:
 
+* email parsing: set personID using email address first before in-reply-to
 * Question why b50d gem is needed. Shouldn't SQL functions be simple enough for routes to call directly?
 * Which of my plpgsql functions could be in language sql immutable strict ?
 * Can a view be generated from an already-selected record, stored in a variable?  If so, the approach of one function looking up just the ids, then passing id to the view to re-select it could be replaced with that approach.  And after doing an update of a status like opened/closed, could do RETURNING * to return its values instead of selecting again.
