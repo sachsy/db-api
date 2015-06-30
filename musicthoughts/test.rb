@@ -21,12 +21,12 @@ class TestMusicthoughtsClient < Minitest::Test
 	end
 
 	def test_category
-		qry("category(5)")
-		assert_equal 'Schreiberblock', @j[:de]
-		assert_equal 'колонка авторов', @j[:ru]
-		qry("category(7)")
+		qry("category('ru', 5)")
+		assert_equal 'колонка авторов', @j[:category]
+		qry("category('zh', 7)")
 		assert_equal [3, 1], @j[:thoughts].map {|x| x[:id]}
-		qry("category(55)")
+		assert_equal '如果音乐可以被翻译成人类的言语，那音乐就再也没有存在的必要了。', @j[:thoughts][0][:thought]
+		qry("category('es', 55)")
 		assert_equal 'Not Found', @j[:title]
 	end
 
@@ -42,12 +42,12 @@ class TestMusicthoughtsClient < Minitest::Test
 	end
 
 	def test_get_author
-		qry("get_author(1)")
+		qry("get_author('it', 1)")
 		assert_equal 'Miles Davis', @j[:name]
 		assert_instance_of Array, @j[:thoughts]
-		assert_equal 'Non aver paura degli errori. Non ce ne sono.', @j[:thoughts][0][:it]
-		assert_equal 'Suona quello che non conosci.', @j[:thoughts][1][:it]
-		qry("get_author(55)")
+		assert_equal 'Non aver paura degli errori. Non ce ne sono.', @j[:thoughts][0][:thought]
+		assert_equal 'Suona quello che non conosci.', @j[:thoughts][1][:thought]
+		qry("get_author('en', 55)")
 		assert_equal 'Not Found', @j[:title]
 	end
 

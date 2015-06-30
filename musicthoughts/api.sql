@@ -63,11 +63,18 @@ $$ LANGUAGE plpgsql;
 
 
 -- get %r{^/authors/([0-9]+)$}
--- PARAMS: author id
-CREATE OR REPLACE FUNCTION get_author(integer, OUT mime text, OUT js json) AS $$
+-- PARAMS: lang, author id
+CREATE OR REPLACE FUNCTION get_author(char(2), integer, OUT mime text, OUT js json) AS $$
+DECLARE
+	qry text;
 BEGIN
+	qry := FORMAT ('SELECT id, name, (SELECT json_agg(t) FROM
+		(SELECT id, %I AS thought FROM thoughts
+		WHERE author_id=authors.id AND approved IS TRUE
+		ORDER BY id DESC) t) AS thoughts
+		FROM authors WHERE id = %s', $1, $2);
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM author_view WHERE id=$1) r;
+	EXECUTE 'SELECT row_to_json(r) FROM (' || qry || ') r' INTO js;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
