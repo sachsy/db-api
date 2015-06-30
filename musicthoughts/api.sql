@@ -43,6 +43,7 @@ BEGIN
 		WHERE category_id=categories.id AND thought_id=thoughts.id AND approved IS TRUE
 		ORDER BY id DESC) t) AS thoughts
 		FROM categories WHERE id = %s', $1, $1, $2);
+	mime := 'application/json';
 	EXECUTE 'SELECT row_to_json(r) FROM (' || qry || ') r' INTO js;
 	IF js IS NULL THEN
 m4_NOTFOUND
@@ -68,10 +69,14 @@ CREATE OR REPLACE FUNCTION get_author(char(2), integer, OUT mime text, OUT js js
 DECLARE
 	qry text;
 BEGIN
+	-- TODO: silly that I'm re-querying for author inside thought subselect
+	-- Find way to re-use id, name from top of query, outside subselect
 	qry := FORMAT ('SELECT id, name, (SELECT json_agg(t) FROM
-		(SELECT id, %I AS thought FROM thoughts
-		WHERE author_id=authors.id AND approved IS TRUE
-		ORDER BY id DESC) t) AS thoughts
+		(SELECT id, %I AS thought, (SELECT row_to_json(a) FROM
+			(SELECT id, name FROM authors WHERE thoughts.author_id=authors.id) a)
+			AS author FROM thoughts
+			WHERE author_id=authors.id AND approved IS TRUE
+			ORDER BY id DESC) t) AS thoughts
 		FROM authors WHERE id = %s', $1, $2);
 	mime := 'application/json';
 	EXECUTE 'SELECT row_to_json(r) FROM (' || qry || ') r' INTO js;
@@ -235,5 +240,4 @@ BEGIN
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
-
 
