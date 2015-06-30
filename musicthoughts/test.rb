@@ -11,10 +11,13 @@ class TestMusicthoughtsClient < Minitest::Test
 	end
 
 	def test_categories
-		qry("all_categories()")
+		qry("all_categories('fr')")
 		assert_equal 12, @j.size
 		assert_equal 2, @j[1][:id]
 		assert_equal 2, @j[1][:howmany]
+		assert_equal 'écrire des paroles', @j[1][:category]
+		refute @j[1][:en]
+		refute @j[1][:fr]
 	end
 
 	def test_category

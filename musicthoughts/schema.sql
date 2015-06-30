@@ -135,6 +135,11 @@ CREATE VIEW thought_view AS
 				AND categories_thoughts.thought_id=thoughts.id) ct) AS categories
 		FROM thoughts WHERE approved IS TRUE ORDER BY id DESC;
 
+----------------------------------------
+------------------------- API FUNCTIONS:
+-- TODO: add language parameter to functions
+----------------------------------------
+
 -- NOTE: all queries only show where thoughts.approved IS TRUE
 -- When building manager API, I will add unapproved thoughts function
 
@@ -149,25 +154,33 @@ $$ LANGUAGE plpgsql;
 
 
 -- get '/categories'
--- PARAMS: -none-
-CREATE OR REPLACE FUNCTION all_categories(OUT mime text, OUT js json) AS $$
+-- PARAMS: lang
+CREATE OR REPLACE FUNCTION all_categories(char(2), OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := json_agg(r) FROM (SELECT id, en, es, fr, de, it, pt, ja, zh, ar, ru,
+	EXECUTE FORMAT ('SELECT json_agg(r) FROM (SELECT id, %I AS category, 
 		(SELECT COUNT(thoughts.id) FROM categories_thoughts, thoughts
 			WHERE category_id=categories.id
 			AND thoughts.id=categories_thoughts.thought_id AND thoughts.approved IS TRUE)
-		AS howmany FROM categories ORDER BY id) r;
+			AS howmany FROM categories ORDER BY id) r', $1) INTO js;
 END;
 $$ LANGUAGE plpgsql;
 
 
 -- get %r{^/categories/([0-9]+)$}
--- PARAMS: category id
-CREATE OR REPLACE FUNCTION category(integer, OUT mime text, OUT js json) AS $$
+-- PARAMS: lang, category_id
+CREATE OR REPLACE FUNCTION category(char(2), integer, OUT mime text, OUT js json) AS $$
+DECLARE
+	qry text;
 BEGIN
-	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM category_view WHERE id=$1) r;
+	qry := FORMAT ('SELECT id, %I AS category, (SELECT json_agg(t) FROM
+		(SELECT id, %I AS thought, (SELECT row_to_json(a) FROM (SELECT id, name
+			FROM authors WHERE thoughts.author_id=authors.id) a) AS author
+		FROM thoughts, categories_thoughts
+		WHERE category_id=categories.id AND thought_id=thoughts.id AND approved IS TRUE
+		ORDER BY id DESC) t) AS thoughts
+		FROM categories WHERE id = %s', $1, $1, $2);
+	EXECUTE 'SELECT row_to_json(r) FROM (' || qry || ') r' INTO js;
 	IF js IS NULL THEN
 
 	mime := 'application/problem+json';
