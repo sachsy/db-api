@@ -10,7 +10,7 @@ class TestMusicThoughts < Minitest::Test
 
 	def setup
 		super
-		@mt = B50D::MusicThoughts.new('test')
+		@mt = B50D::MusicThoughts.new('test', 'en')
 		@authornames = ['Maya Angelou', 'Miles Davis', '老崔']
 		@nu = {author_name: 'Oscar', contributor_name: 'Kid', contributor_email: 'kid@kid.net', lang: 'fr', thought: 'Ça va'}
 	end
@@ -55,7 +55,7 @@ class TestMusicThoughts < Minitest::Test
 	end
 
 	def test_author_bad
-		assert_nil @mt.author(9876)
+		refute @mt.author(9876)
 	end
 
 	def test_contributors
@@ -86,14 +86,14 @@ class TestMusicThoughts < Minitest::Test
 	end
 
 	def test_contributor_bad
-		assert_nil @mt.contributor(9876)
+		refute @mt.contributor(9876)
 	end
 
 	def test_all_thoughts
 		tt = @mt.thoughts_all
 		assert_equal [1, 3, 4, 5], tt.map {|t| t[:id]}.sort
 		t1 = tt.find {|x| x[:id] == 1}
-		assert_equal "Play what you don't know.", t1[:en]
+		assert_equal "Play what you don't know.", t1[:thought]
 	end
 
 	def test_new_thoughts
@@ -115,9 +115,9 @@ class TestMusicThoughts < Minitest::Test
 	end
 
 	def test_bad_thought
-		assert_nil @mt.thought(98765)
-		assert_nil @mt.thought('')
-		assert_nil @mt.thought('"')
+		refute @mt.thought(98765)
+		refute @mt.thought('')
+		refute @mt.thought('"')
 	end
 
 	def test_search
@@ -185,10 +185,10 @@ class TestMusicThoughts < Minitest::Test
 
 	# for now, searches all languages, no matter which one is shown
 	def test_lang_search
-		r = @mt.search('Spiele')
-		assert_equal "Play what you don't know.", r[:thoughts][0][:en]
-		r = @mt.search('作詞') 
-		assert_equal 'writing lyrics', r[:categories][0][:en]
+		r = @mt.search('know')
+		assert_equal "Play what you don't know.", r[:thoughts][0][:thought]
+		r = @mt.search('lyrics') 
+		assert_equal 'writing lyrics', r[:categories][0][:category]
 	end
 
 	def test_add

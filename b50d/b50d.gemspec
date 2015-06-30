@@ -1,8 +1,8 @@
 Gem::Specification.new do |s|
   s.platform	= Gem::Platform::RUBY
   s.name        = 'b50d'
-  s.version     = '3.1.0'
-  s.date        = '2015-05-31'
+  s.version     = '3.2.0'
+  s.date        = '2015-07-01'
   s.author      = 'Derek Sivers'
   s.email       = 'derek@sivers.org'
   s.license     = 'CC BY-NC'

@@ -1,23 +1,11 @@
 require_relative 'dbapi.rb'
 
-# Main addition is to set the language so that categories and thoughts are
-# translated, like this:
-#
 # @mt = B50D::MusicThoughts.new  (default English)
 # t = @mt.thought(123)
 # puts t[:thought]   # "Hi this is English"
 # @mt.set_lang('fr')
 # t = @mt.thought(123)
 # puts t[:thought]   # "Bonjour, c'est français"
-#
-# The multi-lingual things are categories and thoughts.
-# So for those, use the @lang key to assign self-named value to that.
-# In other words:
-# When getting category and language is French,
-# set c[:category] to the same as c[:fr]
-# When getting thought and language is Chinese,
-# set t[:thought] to the same as t[:zh]
-# Now website template views can just call c[:category] and t[:thought].
 
 module B50D
 	class MusicThoughts
@@ -30,32 +18,24 @@ module B50D
 		end
 
 		def languages
-			# cached
 			return ['ar', 'de', 'en', 'es', 'fr', 'it', 'ja', 'pt', 'ru', 'zh']
 		end
 
 		# restricts responses to this language
 		def set_lang(lang)
 			lang = 'en' unless languages.include? lang
-			@lang = lang.to_sym
+			@lang = lang
 		end
 
 		# hash keys: id, category, howmany
 		def categories
-			@cat_cache ||= @db.js('musicthoughts.all_categories()').map {|c| c.merge(category: c[@lang]) }
-			@cat_cache
+			@db.js('musicthoughts.all_categories($1)', [@lang])
 		end
 
 		# hash keys: id, category, thoughts:[{id, thought, author:{id, name}}]
 		def category(id)
-			begin
-				c = @db.js('musicthoughts.category($1)', [id])
-				c[:category] = c[@lang]
-				c[:thoughts].map! {|t| t.merge(thought: t[@lang]) }
-				c
-			rescue
-				nil
-			end
+			return false unless id.instance_of? Fixnum || /\A[0-9]+\Z/ === id
+			@db.js('musicthoughts.category($1, $2)', [@lang, id])
 		end
 
 		# hash keys: id, name, howmany
@@ -70,15 +50,8 @@ module B50D
 
 		# hash keys: id, name, thoughts:[{id, thought, author:{id, name}}]
 		def author(id)
-			begin
-				a = @db.js('musicthoughts.get_author($1)', [id])
-				a[:thoughts].map! do |t|
-					t.merge(thought: t[@lang], author: {id: id, name: a[:name]})
-				end if a[:thoughts]
-				a
-			rescue
-				nil
-			end
+			return false unless id.instance_of? Fixnum || /\A[0-9]+\Z/ === id
+			@db.js('musicthoughts.get_author($1, $2)', [@lang, id])
 		end
 
 		# hash keys: id, name, howmany
@@ -93,58 +66,28 @@ module B50D
 
 		# hash keys: id, name, thoughts:[{id, thought, author:{id, name}}]
 		def contributor(id)
-			begin
-				c = @db.js('musicthoughts.get_contributor($1)', [id])
-				c[:thoughts].map! do |t|
-					t.merge(thought: t[@lang])
-				end if c[:thoughts]
-				c
-			rescue
-				nil
-			end
+			return false unless id.instance_of? Fixnum || /\A[0-9]+\Z/ === id
+			@db.js('musicthoughts.get_contributor($1, $2)', [@lang, id])
 		end
 
 		# Format for all thought methods, below:
 		# hash keys: id, source_url, thought,
 		#   author:{id, name}, contributor:{id, name}, categories:[{id, category}]
 		def thoughts_all
-			@db.js('musicthoughts.new_thoughts(NULL)').map do |t|
-				t[:categories].map! do |c|
-					c.merge(category: c[@lang])
-				end if t[:categories]
-				t.merge(thought: t[@lang])
-			end
+			@db.js('musicthoughts.new_thoughts($1, NULL)', [@lang])
 		end
 
 		def thoughts_new
-			@db.js('musicthoughts.new_thoughts($1)', [20]).map do |t|
-				t[:categories].map! do |c|
-					c.merge(category: c[@lang])
-				end if t[:categories]
-				t.merge(thought: t[@lang])
-			end
+			@db.js('musicthoughts.new_thoughts($1, $2)', [@lang, 20])
 		end
 
 		def thought(id)
-			begin
-				t = @db.js('musicthoughts.get_thought($1)', [id])
-				t[:thought] = t[@lang] 
-				t[:categories].map! do |c|
-					c.merge(category: c[@lang])
-				end if t[:categories]
-				t
-			rescue
-				nil
-			end
+			return false unless id.instance_of? Fixnum || /\A[0-9]+\Z/ === id
+			@db.js('musicthoughts.get_thought($1, $2)', [@lang, id])
 		end
 
 		def thought_random
-			t = @db.js('musicthoughts.random_thought()')
-			t[:thought] = t[@lang] 
-			t[:categories].map! do |c|
-				c.merge(category: c[@lang])
-			end if t[:categories]
-			t
+			@db.js('musicthoughts.random_thought($1)', [@lang])
 		end
 
 		# hash keys:
@@ -154,17 +97,7 @@ module B50D
 		#  thoughts: nil || [{id, source_url, thought,
 		#   author:{id, name}, contributor:{id, name}, categories:[{id, category}]}]
 		def search(q)
-			res = @db.js('musicthoughts.search($1)', [q.strip])
-			res[:categories].map! do |c|
-				c.merge(category: c[@lang])
-			end if res[:categories]
-			res[:thoughts].map! do |t|
-				t[:categories].map! do |c|
-					c.merge(category: c[@lang])
-				end if t[:categories]
-				t.merge(thought: t[@lang])
-			end if res[:thoughts]
-			res
+			@db.js('musicthoughts.search($1, $2)', [@lang, q.strip])
 		end 
 
 
