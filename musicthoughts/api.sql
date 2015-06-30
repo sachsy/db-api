@@ -117,22 +117,24 @@ $$ LANGUAGE plpgsql;
 
 
 -- get '/thoughts/random'
--- PARAMS: -none-
-CREATE OR REPLACE FUNCTION random_thought(OUT mime text, OUT js json) AS $$
+-- PARAMS: lang
+CREATE OR REPLACE FUNCTION random_thought(char(2), OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM thought_view WHERE id =
-		(SELECT id FROM thoughts WHERE as_rand IS TRUE ORDER BY RANDOM() LIMIT 1)) r;
+	EXECUTE 'SELECT row_to_json(r) FROM ('
+		|| thought_view($1, (SELECT id FROM thoughts WHERE as_rand IS TRUE
+			ORDER BY RANDOM() LIMIT 1), NULL, NULL)
+		|| ') r' INTO js;
 END;
 $$ LANGUAGE plpgsql;
 
 
 -- get %r{^/thoughts/([0-9]+)$}
--- PARAMS: thought id
-CREATE OR REPLACE FUNCTION get_thought(integer, OUT mime text, OUT js json) AS $$
+-- PARAMS: lang, thought id
+CREATE OR REPLACE FUNCTION get_thought(char(2), integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM thought_view WHERE id = $1) r;
+	EXECUTE 'SELECT row_to_json(r) FROM (' || thought_view($1, $2, NULL, NULL) || ') r' INTO js;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
@@ -142,17 +144,17 @@ $$ LANGUAGE plpgsql;
 
 -- get '/thoughts'
 -- get '/thoughts/new'
--- PARAMS: newest limit (NULL for all)
-CREATE OR REPLACE FUNCTION new_thoughts(integer, OUT mime text, OUT js json) AS $$
+-- PARAMS: lang, newest limit (NULL for all)
+CREATE OR REPLACE FUNCTION new_thoughts(char(2), integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := json_agg(r) FROM (SELECT * FROM thought_view LIMIT $1) r;
+	EXECUTE 'SELECT json_agg(r) FROM (' || thought_view($1, NULL, NULL, $2) || ') r' INTO js;
 END;
 $$ LANGUAGE plpgsql;
 
 -- get '/search/:q'
--- PARAMS: search term
-CREATE OR REPLACE FUNCTION search(text, OUT mime text, OUT js json) AS $$
+-- PARAMS: lang, search term
+CREATE OR REPLACE FUNCTION search(char(2), text, OUT mime text, OUT js json) AS $$
 DECLARE
 	q text;
 	auth json;
@@ -161,22 +163,19 @@ DECLARE
 	thts json;
 m4_ERRVARS
 BEGIN
-	IF LENGTH(regexp_replace($1, '\s', '', 'g')) < 2 THEN
+	IF LENGTH(regexp_replace($2, '\s', '', 'g')) < 2 THEN
 		RAISE 'search term too short';
 	END IF;
-	q := concat('%', btrim($1, E'\r\n\t '), '%');
+	q := concat('%', btrim($2, E'\r\n\t '), '%');
 	SELECT json_agg(r) INTO auth FROM
 		(SELECT * FROM authors_view WHERE name ILIKE q) r;
 	SELECT json_agg(r) INTO cont FROM
 		(SELECT * FROM contributors_view WHERE name ILIKE q) r;
-	SELECT json_agg(r) INTO cats FROM
-		(SELECT * FROM categories WHERE
-		CONCAT(en,'|',es,'|',fr,'|',de,'|',it,'|',pt,'|',ja,'|',zh,'|',ar,'|',ru)
-			ILIKE q ORDER BY id) r;
-	SELECT json_agg(r) INTO thts FROM
-		(SELECT * FROM thought_view WHERE
-		CONCAT(en,'|',es,'|',fr,'|',de,'|',it,'|',pt,'|',ja,'|',zh,'|',ar,'|',ru)
-			ILIKE q ORDER BY id) r;
+	EXECUTE FORMAT ('SELECT json_agg(r) FROM (SELECT id, %I AS category
+		FROM categories WHERE %I ILIKE %L ORDER BY id) r',
+		$1, $1, q) INTO cats;
+	EXECUTE 'SELECT json_agg(r) FROM ('
+		|| thought_view($1, NULL, q, NULL) || ') r' INTO thts;
 	mime := 'application/json';
 	js := json_build_object(
 		'authors', auth,

@@ -73,6 +73,8 @@ COMMIT;
 
 DROP VIEW IF EXISTS category_view CASCADE;
 DROP VIEW IF EXISTS author_view CASCADE;
+DROP VIEW IF EXISTS contributor_view CASCADE;
+DROP VIEW IF EXISTS thought_view CASCADE;
 
 DROP VIEW IF EXISTS authors_view CASCADE;
 CREATE VIEW authors_view AS
@@ -93,20 +95,12 @@ CREATE VIEW contributors_view AS
 			(SELECT contributor_id FROM thoughts WHERE approved IS TRUE)
 		ORDER BY howmany DESC, name ASC;
 
-DROP VIEW IF EXISTS contributor_view CASCADE;
-CREATE VIEW contributor_view AS
-	SELECT contributors.id, peeps.people.name, (SELECT json_agg(t) FROM
-		(SELECT id, en, es, fr, de, it, pt, ja, zh, ar, ru,
-			(SELECT row_to_json(a) FROM
-				(SELECT id, name FROM authors WHERE thoughts.author_id=authors.id) a) AS author
-			FROM thoughts
-			WHERE contributor_id=contributors.id AND approved IS TRUE
-			ORDER BY id DESC) t) AS thoughts
-		FROM contributors, peeps.people WHERE contributors.person_id=peeps.people.id;
-
-DROP VIEW IF EXISTS thought_view CASCADE;
-CREATE VIEW thought_view AS
-	SELECT id, source_url, en, es, fr, de, it, pt, ja, zh, ar, ru,
+-- PARAMS: lang, OPTIONAL: thoughts.id, search term, limit
+CREATE FUNCTION thought_view(char(2), integer, varchar, integer) RETURNS text AS $$
+DECLARE
+	qry text;
+BEGIN
+	qry := FORMAT ('SELECT id, source_url, %I AS thought,
 		(SELECT row_to_json(a) FROM
 			(SELECT id, name FROM authors WHERE thoughts.author_id=authors.id) a) AS author,
 		(SELECT row_to_json(c) FROM
@@ -114,10 +108,24 @@ CREATE VIEW thought_view AS
 				LEFT JOIN peeps.people ON contributors.person_id=peeps.people.id
 				WHERE thoughts.contributor_id=contributors.id) c) AS contributor,
 		(SELECT json_agg(ct) FROM
-			(SELECT categories.* FROM categories, categories_thoughts
+			(SELECT categories.id, categories.%I AS category
+				FROM categories, categories_thoughts
 				WHERE categories_thoughts.category_id=categories.id
 				AND categories_thoughts.thought_id=thoughts.id) ct) AS categories
-		FROM thoughts WHERE approved IS TRUE ORDER BY id DESC;
+		FROM thoughts WHERE approved IS TRUE', $1, $1);
+	IF $2 IS NOT NULL THEN
+		qry := qry || FORMAT (' AND id = %s', $2);
+	END IF;
+	IF $3 IS NOT NULL THEN
+		qry := qry || FORMAT (' AND %I ILIKE %L', $1, $3);
+	END IF;
+	qry := qry || ' ORDER BY id DESC';
+	IF $4 IS NOT NULL THEN
+		qry := qry || FORMAT (' LIMIT %s', $4);
+	END IF;
+	RETURN qry;
+END;
+$$ LANGUAGE plpgsql;
 
 ----------------------------------------
 ------------------------- API FUNCTIONS:
@@ -256,22 +264,24 @@ $$ LANGUAGE plpgsql;
 
 
 -- get '/thoughts/random'
--- PARAMS: -none-
-CREATE OR REPLACE FUNCTION random_thought(OUT mime text, OUT js json) AS $$
+-- PARAMS: lang
+CREATE OR REPLACE FUNCTION random_thought(char(2), OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM thought_view WHERE id =
-		(SELECT id FROM thoughts WHERE as_rand IS TRUE ORDER BY RANDOM() LIMIT 1)) r;
+	EXECUTE 'SELECT row_to_json(r) FROM ('
+		|| thought_view($1, (SELECT id FROM thoughts WHERE as_rand IS TRUE
+			ORDER BY RANDOM() LIMIT 1), NULL, NULL)
+		|| ') r' INTO js;
 END;
 $$ LANGUAGE plpgsql;
 
 
 -- get %r{^/thoughts/([0-9]+)$}
--- PARAMS: thought id
-CREATE OR REPLACE FUNCTION get_thought(integer, OUT mime text, OUT js json) AS $$
+-- PARAMS: lang, thought id
+CREATE OR REPLACE FUNCTION get_thought(char(2), integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM thought_view WHERE id = $1) r;
+	EXECUTE 'SELECT row_to_json(r) FROM (' || thought_view($1, $2, NULL, NULL) || ') r' INTO js;
 	IF js IS NULL THEN
 
 	mime := 'application/problem+json';
@@ -287,17 +297,17 @@ $$ LANGUAGE plpgsql;
 
 -- get '/thoughts'
 -- get '/thoughts/new'
--- PARAMS: newest limit (NULL for all)
-CREATE OR REPLACE FUNCTION new_thoughts(integer, OUT mime text, OUT js json) AS $$
+-- PARAMS: lang, newest limit (NULL for all)
+CREATE OR REPLACE FUNCTION new_thoughts(char(2), integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := json_agg(r) FROM (SELECT * FROM thought_view LIMIT $1) r;
+	EXECUTE 'SELECT json_agg(r) FROM (' || thought_view($1, NULL, NULL, $2) || ') r' INTO js;
 END;
 $$ LANGUAGE plpgsql;
 
 -- get '/search/:q'
--- PARAMS: search term
-CREATE OR REPLACE FUNCTION search(text, OUT mime text, OUT js json) AS $$
+-- PARAMS: lang, search term
+CREATE OR REPLACE FUNCTION search(char(2), text, OUT mime text, OUT js json) AS $$
 DECLARE
 	q text;
 	auth json;
@@ -311,22 +321,19 @@ DECLARE
 	err_context text;
 
 BEGIN
-	IF LENGTH(regexp_replace($1, '\s', '', 'g')) < 2 THEN
+	IF LENGTH(regexp_replace($2, '\s', '', 'g')) < 2 THEN
 		RAISE 'search term too short';
 	END IF;
-	q := concat('%', btrim($1, E'\r\n\t '), '%');
+	q := concat('%', btrim($2, E'\r\n\t '), '%');
 	SELECT json_agg(r) INTO auth FROM
 		(SELECT * FROM authors_view WHERE name ILIKE q) r;
 	SELECT json_agg(r) INTO cont FROM
 		(SELECT * FROM contributors_view WHERE name ILIKE q) r;
-	SELECT json_agg(r) INTO cats FROM
-		(SELECT * FROM categories WHERE
-		CONCAT(en,'|',es,'|',fr,'|',de,'|',it,'|',pt,'|',ja,'|',zh,'|',ar,'|',ru)
-			ILIKE q ORDER BY id) r;
-	SELECT json_agg(r) INTO thts FROM
-		(SELECT * FROM thought_view WHERE
-		CONCAT(en,'|',es,'|',fr,'|',de,'|',it,'|',pt,'|',ja,'|',zh,'|',ar,'|',ru)
-			ILIKE q ORDER BY id) r;
+	EXECUTE FORMAT ('SELECT json_agg(r) FROM (SELECT id, %I AS category
+		FROM categories WHERE %I ILIKE %L ORDER BY id) r',
+		$1, $1, q) INTO cats;
+	EXECUTE 'SELECT json_agg(r) FROM ('
+		|| thought_view($1, NULL, q, NULL) || ') r' INTO thts;
 	mime := 'application/json';
 	js := json_build_object(
 		'authors', auth,

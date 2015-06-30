@@ -20,7 +20,7 @@ BEGIN
 	-- Generate secure random bytes and convert them to a string of chars.
 	-- Since our charset contains 62 characters, we will have a small
 	-- modulo bias, which is acceptable for our uses.
-	rand := gen_random_bytes(length);
+	rand := peeps.gen_random_bytes(length);
 	FOR i IN 0..length-1 LOOP
 		result := result || chars[1 + (get_byte(rand, i) % array_length(chars, 1))];
 		-- note: rand indexing is zero-based, chars is 1-based.
