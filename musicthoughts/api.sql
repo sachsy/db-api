@@ -94,11 +94,21 @@ $$ LANGUAGE plpgsql;
 
 
 -- get %r{^/contributors/([0-9]+)$}
--- PARAMS: contributor id
-CREATE OR REPLACE FUNCTION get_contributor(integer, OUT mime text, OUT js json) AS $$
+-- PARAMS: lang, contributor id
+CREATE OR REPLACE FUNCTION get_contributor(char(2), integer, OUT mime text, OUT js json) AS $$
+DECLARE
+	qry text;
 BEGIN
+	qry := FORMAT ('SELECT contributors.id, peeps.people.name, (SELECT json_agg(t) FROM
+		(SELECT id, %I AS thought, (SELECT row_to_json(a) FROM (SELECT id, name
+				FROM authors WHERE thoughts.author_id=authors.id) a) AS author
+			FROM thoughts
+			WHERE contributor_id=contributors.id AND approved IS TRUE
+			ORDER BY id DESC) t) AS thoughts
+		FROM contributors, peeps.people
+		WHERE contributors.person_id=peeps.people.id AND contributors.id = %s', $1, $2);
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM contributor_view WHERE id=$1) r;
+	EXECUTE 'SELECT row_to_json(r) FROM (' || qry || ') r' INTO js;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;

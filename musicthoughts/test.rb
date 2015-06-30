@@ -61,13 +61,14 @@ class TestMusicthoughtsClient < Minitest::Test
 	end
 
 	def test_get_contributor
-		qry("get_contributor(1)")
+		qry("get_contributor('ru', 1)")
 		assert_equal 'Derek Sivers', @j[:name]
 		assert_instance_of Array, @j[:thoughts]
 		assert_equal [4, 3, 1], @j[:thoughts].map {|x| x[:id]}
-		qry("get_contributor(2)")
+		assert_equal 'Не бойся совершать ошибки. Их не существует.', @j[:thoughts][0][:thought]
+		qry("get_contributor('en', 2)")
 		assert_nil @j[:thoughts]
-		qry("get_contributor(55)")
+		qry("get_contributor('en', 55)")
 		assert_equal 'Not Found', @j[:title]
 	end
 
