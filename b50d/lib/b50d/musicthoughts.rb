@@ -1,41 +1,27 @@
 require_relative 'dbapi.rb'
 
-# @mt = B50D::MusicThoughts.new  (default English)
-# t = @mt.thought(123)
-# puts t[:thought]   # "Hi this is English"
-# @mt.set_lang('fr')
-# t = @mt.thought(123)
-# puts t[:thought]   # "Bonjour, c'est français"
-
 module B50D
 	class MusicThoughts
 		def error ; @db.error ; end
 		def message ; @db.message ; end
 
-		def initialize(server='live', lang='en')
+		def initialize(server='live')
 			@db = DbAPI.new(server)
-			set_lang(lang)
 		end
 
 		def languages
 			return ['ar', 'de', 'en', 'es', 'fr', 'it', 'ja', 'pt', 'ru', 'zh']
 		end
 
-		# restricts responses to this language
-		def set_lang(lang)
-			lang = 'en' unless languages.include? lang
-			@lang = lang
-		end
-
 		# hash keys: id, category, howmany
-		def categories
-			@db.js('musicthoughts.all_categories($1)', [@lang])
+		def categories(lang)
+			@db.js('musicthoughts.all_categories($1)', [lang])
 		end
 
 		# hash keys: id, category, thoughts:[{id, thought, author:{id, name}}]
-		def category(id)
-			return false unless id.instance_of? Fixnum || /\A[0-9]+\Z/ === id
-			@db.js('musicthoughts.category($1, $2)', [@lang, id])
+		def category(lang, id)
+			return false unless /\A[0-9]+\Z/ === String(id)
+			@db.js('musicthoughts.category($1, $2)', [lang, id])
 		end
 
 		# hash keys: id, name, howmany
@@ -49,9 +35,9 @@ module B50D
 		end
 
 		# hash keys: id, name, thoughts:[{id, thought, author:{id, name}}]
-		def author(id)
-			return false unless id.instance_of? Fixnum || /\A[0-9]+\Z/ === id
-			@db.js('musicthoughts.get_author($1, $2)', [@lang, id])
+		def author(lang, id)
+			return false unless /\A[0-9]+\Z/ === String(id)
+			@db.js('musicthoughts.get_author($1, $2)', [lang, id])
 		end
 
 		# hash keys: id, name, howmany
@@ -65,29 +51,29 @@ module B50D
 		end
 
 		# hash keys: id, name, thoughts:[{id, thought, author:{id, name}}]
-		def contributor(id)
-			return false unless id.instance_of? Fixnum || /\A[0-9]+\Z/ === id
-			@db.js('musicthoughts.get_contributor($1, $2)', [@lang, id])
+		def contributor(lang, id)
+			return false unless /\A[0-9]+\Z/ === String(id)
+			@db.js('musicthoughts.get_contributor($1, $2)', [lang, id])
 		end
 
 		# Format for all thought methods, below:
 		# hash keys: id, source_url, thought,
 		#   author:{id, name}, contributor:{id, name}, categories:[{id, category}]
-		def thoughts_all
-			@db.js('musicthoughts.new_thoughts($1, NULL)', [@lang])
+		def thoughts_all(lang)
+			@db.js('musicthoughts.new_thoughts($1, NULL)', [lang])
 		end
 
-		def thoughts_new
-			@db.js('musicthoughts.new_thoughts($1, $2)', [@lang, 20])
+		def thoughts_new(lang)
+			@db.js('musicthoughts.new_thoughts($1, $2)', [lang, 20])
 		end
 
-		def thought(id)
-			return false unless id.instance_of? Fixnum || /\A[0-9]+\Z/ === id
-			@db.js('musicthoughts.get_thought($1, $2)', [@lang, id])
+		def thought(lang, id)
+			return false unless /\A[0-9]+\Z/ === String(id)
+			@db.js('musicthoughts.get_thought($1, $2)', [lang, id])
 		end
 
-		def thought_random
-			@db.js('musicthoughts.random_thought($1)', [@lang])
+		def thought_random(lang)
+			@db.js('musicthoughts.random_thought($1)', [lang])
 		end
 
 		# hash keys:
@@ -96,16 +82,16 @@ module B50D
 		#  contributors: nil || [{id, name, howmany}]
 		#  thoughts: nil || [{id, source_url, thought,
 		#   author:{id, name}, contributor:{id, name}, categories:[{id, category}]}]
-		def search(q)
-			@db.js('musicthoughts.search($1, $2)', [@lang, q.strip])
+		def search(lang, q)
+			@db.js('musicthoughts.search($1, $2)', [lang, q.strip])
 		end 
 
 
-		def add(params)
+		def add(lang, params)
 			%i(thought contributor_name contributor_email author_name).each do |i|
 				raise "#{i} required" unless String(params[i]).size > 0
 			end
-			params[:lang_code] ||= @lang
+			params[:lang_code] ||= lang
 			params[:contributor_url] ||= ''
 			params[:contributor_place] ||= ''
 			params[:source_url] ||= ''
