@@ -13,7 +13,7 @@ CREATE TABLE managers (
 CREATE TABLE clients (
 	id serial primary key,
 	person_id integer not null unique REFERENCES peeps.people(id),
-	currency char(3) REFERENCES peeps.currencies(code),
+	currency char(3) not null DEFAULT 'USD' REFERENCES peeps.currencies(code),
 	cents_balance integer not null default 0
 );
 
@@ -21,7 +21,7 @@ CREATE TABLE workers (
 	id serial primary key,
 	person_id integer not null unique REFERENCES peeps.people(id),
 	rating integer not null default 50,
-	currency char(3) REFERENCES peeps.currencies(code),
+	currency char(3) not null DEFAULT 'USD' REFERENCES peeps.currencies(code),
 	millicents_per_second integer CHECK (millicents_per_second > 0)
 );
 
@@ -33,10 +33,10 @@ CREATE TABLE projects (
 	title text,
 	description text,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
-	quoted_at timestamp(0) with time zone,
-	approved_at timestamp(0) with time zone,
-	started_at timestamp(0) with time zone,
-	finished_at timestamp(0) with time zone,
+	quoted_at timestamp(0) with time zone CHECK (quoted_at > created_at),
+	approved_at timestamp(0) with time zone CHECK (approved_at > quoted_at),
+	started_at timestamp(0) with time zone CHECK (started_at > approved_at),
+	finished_at timestamp(0) with time zone CHECK (finished_at > started_at),
 	status status not null default 'created',
 	seconds integer CHECK (seconds > 0),
 	quoted_currency char(3) REFERENCES peeps.currencies(code),
@@ -57,9 +57,9 @@ CREATE TABLE tasks (
 	title text,
 	description text,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
-	started_at timestamp(0) with time zone,
-	finished_at timestamp(0) with time zone,
-	status status not null default 'created'
+	started_at timestamp(0) with time zone CHECK (started_at > created_at),
+	finished_at timestamp(0) with time zone CHECK (finished_at > started_at),
+	status muckwork.status not null default 'created'
 );
 CREATE INDEX tpi ON tasks(project_id);
 CREATE INDEX twi ON tasks(worker_id);
