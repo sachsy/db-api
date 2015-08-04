@@ -22,7 +22,7 @@ CREATE TABLE workers (
 	person_id integer not null unique REFERENCES peeps.people(id),
 	rating integer not null default 50,
 	currency char(3) not null DEFAULT 'USD' REFERENCES peeps.currencies(code),
-	millicents_per_second integer CHECK (millicents_per_second > 0)
+	millicents_per_second integer CHECK (millicents_per_second >= 0)
 );
 
 CREATE TYPE muckwork.status AS ENUM('created', 'quoted', 'approved', 'started', 'finished');
@@ -33,22 +33,21 @@ CREATE TABLE projects (
 	title text,
 	description text,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
-	quoted_at timestamp(0) with time zone CHECK (quoted_at > created_at),
-	approved_at timestamp(0) with time zone CHECK (approved_at > quoted_at),
-	started_at timestamp(0) with time zone CHECK (started_at > approved_at),
-	finished_at timestamp(0) with time zone CHECK (finished_at > started_at),
+	quoted_at timestamp(0) with time zone CHECK (quoted_at >= created_at),
+	approved_at timestamp(0) with time zone CHECK (approved_at >= quoted_at),
+	started_at timestamp(0) with time zone CHECK (started_at >= approved_at),
+	finished_at timestamp(0) with time zone CHECK (finished_at >= started_at),
 	status status not null default 'created',
 	seconds integer CHECK (seconds > 0),
 	quoted_currency char(3) REFERENCES peeps.currencies(code),
-	quoted_cents integer CHECK (quoted_cents > 0),
+	quoted_cents integer CHECK (quoted_cents >= 0),
 	quoted_ratetype varchar(4) CHECK (quoted_ratetype = 'fix' OR quoted_ratetype = 'time'),
 	final_currency char(3) REFERENCES peeps.currencies(code),
-	final_cents integer CHECK (final_cents > 0)
+	final_cents integer CHECK (final_cents >= 0)
 );
 CREATE INDEX pjci ON projects(client_id);
-CREATE INDEX pjsa ON projects(started_at);
-CREATE INDEX pjaa ON projects(finished_at);
-	
+CREATE INDEX pjst ON projects(status);
+
 CREATE TABLE tasks (
 	id serial primary key,
 	project_id integer REFERENCES projects(id),
@@ -57,21 +56,20 @@ CREATE TABLE tasks (
 	title text,
 	description text,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
-	started_at timestamp(0) with time zone CHECK (started_at > created_at),
-	finished_at timestamp(0) with time zone CHECK (finished_at > started_at),
+	started_at timestamp(0) with time zone CHECK (started_at >= created_at),
+	finished_at timestamp(0) with time zone CHECK (finished_at >= started_at),
 	status muckwork.status not null default 'created'
 );
 CREATE INDEX tpi ON tasks(project_id);
 CREATE INDEX twi ON tasks(worker_id);
-CREATE INDEX tsa ON tasks(started_at);
-CREATE INDEX tfa ON tasks(finished_at);
+CREATE INDEX tst ON tasks(status);
 
 CREATE TABLE charges (
 	id serial primary key,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
 	project_id integer REFERENCES projects(id),
 	currency char(3) not null REFERENCES peeps.currencies(code),
-	cents integer not null CHECK (cents > 0),
+	cents integer not null CHECK (cents >= 0),
 	notes text
 );
 CREATE INDEX chpi ON charges(project_id);
@@ -84,7 +82,7 @@ CREATE TABLE payments (
 	cents integer not null CHECK (cents > 0),
 	notes text
 );
-CREATE INDEX pci ON payments(client_id);
+CREATE INDEX pyci ON payments(client_id);
 
 CREATE TABLE worker_payments (
 	id serial primary key,
@@ -100,7 +98,7 @@ CREATE TABLE worker_charges (
 	id serial primary key,
 	task_id integer not null REFERENCES tasks(id),
 	currency char(3) not null REFERENCES peeps.currencies(code),
-	cents integer not null CHECK (cents > 0),
+	cents integer not null CHECK (cents >= 0),
 	payment_id integer REFERENCES worker_payments(id) -- NULL until paid
 );
 CREATE INDEX wcpi ON worker_charges(payment_id);
