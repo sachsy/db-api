@@ -81,5 +81,20 @@ class TestMuckworkDB < Minitest::Test
 		end
 	end
 
+	def test_no_cents_without_currency
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE projects SET final_cents=100 WHERE id=4")
+		end
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE projects SET quoted_cents=100 WHERE id=5")
+		end
+		DB.exec("UPDATE projects SET quoted_currency='EUR', quoted_cents=100 WHERE id=5")
+	end
+
+	def test_ratetype
+		assert_raises PG::CheckViolation do
+			DB.exec("UPDATE projects SET quoted_ratetype='yeah' WHERE id=5")
+		end
+	end
 end
 
