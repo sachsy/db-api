@@ -22,8 +22,10 @@ CREATE TABLE workers (
 	person_id integer not null unique REFERENCES peeps.people(id),
 	rating integer not null default 50,
 	currency char(3) REFERENCES peeps.currencies(code),
-	millicents_per_second integer
+	millicents_per_second integer CHECK (millicents_per_second > 0)
 );
+
+CREATE TYPE muckwork.status AS ENUM('created', 'quoted', 'approved', 'started', 'finished');
 
 CREATE TABLE projects (
 	id serial primary key,
@@ -35,12 +37,13 @@ CREATE TABLE projects (
 	approved_at timestamp(0) with time zone,
 	started_at timestamp(0) with time zone,
 	finished_at timestamp(0) with time zone,
-	seconds integer,
+	status status not null default 'created',
+	seconds integer CHECK (seconds > 0),
 	quoted_currency char(3) REFERENCES peeps.currencies(code),
-	quoted_cents integer,
-	quoted_ratetype varchar(4), -- time, fix
+	quoted_cents integer CHECK (quoted_cents > 0),
+	quoted_ratetype varchar(4) CHECK (quoted_ratetype = 'fix' OR quoted_ratetype = 'time'),
 	final_currency char(3) REFERENCES peeps.currencies(code),
-	final_cents integer
+	final_cents integer CHECK (final_cents > 0)
 );
 CREATE INDEX pjci ON projects(client_id);
 CREATE INDEX pjsa ON projects(started_at);
@@ -55,7 +58,8 @@ CREATE TABLE tasks (
 	description text,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
 	started_at timestamp(0) with time zone,
-	finished_at timestamp(0) with time zone
+	finished_at timestamp(0) with time zone,
+	status status not null default 'created'
 );
 CREATE INDEX tpi ON tasks(project_id);
 CREATE INDEX twi ON tasks(worker_id);
@@ -67,7 +71,7 @@ CREATE TABLE charges (
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
 	project_id integer REFERENCES projects(id),
 	currency char(3) not null REFERENCES peeps.currencies(code),
-	cents integer not null,
+	cents integer not null CHECK (cents > 0),
 	notes text
 );
 CREATE INDEX chpi ON charges(project_id);
@@ -77,7 +81,7 @@ CREATE TABLE payments (
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
 	client_id integer REFERENCES clients(id),
 	currency char(3) not null REFERENCES peeps.currencies(code),
-	cents integer not null,
+	cents integer not null CHECK (cents > 0),
 	notes text
 );
 CREATE INDEX pci ON payments(client_id);
@@ -86,7 +90,7 @@ CREATE TABLE worker_payments (
 	id serial primary key,
 	worker_id integer not null REFERENCES workers(id),
 	currency char(3) not null REFERENCES peeps.currencies(code),
-	cents integer,
+	cents integer CHECK (cents > 0),
 	created_at date not null default CURRENT_DATE,
 	notes text
 );
@@ -96,7 +100,7 @@ CREATE TABLE worker_charges (
 	id serial primary key,
 	task_id integer not null REFERENCES tasks(id),
 	currency char(3) not null REFERENCES peeps.currencies(code),
-	cents integer not null,
+	cents integer not null CHECK (cents > 0),
 	payment_id integer REFERENCES worker_payments(id) -- NULL until paid
 );
 CREATE INDEX wcpi ON worker_charges(payment_id);
