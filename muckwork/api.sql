@@ -7,6 +7,7 @@ CREATE OR REPLACE FUNCTION get_clients(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
+	-- SELECT c.*, p.name, p.email FROM muckwork.clients c, peeps.people p WHERE c.person_id=p.id ORDER BY id DESC
 	js := '[]';
 END;
 $$ LANGUAGE plpgsql;
@@ -18,6 +19,7 @@ CREATE OR REPLACE FUNCTION get_client(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
+	-- SELECT c.*, p.name, p.email FROM muckwork.clients c, peeps.people p WHERE c.person_id=p.id AND c.id=$1
 	js := '{}';
 END;
 $$ LANGUAGE plpgsql;
