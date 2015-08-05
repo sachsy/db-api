@@ -114,8 +114,8 @@ SELECT pg_catalog.setval('projects_id_seq', 5, true);
 
 ALTER TABLE workers DISABLE TRIGGER ALL;
 
-INSERT INTO workers (id, person_id, rating, currency, millicents_per_second) VALUES (1, 4, 50, 'USD', 42);
-INSERT INTO workers (id, person_id, rating, currency, millicents_per_second) VALUES (2, 5, 50, 'THB', 1000);
+INSERT INTO workers (id, person_id, currency, millicents_per_second) VALUES (1, 4, 'USD', 42);
+INSERT INTO workers (id, person_id, currency, millicents_per_second) VALUES (2, 5, 'THB', 1000);
 
 
 ALTER TABLE workers ENABLE TRIGGER ALL;

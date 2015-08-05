@@ -20,7 +20,6 @@ CREATE TABLE clients (
 CREATE TABLE workers (
 	id serial primary key,
 	person_id integer not null unique REFERENCES peeps.people(id),
-	rating integer not null default 50,
 	currency char(3) not null DEFAULT 'USD' REFERENCES peeps.currencies(code),
 	millicents_per_second integer CHECK (millicents_per_second >= 0)
 );
