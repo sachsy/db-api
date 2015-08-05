@@ -24,7 +24,7 @@ CREATE TABLE workers (
 	millicents_per_second integer CHECK (millicents_per_second >= 0)
 );
 
-CREATE TYPE muckwork.status AS ENUM('created', 'quoted', 'approved', 'started', 'finished');
+CREATE TYPE muckwork.status AS ENUM('created', 'quoted', 'approved', 'refused', 'started', 'finished');
 
 CREATE TABLE projects (
 	id serial primary key,
@@ -54,7 +54,8 @@ CREATE TABLE tasks (
 	title text,
 	description text,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
-	started_at timestamp(0) with time zone CHECK (started_at >= created_at),
+	claimed_at timestamp(0) with time zone CHECK (claimed_at >= created_at),
+	started_at timestamp(0) with time zone CHECK (started_at >= claimed_at),
 	finished_at timestamp(0) with time zone CHECK (finished_at >= started_at),
 	status muckwork.status not null default 'created'
 );
