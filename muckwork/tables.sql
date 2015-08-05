@@ -48,7 +48,7 @@ CREATE INDEX pjst ON projects(status);
 
 CREATE TABLE tasks (
 	id serial primary key,
-	project_id integer REFERENCES projects(id),
+	project_id integer REFERENCES projects(id) ON DELETE CASCADE,
 	worker_id integer REFERENCES workers(id),
 	sortid integer,
 	title text,

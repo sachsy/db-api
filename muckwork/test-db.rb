@@ -156,5 +156,24 @@ class TestMuckworkDB < Minitest::Test
 			DB.exec("UPDATE muckwork.tasks SET created_at=NOW() WHERE id=9")
 		end
 	end
+
+	def test_no_delete_started
+		assert_raises PG::RaiseException do
+			DB.exec("DELETE FROM muckwork.projects WHERE id=2")
+		end
+		assert_raises PG::RaiseException do
+			DB.exec("DELETE FROM muckwork.tasks WHERE id=5")
+		end
+		DB.exec("DELETE FROM muckwork.tasks WHERE id=10")
+		DB.exec("DELETE FROM muckwork.projects WHERE id=4")
+	end
+
+	def test_delete_project_deletes_tasks
+		DB.exec("DELETE FROM muckwork.projects WHERE id=4")
+		res = DB.exec("SELECT * FROM muckwork.tasks WHERE project_id=4")
+		assert_equal 0, res.ntuples
+		res = DB.exec("SELECT * FROM muckwork.tasks WHERE id=10")
+		assert_equal 0, res.ntuples
+	end
 end
 

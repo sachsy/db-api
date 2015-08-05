@@ -48,7 +48,7 @@ CREATE INDEX pjst ON projects(status);
 
 CREATE TABLE tasks (
 	id serial primary key,
-	project_id integer REFERENCES projects(id),
+	project_id integer REFERENCES projects(id) ON DELETE CASCADE,
 	worker_id integer REFERENCES workers(id),
 	sortid integer,
 	title text,
@@ -121,7 +121,6 @@ COMMIT;
 ------------------ TRIGGERS:
 ----------------------------
 
--- TODO: can't delete started projects or tasks
 -- TODO: can't update description of started project or task
 
 CREATE FUNCTION project_status() RETURNS TRIGGER AS $$
@@ -326,6 +325,21 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER tasks_claimed_pair BEFORE UPDATE OF
 	worker_id, claimed_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.tasks_claimed_pair();
+
+
+-- can't delete started projects or tasks
+CREATE FUNCTION no_delete_started() RETURNS TRIGGER AS $$
+BEGIN
+	IF OLD.started_at IS NOT NULL 
+		THEN RAISE 'no_delete_started';
+	END IF;
+	RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER no_delete_started_project BEFORE DELETE ON muckwork.projects
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_delete_started();
+CREATE TRIGGER no_delete_started_task BEFORE DELETE ON muckwork.tasks
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_delete_started();
 
 
 --------------------------------------
