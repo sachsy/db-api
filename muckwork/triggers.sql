@@ -2,8 +2,6 @@
 ------------------ TRIGGERS:
 ----------------------------
 
--- TODO: can't update description of started project or task
-
 CREATE FUNCTION project_status() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.quoted_at IS NULL THEN
@@ -221,5 +219,33 @@ CREATE TRIGGER no_delete_started_project BEFORE DELETE ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_delete_started();
 CREATE TRIGGER no_delete_started_task BEFORE DELETE ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_delete_started();
+
+
+-- can't update title, description of quoted project
+CREATE FUNCTION no_update_quoted_project() RETURNS TRIGGER AS $$
+BEGIN
+	IF OLD.quoted_at IS NOT NULL 
+		THEN RAISE 'no_update_quoted';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER no_update_quoted_project BEFORE UPDATE OF
+	title, description ON muckwork.projects
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_update_quoted_project();
+
+
+-- can't update title, description of started task
+CREATE FUNCTION no_update_started_task() RETURNS TRIGGER AS $$
+BEGIN
+	IF OLD.started_at IS NOT NULL 
+		THEN RAISE 'no_update_started';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER no_update_started_task BEFORE UPDATE OF
+	title, description ON muckwork.tasks
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_update_started_task();
 
 

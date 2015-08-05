@@ -175,5 +175,19 @@ class TestMuckworkDB < Minitest::Test
 		res = DB.exec("SELECT * FROM muckwork.tasks WHERE id=10")
 		assert_equal 0, res.ntuples
 	end
+
+	def test_no_update_quoted_project
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.projects SET title='yeah', description='right' WHERE id=4")
+		end
+		DB.exec("UPDATE muckwork.projects SET title='yeah', description='right' WHERE id=5")
+	end
+
+	def test_no_update_started_task
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.tasks SET title='yeah', description='right' WHERE id=5")
+		end
+		DB.exec("UPDATE muckwork.tasks SET title='yeah', description='right' WHERE id=6")
+	end
 end
 
