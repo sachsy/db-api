@@ -285,7 +285,38 @@ CREATE TRIGGER task_unstarts_project AFTER UPDATE OF started_at ON muckwork.task
 	FOR EACH ROW WHEN (NEW.started_at IS NULL)
 	EXECUTE PROCEDURE muckwork.task_unstarts_project();
 
--- TODO: last task finished marks project as finished (& reverse if NULL)
+
+-- last task finished marks project as finished (see reverse below)
+CREATE FUNCTION task_finishes_project() RETURNS TRIGGER AS $$
+DECLARE
+	pi integer;
+BEGIN
+	SELECT project_id INTO pi FROM muckwork.tasks
+		WHERE project_id=OLD.project_id
+		AND finished_at IS NULL LIMIT 1;
+	IF pi IS NULL THEN
+		UPDATE muckwork.projects SET finished_at=NOW() WHERE id=OLD.project_id;
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER task_finishes_project AFTER UPDATE OF finished_at ON muckwork.tasks
+	FOR EACH ROW WHEN (NEW.finished_at IS NOT NULL)
+	EXECUTE PROCEDURE muckwork.task_finishes_project();
+
+-- last finished task un-finished marks project as un-finished again
+CREATE FUNCTION task_unfinishes_project() RETURNS TRIGGER AS $$
+BEGIN
+	UPDATE muckwork.projects SET finished_at=NULL
+		WHERE id=OLD.project_id AND finished_at IS NOT NULL;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER task_unfinishes_project AFTER UPDATE OF finished_at ON muckwork.tasks
+	FOR EACH ROW WHEN (NEW.finished_at IS NULL)
+	EXECUTE PROCEDURE muckwork.task_unfinishes_project();
+
+
 -- TODO: task finished creates worker_charge
 -- TODO: project finished creates charge
 
