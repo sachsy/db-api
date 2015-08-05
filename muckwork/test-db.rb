@@ -39,16 +39,16 @@ class TestMuckworkDB < Minitest::Test
 		assert_raises PG::RaiseException do
 			DB.exec("UPDATE muckwork.projects SET started_at=NOW() WHERE id=5")
 		end
-		assert_raises PG::CheckViolation do
-			DB.exec("UPDATE muckwork.projects SET created_at=NOW() WHERE id=1")
-		end
-		assert_raises PG::CheckViolation do
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.projects SET quoted_at=NULL WHERE id=1")
 			DB.exec("UPDATE muckwork.projects SET quoted_at=NOW() WHERE id=1")
 		end
-		assert_raises PG::CheckViolation do
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.projects SET approved_at=NULL WHERE id=1")
 			DB.exec("UPDATE muckwork.projects SET approved_at=NOW() WHERE id=1")
 		end
-		assert_raises PG::CheckViolation do
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.projects SET started_at=NULL WHERE id=1")
 			DB.exec("UPDATE muckwork.projects SET started_at=NOW() WHERE id=1")
 		end
 	end
@@ -76,13 +76,12 @@ class TestMuckworkDB < Minitest::Test
 		assert_raises PG::RaiseException do
 			DB.exec("UPDATE muckwork.tasks SET finished_at=NOW() WHERE id=8")
 		end
-		assert_raises PG::CheckViolation do
-			DB.exec("UPDATE muckwork.tasks SET created_at=NOW() WHERE id=1")
-		end
-		assert_raises PG::CheckViolation do
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.tasks SET claimed_at=NULL WHERE id=1")
 			DB.exec("UPDATE muckwork.tasks SET claimed_at=NOW() WHERE id=1")
 		end
-		assert_raises PG::CheckViolation do
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.tasks SET started_at=NULL WHERE id=1")
 			DB.exec("UPDATE muckwork.tasks SET started_at=NOW() WHERE id=1")
 		end
 	end
@@ -112,6 +111,50 @@ class TestMuckworkDB < Minitest::Test
 		end
 		DB.exec("UPDATE muckwork.tasks SET worker_id=1, claimed_at=NOW() WHERE id=9")
 		DB.exec("UPDATE muckwork.tasks SET worker_id=NULL, claimed_at=NULL WHERE id=9")
+	end
+
+	def test_dates_cant_change
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.projects SET finished_at=NOW() WHERE id=1")
+		end
+		DB.exec("UPDATE muckwork.projects SET finished_at=NULL WHERE id=1")
+		DB.exec("UPDATE muckwork.projects SET finished_at=NOW() WHERE id=1")
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.projects SET started_at=NOW() WHERE id=2")
+		end
+		DB.exec("UPDATE muckwork.projects SET started_at=NULL WHERE id=2")
+		DB.exec("UPDATE muckwork.projects SET started_at=NOW() WHERE id=2")
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.projects SET approved_at=NOW() WHERE id=3")
+		end
+		DB.exec("UPDATE muckwork.projects SET approved_at=NULL WHERE id=3")
+		DB.exec("UPDATE muckwork.projects SET approved_at=NOW() WHERE id=3")
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.projects SET quoted_at=NOW() WHERE id=4")
+		end
+		DB.exec("UPDATE muckwork.projects SET quoted_at=NULL WHERE id=4")
+		DB.exec("UPDATE muckwork.projects SET quoted_at=NOW() WHERE id=4")
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.projects SET created_at=NOW() WHERE id=5")
+		end
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.tasks SET finished_at=NOW() WHERE id=4")
+		end
+		DB.exec("UPDATE muckwork.tasks SET finished_at=NULL WHERE id=4")
+		DB.exec("UPDATE muckwork.tasks SET finished_at=NOW() WHERE id=4")
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.tasks SET started_at=NOW() WHERE id=5")
+		end
+		DB.exec("UPDATE muckwork.tasks SET started_at=NULL WHERE id=5")
+		DB.exec("UPDATE muckwork.tasks SET started_at=NOW() WHERE id=5")
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.tasks SET claimed_at=NOW() WHERE id=6")
+		end
+		DB.exec("UPDATE muckwork.tasks SET claimed_at=NULL, worker_id=NULL WHERE id=6")
+		DB.exec("UPDATE muckwork.tasks SET claimed_at=NOW(), worker_id=2 WHERE id=6")
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.tasks SET created_at=NOW() WHERE id=9")
+		end
 	end
 end
 

@@ -123,7 +123,6 @@ COMMIT;
 
 -- TODO: can't delete started projects or tasks
 -- TODO: can't update description of started project or task
--- TODO: can't update existing timestamps
 
 CREATE FUNCTION project_status() RETURNS TRIGGER AS $$
 BEGIN
@@ -161,6 +160,109 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER project_dates_in_order BEFORE UPDATE OF
 	quoted_at, approved_at, started_at, finished_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.project_dates_in_order();
+
+
+-- can't update existing timestamps
+-- not sure what's better: one trigger for all dates, or one trigger per field.
+CREATE FUNCTION dates_cant_change_pc() RETURNS TRIGGER AS $$
+BEGIN
+	IF (NEW.created_at IS NOT NULL AND OLD.created_at IS NOT NULL)
+		THEN RAISE 'dates_cant_change';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER dates_cant_change_pc BEFORE UPDATE OF created_at ON muckwork.projects
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pc();
+
+CREATE FUNCTION dates_cant_change_pq() RETURNS TRIGGER AS $$
+BEGIN
+	IF (NEW.quoted_at IS NOT NULL AND OLD.quoted_at IS NOT NULL)
+		THEN RAISE 'dates_cant_change';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER dates_cant_change_pq BEFORE UPDATE OF quoted_at ON muckwork.projects
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pq();
+
+CREATE FUNCTION dates_cant_change_pa() RETURNS TRIGGER AS $$
+BEGIN
+	IF (NEW.approved_at IS NOT NULL AND OLD.approved_at IS NOT NULL)
+		THEN RAISE 'dates_cant_change';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER dates_cant_change_pa BEFORE UPDATE OF approved_at ON muckwork.projects
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pa();
+
+CREATE FUNCTION dates_cant_change_ps() RETURNS TRIGGER AS $$
+BEGIN
+	IF (NEW.started_at IS NOT NULL AND OLD.started_at IS NOT NULL)
+		THEN RAISE 'dates_cant_change';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER dates_cant_change_ps BEFORE UPDATE OF started_at ON muckwork.projects
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_ps();
+
+CREATE FUNCTION dates_cant_change_pf() RETURNS TRIGGER AS $$
+BEGIN
+	IF (NEW.finished_at IS NOT NULL AND OLD.finished_at IS NOT NULL)
+		THEN RAISE 'dates_cant_change';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER dates_cant_change_pf BEFORE UPDATE OF finished_at ON muckwork.projects
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pf();
+
+CREATE FUNCTION dates_cant_change_tc() RETURNS TRIGGER AS $$
+BEGIN
+	IF (NEW.created_at IS NOT NULL AND OLD.created_at IS NOT NULL)
+		THEN RAISE 'dates_cant_change';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER dates_cant_change_tc BEFORE UPDATE OF created_at ON muckwork.tasks
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_tc();
+
+CREATE FUNCTION dates_cant_change_tl() RETURNS TRIGGER AS $$
+BEGIN
+	IF (NEW.claimed_at IS NOT NULL AND OLD.claimed_at IS NOT NULL)
+		THEN RAISE 'dates_cant_change';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER dates_cant_change_tl BEFORE UPDATE OF claimed_at ON muckwork.tasks
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_tl();
+
+CREATE FUNCTION dates_cant_change_ts() RETURNS TRIGGER AS $$
+BEGIN
+	IF (NEW.started_at IS NOT NULL AND OLD.started_at IS NOT NULL)
+		THEN RAISE 'dates_cant_change';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER dates_cant_change_ts BEFORE UPDATE OF started_at ON muckwork.tasks
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_ts();
+
+CREATE FUNCTION dates_cant_change_tf() RETURNS TRIGGER AS $$
+BEGIN
+	IF (NEW.finished_at IS NOT NULL AND OLD.finished_at IS NOT NULL)
+		THEN RAISE 'dates_cant_change';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER dates_cant_change_tf BEFORE UPDATE OF finished_at ON muckwork.tasks
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_tf();
+
 
 
 CREATE FUNCTION task_status() RETURNS TRIGGER AS $$
