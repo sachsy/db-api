@@ -249,3 +249,8 @@ CREATE TRIGGER no_update_started_task BEFORE UPDATE OF
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_update_started_task();
 
 
+-- TODO: first task started marks project as started (& reverse if NULL)
+-- TODO: last task finished marks project as finished (& reverse if NULL)
+-- TODO: task finished creates worker_charge
+-- TODO: project finished creates charge
+
