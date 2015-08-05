@@ -189,5 +189,20 @@ class TestMuckworkDB < Minitest::Test
 		end
 		DB.exec("UPDATE muckwork.tasks SET title='yeah', description='right' WHERE id=6")
 	end
+
+	def test_task_starts_unstarts_project
+		res = DB.exec("SELECT started_at, status FROM muckwork.projects WHERE id=3")
+		assert_equal nil, res[0]['started_at']
+		assert_equal 'approved', res[0]['status']
+		DB.exec("UPDATE muckwork.tasks SET started_at=NOW() WHERE id=7")
+		res = DB.exec("SELECT started_at, status FROM muckwork.projects WHERE id=3")
+		assert_equal Time.now.to_s[0,7], res[0]['started_at'][0,7]
+		assert_equal 'started', res[0]['status']
+		DB.exec("UPDATE muckwork.tasks SET started_at=NULL WHERE id=7")
+		res = DB.exec("SELECT started_at, status FROM muckwork.projects WHERE id=3")
+		assert_equal nil, res[0]['started_at']
+		assert_equal 'approved', res[0]['status']
+	end
+
 end
 

@@ -136,7 +136,7 @@ INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, create
 INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, started_at, finished_at, status, claimed_at) VALUES (4, 2, 2, 1, '1st task', '3 hours', '2015-07-08 00:34:56+12', '2015-07-09 00:34:56+12', '2015-07-09 03:34:56+12', 'finished', '2015-07-09 00:30:56+12');
 INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, started_at, finished_at, status, claimed_at) VALUES (5, 2, 2, 2, '2nd task', 'still working', '2015-07-08 00:34:56+12', '2015-07-09 04:00:00+12', NULL, 'started', '2015-07-09 00:30:56+12');
 INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, started_at, finished_at, status, claimed_at) VALUES (6, 2, 2, 3, '3rd task', 'not yet started', '2015-07-08 00:34:56+12', NULL, NULL, 'approved', '2015-07-09 00:30:56+12');
-INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, started_at, finished_at, status, claimed_at) VALUES (7, 3, 1, 1, 'task one', '1 hour finished', '2015-07-10 00:34:56+12', '2015-07-11 12:00:00+12', '2015-07-11 13:00:00+12', 'finished', '2015-07-10 00:39:00+12');
+INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, started_at, finished_at, status, claimed_at) VALUES (7, 3, 1, 1, 'task one', 'claimed, not started', '2015-07-10 00:34:56+12',NULL , NULL, 'approved', '2015-07-10 00:39:00+12');
 INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, started_at, finished_at, status, claimed_at) VALUES (8, 3, 2, 2, 'task two', 'claimed, not started', '2015-07-10 00:34:56+12', NULL, NULL, 'approved', '2015-07-10 04:39:00+12');
 
 
