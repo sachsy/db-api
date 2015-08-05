@@ -223,5 +223,13 @@ class TestMuckworkDB < Minitest::Test
 		assert_equal 'started', res[0]['status']
 	end
 
+	def test_seconds_per_task
+		res = DB.exec("SELECT seconds FROM seconds_per_task(2)")
+		assert_equal '60', res[0]['seconds']
+		res = DB.exec("SELECT seconds FROM seconds_per_task(3)")
+		assert_equal '10680', res[0]['seconds']
+		res = DB.exec("SELECT seconds FROM seconds_per_task(9)")
+		assert_equal nil, res[0]['seconds']
+	end
 end
 

@@ -370,15 +370,9 @@ CREATE TRIGGER no_update_started_task BEFORE UPDATE OF
 
 -- first task started marks project as started (see reverse below)
 CREATE FUNCTION task_starts_project() RETURNS TRIGGER AS $$
-DECLARE
-	pi integer;
 BEGIN
-	SELECT p.id INTO pi FROM muckwork.tasks t, muckwork.projects p
-		WHERE t.project_id=p.id AND t.id=NEW.id
-		AND p.started_at IS NULL;
-	IF pi IS NOT NULL THEN
-		UPDATE muckwork.projects SET started_at=NOW() WHERE id=pi;
-	END IF;
+	UPDATE muckwork.projects SET started_at=NOW()
+		WHERE id=OLD.project_id AND started_at IS NULL;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -414,7 +408,8 @@ BEGIN
 		WHERE project_id=OLD.project_id
 		AND finished_at IS NULL LIMIT 1;
 	IF pi IS NULL THEN
-		UPDATE muckwork.projects SET finished_at=NOW() WHERE id=OLD.project_id;
+		UPDATE muckwork.projects SET finished_at=NOW()
+			WHERE id=OLD.project_id AND finished_at IS NULL;
 	END IF;
 	RETURN NEW;
 END;
@@ -436,12 +431,47 @@ CREATE TRIGGER task_unfinishes_project AFTER UPDATE OF finished_at ON muckwork.t
 	EXECUTE PROCEDURE muckwork.task_unfinishes_project();
 
 
--- TODO: task finished creates worker_charge
+-- task finished creates worker_charge  (see reverse below)
+CREATE FUNCTION task_creates_charge() RETURNS TRIGGER AS $$
+DECLARE
+	pi integer;
+BEGIN
+	SELECT project_id INTO pi FROM muckwork.tasks
+		WHERE project_id=OLD.project_id
+		AND finished_at IS NULL LIMIT 1;
+	IF pi IS NULL THEN
+		UPDATE muckwork.projects SET finished_at=NOW() WHERE id=OLD.project_id;
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER task_creates_charge AFTER UPDATE OF finished_at ON muckwork.tasks
+	FOR EACH ROW WHEN (NEW.finished_at IS NOT NULL)
+	EXECUTE PROCEDURE muckwork.task_creates_charge();
+
+-- task UN-finished deletes associated charge
+CREATE FUNCTION task_uncreates_charge() RETURNS TRIGGER AS $$
+BEGIN
+	UPDATE muckwork.projects SET finished_at=NULL
+		WHERE id=OLD.project_id AND finished_at IS NOT NULL;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER task_uncreates_charge AFTER UPDATE OF finished_at ON muckwork.tasks
+	FOR EACH ROW WHEN (NEW.finished_at IS NULL)
+	EXECUTE PROCEDURE muckwork.task_uncreates_charge();
+
 -- TODO: project finished creates charge
 
 --------------------------------------
 --------------------------- FUNCTIONS:
 --------------------------------------
+
+CREATE FUNCTION seconds_per_task(integer, OUT seconds integer) AS $$
+BEGIN
+	seconds := (EXTRACT(EPOCH FROM finished_at) - EXTRACT(EPOCH FROM started_at)) FROM muckwork.tasks WHERE id = $1;
+END;
+$$ LANGUAGE plpgsql;
 
 -- TODO: create worker_charge from task:
 -- seconds per task (id)

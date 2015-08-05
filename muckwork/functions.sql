@@ -2,13 +2,13 @@
 --------------------------- FUNCTIONS:
 --------------------------------------
 
--- TODO: create worker_charge from task:
--- seconds per task (id)
--- seconds per project (id)
-
--- check finality of project
--- each task finished?
--- update project finished_at
+-- PARAMS: tasks.id
+CREATE FUNCTION seconds_per_task(integer, OUT seconds integer) AS $$
+BEGIN
+	seconds := (EXTRACT(EPOCH FROM finished_at) - EXTRACT(EPOCH FROM started_at))
+		FROM muckwork.tasks WHERE id = $1;
+END;
+$$ LANGUAGE plpgsql;
 
 -- next tasks.sortid for project
 -- tasks.sortid resort
