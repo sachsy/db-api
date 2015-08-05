@@ -251,15 +251,9 @@ CREATE TRIGGER no_update_started_task BEFORE UPDATE OF
 
 -- first task started marks project as started (see reverse below)
 CREATE FUNCTION task_starts_project() RETURNS TRIGGER AS $$
-DECLARE
-	pi integer;
 BEGIN
-	SELECT p.id INTO pi FROM muckwork.tasks t, muckwork.projects p
-		WHERE t.project_id=p.id AND t.id=NEW.id
-		AND p.started_at IS NULL;
-	IF pi IS NOT NULL THEN
-		UPDATE muckwork.projects SET started_at=NOW() WHERE id=pi;
-	END IF;
+	UPDATE muckwork.projects SET started_at=NOW()
+		WHERE id=OLD.project_id AND started_at IS NULL;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
