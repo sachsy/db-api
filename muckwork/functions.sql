@@ -9,6 +9,7 @@ BEGIN
 		FROM muckwork.tasks WHERE id = $1;
 END;
 $$ LANGUAGE plpgsql;
+-- FYI: SELECT SUM(seconds_per_task(id)) FROM muckwork.tasks WHERE project_id=1;
 
 -- next tasks.sortid for project
 -- tasks.sortid resort
