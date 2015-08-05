@@ -2,6 +2,11 @@
 ------------------ TRIGGERS:
 ----------------------------
 
+-- TODO: can't delete started projects or tasks
+-- TODO: can't update description of started project or task
+-- TODO: can't update existing timestamps
+-- TODO: tasks.claimed_at and tasks.worker_id must match (both|neither)
+
 CREATE FUNCTION project_status() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.quoted_at IS NULL THEN
@@ -42,6 +47,7 @@ CREATE TRIGGER project_dates_in_order BEFORE UPDATE OF
 
 CREATE FUNCTION task_status() RETURNS TRIGGER AS $$
 BEGIN
+	-- TODO: approved?
 	IF NEW.started_at IS NULL THEN
 		NEW.status := 'created';
 	ELSIF NEW.finished_at IS NULL THEN
@@ -62,6 +68,7 @@ CREATE TRIGGER task_status BEFORE UPDATE OF
 CREATE FUNCTION task_dates_in_order() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.finished_at IS NOT NULL AND NEW.started_at IS NULL)
+		OR (NEW.started_at IS NOT NULL AND NEW.claimed_at IS NULL)
 		THEN RAISE 'dates_out_of_order';
 	END IF;
 	RETURN NEW;

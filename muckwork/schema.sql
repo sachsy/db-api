@@ -20,12 +20,11 @@ CREATE TABLE clients (
 CREATE TABLE workers (
 	id serial primary key,
 	person_id integer not null unique REFERENCES peeps.people(id),
-	rating integer not null default 50,
 	currency char(3) not null DEFAULT 'USD' REFERENCES peeps.currencies(code),
 	millicents_per_second integer CHECK (millicents_per_second >= 0)
 );
 
-CREATE TYPE muckwork.status AS ENUM('created', 'quoted', 'approved', 'started', 'finished');
+CREATE TYPE muckwork.status AS ENUM('created', 'quoted', 'approved', 'refused', 'started', 'finished');
 
 CREATE TABLE projects (
 	id serial primary key,
@@ -38,7 +37,6 @@ CREATE TABLE projects (
 	started_at timestamp(0) with time zone CHECK (started_at >= approved_at),
 	finished_at timestamp(0) with time zone CHECK (finished_at >= started_at),
 	status status not null default 'created',
-	seconds integer CHECK (seconds > 0),
 	quoted_currency char(3) REFERENCES peeps.currencies(code),
 	quoted_cents integer CHECK (quoted_cents >= 0),
 	quoted_ratetype varchar(4) CHECK (quoted_ratetype = 'fix' OR quoted_ratetype = 'time'),
@@ -56,13 +54,27 @@ CREATE TABLE tasks (
 	title text,
 	description text,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
-	started_at timestamp(0) with time zone CHECK (started_at >= created_at),
+	claimed_at timestamp(0) with time zone CHECK (claimed_at >= created_at),
+	started_at timestamp(0) with time zone CHECK (started_at >= claimed_at),
 	finished_at timestamp(0) with time zone CHECK (finished_at >= started_at),
 	status muckwork.status not null default 'created'
 );
 CREATE INDEX tpi ON tasks(project_id);
 CREATE INDEX twi ON tasks(worker_id);
 CREATE INDEX tst ON tasks(status);
+
+-- TODO: notes
+-- CREATE TABLE notes (
+--	id serial primary key,
+--	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
+--	project_id integer REFERENCES projects(id),
+--	task_id integer REFERENCES tasks(id),
+--	manager_id integer REFERENCES managers(id),
+--	client_id integer REFERENCES clients(id),
+--	worker_id integer REFERENCES workers(id),
+--	note text
+--);
+--CREATE INDEX notpi ON notes(project_id);
 
 CREATE TABLE charges (
 	id serial primary key,
@@ -109,6 +121,11 @@ COMMIT;
 ------------------ TRIGGERS:
 ----------------------------
 
+-- TODO: can't delete started projects or tasks
+-- TODO: can't update description of started project or task
+-- TODO: can't update existing timestamps
+-- TODO: tasks.claimed_at and tasks.worker_id must match (both|neither)
+
 CREATE FUNCTION project_status() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.quoted_at IS NULL THEN
@@ -149,6 +166,7 @@ CREATE TRIGGER project_dates_in_order BEFORE UPDATE OF
 
 CREATE FUNCTION task_status() RETURNS TRIGGER AS $$
 BEGIN
+	-- TODO: approved?
 	IF NEW.started_at IS NULL THEN
 		NEW.status := 'created';
 	ELSIF NEW.finished_at IS NULL THEN
@@ -169,6 +187,7 @@ CREATE TRIGGER task_status BEFORE UPDATE OF
 CREATE FUNCTION task_dates_in_order() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.finished_at IS NOT NULL AND NEW.started_at IS NULL)
+		OR (NEW.started_at IS NOT NULL AND NEW.claimed_at IS NULL)
 		THEN RAISE 'dates_out_of_order';
 	END IF;
 	RETURN NEW;
@@ -192,6 +211,20 @@ CREATE TRIGGER no_cents_without_currency BEFORE UPDATE OF
 	quoted_cents, final_cents ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_cents_without_currency();
 
+--------------------------------------
+--------------------------- FUNCTIONS:
+--------------------------------------
+
+-- TODO: create worker_charge from task:
+-- seconds per task (id)
+-- seconds per project (id)
+
+-- check finality of project
+-- each task finished?
+-- update project finished_at
+
+-- next tasks.sortid for project
+-- tasks.sortid resort
 ----------------------------------------
 --------------- VIEWS FOR JSON RESPONSES:
 ----------------------------------------
@@ -199,5 +232,262 @@ CREATE TRIGGER no_cents_without_currency BEFORE UPDATE OF
 ----------------------------------------
 ------------------------- API FUNCTIONS:
 ----------------------------------------
+
+-- PARAMS: (none)
+CREATE OR REPLACE FUNCTION get_clients(
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '[]';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: client_id
+CREATE OR REPLACE FUNCTION get_client(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: person_id
+CREATE OR REPLACE FUNCTION create_client(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: client_id, currency
+CREATE OR REPLACE FUNCTION update_client(integer, text,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: (none)
+CREATE OR REPLACE FUNCTION get_workers(
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '[]';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: worker_id
+CREATE OR REPLACE FUNCTION get_worker(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: person_id
+CREATE OR REPLACE FUNCTION create_worker(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: worker_id, currency, millicents_per_second
+CREATE OR REPLACE FUNCTION update_worker(integer, text, integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS:  (none)
+CREATE OR REPLACE FUNCTION get_projects(
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '[]';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS:  status
+CREATE OR REPLACE FUNCTION get_projects_with_status(text,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '[]';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: project_id
+CREATE OR REPLACE FUNCTION get_project(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: client_id, title, description
+CREATE OR REPLACE FUNCTION create_project(integer, text, text,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: project_id, title, description
+CREATE OR REPLACE FUNCTION update_project(integer, text, text,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: project_id, ratetype, currency, cents
+CREATE OR REPLACE FUNCTION quote_project(integer, text, text, integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	-- set final_currency same as quoted_currency
+	-- set quoted_at
+	-- set tasks to quoted
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: project_id
+CREATE OR REPLACE FUNCTION approve_quote(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	-- set tasks to approved
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: project_id, description
+-- TODO: instead of update description, add notes
+CREATE OR REPLACE FUNCTION refuse_quote(integer, text,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: project_id, title, description, sortid(or NULL)
+CREATE OR REPLACE FUNCTION create_task(integer, text, text, integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	-- get next sortid for project
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: task.id, title, description, sortid(or NULL)
+CREATE OR REPLACE FUNCTION update_task(integer, text, text, integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: task.id, worker_id
+CREATE OR REPLACE FUNCTION claim_task(integer, integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: task.id
+CREATE OR REPLACE FUNCTION unclaim_task(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: task.id
+CREATE OR REPLACE FUNCTION start_task(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	-- TODO: if first task in project, mark project started
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: task.id
+CREATE OR REPLACE FUNCTION finish_task(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	-- TODO: if last task in project, mark project finished
+	mime := 'application/json';
+	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- TODO: complete_task
+--	set finished_at time to now
+--	create worker_charge for task
+--  check finality of project
+--  email customer
+
 
 
