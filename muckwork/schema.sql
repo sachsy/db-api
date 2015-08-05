@@ -124,7 +124,6 @@ COMMIT;
 -- TODO: can't delete started projects or tasks
 -- TODO: can't update description of started project or task
 -- TODO: can't update existing timestamps
--- TODO: tasks.claimed_at and tasks.worker_id must match (both|neither)
 
 CREATE FUNCTION project_status() RETURNS TRIGGER AS $$
 BEGIN
@@ -194,7 +193,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 CREATE TRIGGER task_dates_in_order BEFORE UPDATE OF
-	started_at, finished_at ON muckwork.tasks
+	claimed_at, started_at, finished_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.task_dates_in_order();
 
 
@@ -210,6 +209,22 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER no_cents_without_currency BEFORE UPDATE OF
 	quoted_cents, final_cents ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_cents_without_currency();
+
+
+-- tasks.claimed_at and tasks.worker_id must match (both|neither)
+CREATE FUNCTION tasks_claimed_pair() RETURNS TRIGGER AS $$
+BEGIN
+	IF (NEW.claimed_at IS NOT NULL AND NEW.worker_id IS NULL)
+	OR (NEW.worker_id IS NOT NULL AND NEW.claimed_at IS NULL)
+		THEN RAISE 'tasks_claimed_pair';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER tasks_claimed_pair BEFORE UPDATE OF
+	worker_id, claimed_at ON muckwork.tasks
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.tasks_claimed_pair();
+
 
 --------------------------------------
 --------------------------- FUNCTIONS:
