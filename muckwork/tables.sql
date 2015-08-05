@@ -37,7 +37,6 @@ CREATE TABLE projects (
 	started_at timestamp(0) with time zone CHECK (started_at >= approved_at),
 	finished_at timestamp(0) with time zone CHECK (finished_at >= started_at),
 	status status not null default 'created',
-	seconds integer CHECK (seconds > 0),
 	quoted_currency char(3) REFERENCES peeps.currencies(code),
 	quoted_cents integer CHECK (quoted_cents >= 0),
 	quoted_ratetype varchar(4) CHECK (quoted_ratetype = 'fix' OR quoted_ratetype = 'time'),
