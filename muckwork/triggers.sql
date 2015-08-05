@@ -249,7 +249,7 @@ CREATE TRIGGER no_update_started_task BEFORE UPDATE OF
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_update_started_task();
 
 
--- first task started marks project as started (& reverse if NULL)
+-- first task started marks project as started (see reverse below)
 CREATE FUNCTION task_starts_project() RETURNS TRIGGER AS $$
 DECLARE
 	pi integer;
