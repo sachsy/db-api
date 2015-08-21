@@ -224,12 +224,19 @@ class TestMuckworkDB < Minitest::Test
 	end
 
 	def test_seconds_per_task
-		res = DB.exec("SELECT seconds FROM seconds_per_task(2)")
+		res = DB.exec("SELECT seconds FROM muckwork.seconds_per_task(2)")
 		assert_equal '60', res[0]['seconds']
-		res = DB.exec("SELECT seconds FROM seconds_per_task(3)")
+		res = DB.exec("SELECT seconds FROM muckwork.seconds_per_task(3)")
 		assert_equal '10680', res[0]['seconds']
-		res = DB.exec("SELECT seconds FROM seconds_per_task(9)")
+		res = DB.exec("SELECT seconds FROM muckwork.seconds_per_task(9)")
 		assert_equal nil, res[0]['seconds']
 	end
+
+	def test_approve_project_approves_tasks
+		DB.exec("UPDATE muckwork.projects SET approved_at=NOW() WHERE id=4")
+		res = DB.exec("SELECT 1 FROM muckwork.tasks WHERE project_id=4 AND status='approved'")
+		assert_equal 3, res.ntuples
+	end
+
 end
 
