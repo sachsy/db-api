@@ -343,16 +343,28 @@ CREATE TRIGGER task_uncreates_charge AFTER UPDATE OF finished_at ON muckwork.tas
 	EXECUTE PROCEDURE muckwork.task_uncreates_charge();
 
 -- approving project makes tasks approved
-CREATE FUNCTION approve_project_approves_tasks() RETURNS TRIGGER AS $$
+CREATE FUNCTION approve_project_tasks() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.tasks SET status='approved'
 		WHERE project_id=OLD.id;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-CREATE TRIGGER approve_project_approves_tasks AFTER UPDATE OF approved_at ON muckwork.projects
+CREATE TRIGGER approve_project_tasks AFTER UPDATE OF approved_at ON muckwork.projects
 	FOR EACH ROW WHEN (NEW.approved_at IS NOT NULL)
-	EXECUTE PROCEDURE muckwork.approve_project_approves_tasks();
+	EXECUTE PROCEDURE muckwork.approve_project_tasks();
+
+-- UN-approving project makes tasks UN-approved 
+CREATE FUNCTION unapprove_project_tasks() RETURNS TRIGGER AS $$
+BEGIN
+	UPDATE muckwork.tasks SET status='quoted'
+		WHERE project_id=OLD.id;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER unapprove_project_tasks AFTER UPDATE OF approved_at ON muckwork.projects
+	FOR EACH ROW WHEN (NEW.approved_at IS NULL)
+	EXECUTE PROCEDURE muckwork.unapprove_project_tasks();
 
 
 -- TODO: project finished creates charge

@@ -238,5 +238,17 @@ class TestMuckworkDB < Minitest::Test
 		assert_equal 3, res.ntuples
 	end
 
+	def test_unapprove_project_unapproves_tasks
+		DB.exec("UPDATE muckwork.projects SET approved_at=NULL WHERE id=3")
+		res = DB.exec("SELECT 1 FROM muckwork.tasks WHERE project_id=3 AND status='quoted'")
+		assert_equal 3, res.ntuples
+		# make sure it doesn't change task status for illegal un-approve
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.projects SET approved_at=NULL WHERE id=1")
+		end
+		res = DB.exec("SELECT 1 FROM muckwork.tasks WHERE project_id=1 AND status='finished'")
+		assert_equal 3, res.ntuples
+	end
+
 end
 
