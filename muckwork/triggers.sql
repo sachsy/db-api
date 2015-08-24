@@ -367,5 +367,6 @@ CREATE TRIGGER unapprove_project_tasks AFTER UPDATE OF approved_at ON muckwork.p
 	EXECUTE PROCEDURE muckwork.unapprove_project_tasks();
 
 
+-- TODO: task finished creates worker_charges
 -- TODO: project finished creates charge
 
