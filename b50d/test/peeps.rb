@@ -300,8 +300,10 @@ class TestPeep < Minitest::Test
 
 	def test_add_url
 		person_id = 4
-		url = 'http://something.cc'
-		assert @p.add_url(person_id, url)
+		url = 'http://bank.com'
+		nu = @p.add_url(person_id, url)
+		assert_equal 9, nu[:id]
+		assert_equal url, nu[:url]
 		x = @p.get_person(4)
 		y = x[:urls]
 		assert_equal 1, y.size
@@ -314,7 +316,10 @@ class TestPeep < Minitest::Test
 		person_id = 4
 		key = 'akey'
 		value = 'avalue'
-		assert @p.add_stat(person_id, key, value)
+		nu = @p.add_stat(person_id, key, value)
+		assert_equal 9, nu[:id]
+		assert_equal key, nu[:name]
+		assert_equal value, nu[:value]
 		x = @p.get_person(4)
 		y = x[:stats]
 		assert_equal 1, y.size
