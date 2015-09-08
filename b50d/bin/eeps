@@ -1,23 +1,74 @@
 #!/usr/bin/env ruby
+# USAGE: eeps 2015-12-31-outgoing_email.erb
 require 'erb'
 require 'date'
-require 'net/smtp'
+require 'mandrill'
 require 'b50d/peeps'
 require 'b50d-config.rb'
-p = B50D::Peeps.new(API_KEY, API_PASS)
+
+peeps = B50D::Peeps.new(API_KEY, API_PASS)
+mandrill = Mandrill::API.new(MANDRILL)
 
 infile = ARGV[0] || raise('USAGE: eeps /path/to/one-template.erb')
-template = %{From: Derek Sivers <derek@sivers.org>
-To: <%= @email %>
-Message-ID: <<%= @msgid %>>
-Date: #{Time.now.to_datetime.rfc2822}
-Content-Type: text/plain; charset=UTF-8
-Subject: }
-template << File.read(infile).strip
+outfile = infile.gsub(/erb$/, 'log')
+
+template = File.read(infile).strip
 template << %{\n\n--
 Derek Sivers  derek@sivers.org  http://sivers.org/
 Change your list settings here: https://sivers.org/list/<%= @id %>/<%= @lopass %>
 }
+
+# INPUT: ERB template, person's info from database, optional test email address
+# OUTPUT: hash{ :id, :email, :subject, :body, :msgid}
+def parse_template(template, listitem, test_email = nil)
+	@id, @email, @address, @lopass = listitem
+	@email = test_email if test_email
+	parsedlines = ERB.new(template).result.split("\n\n")
+	parsed = {id: @id, email: @email}
+	parsed[:subject] = parsedlines.shift
+	parsed[:body] = parsedlines.join("\n\n")
+	parsed[:msgid] = ('%s.%d@sivers.org' % [Time.now.strftime('%Y%m%d%H%M%S'), @id])
+	parsed
+end
+
+# INPUT: Mandrill API handler, hash{:email, :subject, :body, :msgid}
+# OUTPUT: array of hashes with '_id', 'email', 'status', 'reject_reason'
+def send_one(mandrill, parsed)
+	msg = {}
+	msg['subject'] = parsed[:subject]
+	msg['from_email'] = 'derek@sivers.org'
+	msg['from_name'] = 'Derek Sivers'
+	msg['to'] = [{'type' => 'to', 'email' => parsed[:email]}]
+	msg['headers'] = {
+		'Message-Id' => parsed[:msgid],
+		'Content-Type' => 'text/plain; charset=utf-8'}
+	msg['text'] = parsed[:body]
+	mandrill.messages.send(msg)
+end
+
+# sends to list (or 5 test emails) and logs response from Mandrill
+# LOG FORMAT:
+# time, person id, email, Mandrill id, status, reason if rejected
+def list_loop(list, template, mandrill, outfile, test_email = nil)
+	list = list[0,5] if test_email
+	File.open(outfile, 'a') do |f|
+		list.each do |listitem|
+			parsed = parse_template(template, listitem, test_email)
+			response = send_one(mandrill, parsed)
+			logline = [
+				Time.now.strftime('%Y-%m-%d %H:%M:%S'),
+				parsed[:id],
+				parsed[:email],
+				response[0]['_id'],
+				response[0]['status'],
+				response[0]['reject_reason']
+			].join("\t")
+			puts logline
+			f.puts logline unless test_email
+		end
+	end
+	puts "\n\nDONE! LOG FILE:\n#{outfile}" unless test_email
+end
 
 print "WHERE "
 k = STDIN.gets.strip
@@ -25,34 +76,14 @@ k = STDIN.gets.strip
 print "WHERE #{k} = "
 v = STDIN.gets.strip
 
-list = p.ieal_where(k, v)
+list = peeps.ieal_where(k, v)
 print "#{list.size} people. Test email: "
 test_email = STDIN.gets.strip
 exit unless /\A\S+@\S+\.\S+\Z/ === test_email
 
-def send(template, list, test_email = nil)
-	msgid_format = Time.now.strftime('%Y%m%d%H%M%S') << '.%d@sivers.org'
-	list = list[0,5] if test_email
-	list.each do |one|
-		@id, @email, @address, @lopass = one
-		if test_email
-			@email = test_email
-		else
-			puts @email
-		end
-		@msgid = msgid_format % @id
-		message = ERB.new(template).result 
-		Net::SMTP.start('localhost') do |smtp|
-			smtp.send_message message, 'derek@sivers.org', @email
-		end
-	end
-end
+list_loop(list, template, mandrill, outfile, test_email)
 
-send(template, list, test_email)
-
-print "Check #{test_email}. To confirm, type # of people, above. "
-if list.size == STDIN.gets.to_i
-	send(template, list)
-end
-puts "DONE"
+print "\nCheck #{test_email}. To confirm, type # of people, above. "
+exit unless list.size == STDIN.gets.to_i
+list_loop(list, template, mandrill, outfile)
 
