@@ -359,7 +359,8 @@ class TestPeepsAPI < Minitest::Test
 
 	def test_add_url
 		qry("add_url(5, 'bank.com')")
-		assert_equal 'http://bank.com', @j[:urls][1][:url]
+		assert_equal 'http://bank.com', @j[:url]
+		assert_equal 9, @j[:id]
 		qry("add_url(5, 'x')")
 		assert_equal 'bad url', @j[:title]
 		qry("add_url(999, 'http://good.com')")
@@ -370,8 +371,9 @@ class TestPeepsAPI < Minitest::Test
 
 	def test_add_stat
 		qry("add_stat(5, ' s OM e ', '  v alu e ')")
-		assert_equal 'some', @j[:stats][1][:name]
-		assert_equal 'v alu e', @j[:stats][1][:value]
+		assert_equal 9, @j[:id]
+		assert_equal 'some', @j[:name]
+		assert_equal 'v alu e', @j[:value]
 		qry("add_stat(5, '  ', 'val')")
 		assert_equal 'stats.key must not be empty', @j[:title]
 		qry("add_stat(5, 'key', ' ')")

@@ -562,9 +562,10 @@ CREATE OR REPLACE FUNCTION add_url(integer, text, OUT mime text, OUT js json) AS
 DECLARE
 m4_ERRVARS
 BEGIN
-	INSERT INTO urls(person_id, url) VALUES ($1, $2);
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.person_view WHERE id = $1) r;
+	WITH nu AS (INSERT INTO urls(person_id, url)
+		VALUES ($1, $2) RETURNING *)
+		SELECT row_to_json(r) INTO js FROM (SELECT * FROM nu) r;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
@@ -576,9 +577,11 @@ CREATE OR REPLACE FUNCTION add_stat(integer, text, text, OUT mime text, OUT js j
 DECLARE
 m4_ERRVARS
 BEGIN
-	INSERT INTO userstats(person_id, statkey, statvalue) VALUES ($1, $2, $3);
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.person_view WHERE id = $1) r;
+	WITH nu AS (INSERT INTO userstats(person_id, statkey, statvalue)
+		VALUES ($1, $2, $3) RETURNING *)
+		SELECT row_to_json(r) INTO js FROM
+			(SELECT id, created_at, statkey AS name, statvalue AS value FROM nu) r;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
