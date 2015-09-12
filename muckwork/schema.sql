@@ -433,15 +433,11 @@ CREATE TRIGGER task_unfinishes_project AFTER UPDATE OF finished_at ON muckwork.t
 
 -- task finished creates worker_charge  (see reverse below)
 CREATE FUNCTION task_creates_charge() RETURNS TRIGGER AS $$
-DECLARE
-	pi integer;
 BEGIN
-	SELECT project_id INTO pi FROM muckwork.tasks
-		WHERE project_id=OLD.project_id
-		AND finished_at IS NULL LIMIT 1;
-	IF pi IS NULL THEN
-		UPDATE muckwork.projects SET finished_at=NOW() WHERE id=OLD.project_id;
-	END IF;
+	WITH x AS (
+		SELECT NEW.id AS task_id, currency, cents
+		FROM muckwork.worker_charge_for_task(NEW.id))
+	INSERT INTO muckwork.worker_charges (task_id, currency, cents) SELECT * FROM x;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -452,8 +448,7 @@ CREATE TRIGGER task_creates_charge AFTER UPDATE OF finished_at ON muckwork.tasks
 -- task UN-finished deletes associated charge
 CREATE FUNCTION task_uncreates_charge() RETURNS TRIGGER AS $$
 BEGIN
-	UPDATE muckwork.projects SET finished_at=NULL
-		WHERE id=OLD.project_id AND finished_at IS NOT NULL;
+	DELETE FROM muckwork.worker_charges WHERE task_id = NEW.id;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -505,11 +500,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- PARAMS: tasks.id
-CREATE FUNCTION worker_cost_for_task(integer, OUT currency char(3), OUT millicents integer) AS $$
+-- NOTE: to convert millicents into cents, rounds UP to the next highest cent
+CREATE FUNCTION worker_charge_for_task(integer, OUT currency char(3), OUT cents integer) AS $$
 BEGIN
 	SELECT w.currency,
-		(w.millicents_per_second * muckwork.seconds_per_task(t.id))
-		INTO currency, millicents
+		CEIL((w.millicents_per_second * muckwork.seconds_per_task(t.id)) / 100)
+		INTO currency, cents
 		FROM muckwork.tasks t
 		LEFT JOIN muckwork.workers w ON t.worker_id=w.id
 		WHERE t.id = $1

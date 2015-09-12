@@ -14,11 +14,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- PARAMS: tasks.id
-CREATE FUNCTION worker_cost_for_task(integer, OUT currency char(3), OUT millicents integer) AS $$
+-- NOTE: to convert millicents into cents, rounds UP to the next highest cent
+CREATE FUNCTION worker_charge_for_task(integer, OUT currency char(3), OUT cents integer) AS $$
 BEGIN
 	SELECT w.currency,
-		(w.millicents_per_second * muckwork.seconds_per_task(t.id))
-		INTO currency, millicents
+		CEIL((w.millicents_per_second * muckwork.seconds_per_task(t.id)) / 100)
+		INTO currency, cents
 		FROM muckwork.tasks t
 		LEFT JOIN muckwork.workers w ON t.worker_id=w.id
 		WHERE t.id = $1

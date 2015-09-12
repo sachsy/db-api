@@ -141,7 +141,7 @@ class TestMuckworkDB < Minitest::Test
 			DB.exec("UPDATE muckwork.tasks SET finished_at=NOW() WHERE id=4")
 		end
 		DB.exec("UPDATE muckwork.tasks SET finished_at=NULL WHERE id=4")
-		DB.exec("UPDATE muckwork.tasks SET finished_at=NOW() WHERE id=4")
+		DB.exec("UPDATE muckwork.tasks SET finished_at='2015-07-09 00:44:56+12' WHERE id=4")
 		assert_raises PG::RaiseException do
 			DB.exec("UPDATE muckwork.tasks SET started_at=NOW() WHERE id=5")
 		end
@@ -208,7 +208,7 @@ class TestMuckworkDB < Minitest::Test
 		res = DB.exec("SELECT finished_at, status FROM muckwork.projects WHERE id=2")
 		assert_equal nil, res[0]['finished_at']
 		assert_equal 'started', res[0]['status']
-		DB.exec("UPDATE muckwork.tasks SET finished_at=NOW() WHERE id=5")
+		DB.exec("UPDATE muckwork.tasks SET finished_at='2015-07-09 05:00:00+12' WHERE id=5")
 		res = DB.exec("SELECT finished_at, status FROM muckwork.projects WHERE id=2")
 		assert_equal nil, res[0]['finished_at']
 		assert_equal 'started', res[0]['status']
@@ -232,17 +232,35 @@ class TestMuckworkDB < Minitest::Test
 		assert_equal nil, res[0]['seconds']
 	end
 
-	def test_worker_cost_for_task
-		res = DB.exec("SELECT * FROM muckwork.worker_cost_for_task(1)")
+	def test_worker_charge_for_task
+		res = DB.exec("SELECT * FROM muckwork.worker_charge_for_task(1)")
 		assert_equal 'USD', res[0]['currency']
-		assert_equal '2520', res[0]['millicents']
-		res = DB.exec("SELECT * FROM muckwork.worker_cost_for_task(4)")
+		assert_equal '25', res[0]['cents']
+		res = DB.exec("SELECT * FROM muckwork.worker_charge_for_task(4)")
 		assert_equal 'THB', res[0]['currency']
-		assert_equal '10800000', res[0]['millicents']
-		res = DB.exec("SELECT * FROM muckwork.worker_cost_for_task(99)")
+		assert_equal '108000', res[0]['cents']
+		res = DB.exec("SELECT * FROM muckwork.worker_charge_for_task(99)")
 		assert_equal 1, res.ntuples # returns result, regardless
 		assert_equal nil, res[0]['currency']
-		assert_equal nil, res[0]['millicents']
+		assert_equal nil, res[0]['cents']
+	end
+
+	def test_task_creates_charge
+		res = DB.exec("SELECT * FROM muckwork.worker_charges WHERE task_id = 5")
+		assert_equal 0, res.ntuples
+		res = DB.exec("UPDATE muckwork.tasks SET finished_at='2015-07-09 04:35:00+12' WHERE id = 5")
+		res = DB.exec("SELECT * FROM muckwork.worker_charges WHERE task_id = 5")
+		assert_equal 'THB', res[0]['currency']
+		assert_equal '21000', res[0]['cents']
+	end
+
+	def tesk_task_uncreates_charge
+		res = DB.exec("SELECT * FROM muckwork.worker_charges WHERE task_id = 4")
+		assert_equal 'THB', res[0]['currency']
+		assert_equal '108000', res[0]['cents']
+		res = DB.exec("UPDATE muckwork.tasks SET finished_at=NULL WHERE id = 4")
+		res = DB.exec("SELECT * FROM muckwork.worker_charges WHERE task_id = 4")
+		assert_equal 0, res.ntuples
 	end
 
 	def test_approve_project_approves_tasks
