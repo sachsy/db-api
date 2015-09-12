@@ -232,6 +232,19 @@ class TestMuckworkDB < Minitest::Test
 		assert_equal nil, res[0]['seconds']
 	end
 
+	def test_worker_cost_for_task
+		res = DB.exec("SELECT * FROM muckwork.worker_cost_for_task(1)")
+		assert_equal 'USD', res[0]['currency']
+		assert_equal '2520', res[0]['millicents']
+		res = DB.exec("SELECT * FROM muckwork.worker_cost_for_task(4)")
+		assert_equal 'THB', res[0]['currency']
+		assert_equal '10800000', res[0]['millicents']
+		res = DB.exec("SELECT * FROM muckwork.worker_cost_for_task(99)")
+		assert_equal 1, res.ntuples # returns result, regardless
+		assert_equal nil, res[0]['currency']
+		assert_equal nil, res[0]['millicents']
+	end
+
 	def test_approve_project_approves_tasks
 		DB.exec("UPDATE muckwork.projects SET approved_at=NOW() WHERE id=4")
 		res = DB.exec("SELECT 1 FROM muckwork.tasks WHERE project_id=4 AND status='approved'")
