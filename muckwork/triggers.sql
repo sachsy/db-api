@@ -285,11 +285,14 @@ CREATE FUNCTION task_finishes_project() RETURNS TRIGGER AS $$
 DECLARE
 	pi integer;
 BEGIN
+	-- any unfinished tasks left for this project?
 	SELECT project_id INTO pi FROM muckwork.tasks
 		WHERE project_id=OLD.project_id
 		AND finished_at IS NULL LIMIT 1;
+	-- ... if not, then mark project as finished_at time of last finished_at task
 	IF pi IS NULL THEN
-		UPDATE muckwork.projects SET finished_at=NOW()
+		UPDATE muckwork.projects SET finished_at =
+			(SELECT MAX(finished_at) FROM tasks WHERE project_id=OLD.project_id)
 			WHERE id=OLD.project_id AND finished_at IS NULL;
 	END IF;
 	RETURN NEW;
@@ -362,6 +365,5 @@ CREATE TRIGGER unapprove_project_tasks AFTER UPDATE OF approved_at ON muckwork.p
 	EXECUTE PROCEDURE muckwork.unapprove_project_tasks();
 
 
--- TODO: task finished creates worker_charges
 -- TODO: project finished creates charge
 
