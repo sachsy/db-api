@@ -293,7 +293,7 @@ class TestMuckworkDB < Minitest::Test
 		assert_equal '3882', res[0]['cents']
 	end
 
-	def test_project_creates_charge
+	def test_project_creates_and_uncreates_charge
 		DB.exec("UPDATE muckwork.tasks SET finished_at = '2015-07-09 05:00:00+12' WHERE id = 5")
 		DB.exec("UPDATE muckwork.tasks SET started_at = '2015-07-09 05:00:00+12' WHERE id = 6")
 		DB.exec("UPDATE muckwork.tasks SET finished_at = '2015-07-09 07:00:00+12' WHERE id = 6")
@@ -304,6 +304,13 @@ class TestMuckworkDB < Minitest::Test
 		assert_equal 1, res.ntuples
 		assert_equal 'GBP', res[0]['currency']
 		assert_equal '3882', res[0]['cents']
+		# now uncreate it
+		DB.exec("UPDATE muckwork.tasks SET finished_at = NULL WHERE id = 6")
+		res = DB.exec("SELECT * FROM muckwork.projects WHERE id = 2")
+		assert_equal nil, res[0]['final_currency']
+		assert_equal nil, res[0]['final_cents']
+		res = DB.exec("SELECT * FROM muckwork.charges WHERE project_id = 2")
+		assert_equal 0, res.ntuples
 	end
 
 end

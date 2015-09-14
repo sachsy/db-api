@@ -484,7 +484,7 @@ CREATE TRIGGER unapprove_project_tasks AFTER UPDATE OF approved_at ON muckwork.p
 
 
 -- project finished creates charge
--- TODO: fixed vs hourly (& hey maybe I should profit?)
+-- SOME DAY: fixed vs hourly (& hey maybe I should profit?)
 CREATE FUNCTION project_creates_charge() RETURNS TRIGGER AS $$
 DECLARE
 	nu_currency char(3);
@@ -503,6 +503,21 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER project_creates_charge AFTER UPDATE OF finished_at ON muckwork.projects
 	FOR EACH ROW WHEN (NEW.finished_at IS NOT NULL)
 	EXECUTE PROCEDURE muckwork.project_creates_charge();
+
+
+-- project UN-finished UN-creates charge
+CREATE FUNCTION project_uncreates_charge() RETURNS TRIGGER AS $$
+BEGIN
+	UPDATE muckwork.projects
+		SET final_currency = NULL, final_cents = NULL
+		WHERE id = NEW.id;
+	DELETE FROM muckwork.charges WHERE project_id = NEW.id;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER project_uncreates_charge AFTER UPDATE OF finished_at ON muckwork.projects
+	FOR EACH ROW WHEN (NEW.finished_at IS NULL)
+	EXECUTE PROCEDURE muckwork.project_uncreates_charge();
 
 
 --------------------------------------
