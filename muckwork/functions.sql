@@ -28,5 +28,34 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- Sum of all worker_charges for tasks in this project, *converted* to project currency
+CREATE FUNCTION final_project_charges(integer, OUT currency char(3), OUT cents integer) AS $$
+DECLARE
+	project_currency char(3);
+	wc muckwork.worker_charges;
+	sum_cents numeric := 0;
+BEGIN
+	-- figure out what currency to quote in
+	SELECT final_currency INTO project_currency FROM muckwork.projects WHERE id = $1;
+	IF project_currency IS NULL THEN
+		SELECT muckwork.clients.currency INTO project_currency FROM muckwork.clients
+			JOIN muckwork.projects ON muckwork.clients.id=muckwork.projects.client_id
+			WHERE muckwork.projects.id = $1;
+	END IF;
+	-- go through charges for this project:
+	FOR wc IN SELECT * FROM muckwork.worker_charges
+		JOIN muckwork.tasks ON muckwork.worker_charges.task_id=muckwork.tasks.id
+		WHERE muckwork.tasks.project_id = $1 LOOP
+		SELECT sum_cents + amount INTO sum_cents
+			FROM peeps.currency_from_to(wc.cents, wc.currency, project_currency);
+	END LOOP;
+	currency := project_currency;
+	-- round up to cent integer
+	cents := CEIL(sum_cents);
+END;
+$$ LANGUAGE plpgsql;
+
+
+
 -- next tasks.sortid for project
 -- tasks.sortid resort

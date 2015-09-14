@@ -281,5 +281,30 @@ class TestMuckworkDB < Minitest::Test
 		assert_equal 3, res.ntuples
 	end
 
+	def test_final_project_charges
+		res = DB.exec("SELECT * FROM muckwork.final_project_charges(1)")
+		assert_equal 'USD', res[0]['currency']
+		assert_equal '4536', res[0]['cents']
+		DB.exec("UPDATE muckwork.tasks SET finished_at = '2015-07-09 05:00:00+12' WHERE id = 5")
+		DB.exec("UPDATE muckwork.tasks SET started_at = '2015-07-09 05:00:00+12' WHERE id = 6")
+		DB.exec("UPDATE muckwork.tasks SET finished_at = '2015-07-09 07:00:00+12' WHERE id = 6")
+		res = DB.exec("SELECT * FROM muckwork.final_project_charges(2)")
+		assert_equal 'GBP', res[0]['currency']
+		assert_equal '3882', res[0]['cents']
+	end
+
+	def test_project_creates_charge
+		DB.exec("UPDATE muckwork.tasks SET finished_at = '2015-07-09 05:00:00+12' WHERE id = 5")
+		DB.exec("UPDATE muckwork.tasks SET started_at = '2015-07-09 05:00:00+12' WHERE id = 6")
+		DB.exec("UPDATE muckwork.tasks SET finished_at = '2015-07-09 07:00:00+12' WHERE id = 6")
+		res = DB.exec("SELECT * FROM muckwork.projects WHERE id = 2")
+		assert_equal 'GBP', res[0]['final_currency']
+		assert_equal '3882', res[0]['final_cents']
+		res = DB.exec("SELECT * FROM muckwork.charges WHERE project_id = 2")
+		assert_equal 1, res.ntuples
+		assert_equal 'GBP', res[0]['currency']
+		assert_equal '3882', res[0]['cents']
+	end
+
 end
 

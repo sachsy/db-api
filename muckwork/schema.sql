@@ -264,7 +264,6 @@ CREATE TRIGGER dates_cant_change_tf BEFORE UPDATE OF finished_at ON muckwork.tas
 
 CREATE FUNCTION task_status() RETURNS TRIGGER AS $$
 BEGIN
-	-- TODO: approved?
 	IF NEW.started_at IS NULL THEN
 		NEW.status := 'created';
 	ELSIF NEW.finished_at IS NULL THEN
@@ -484,7 +483,27 @@ CREATE TRIGGER unapprove_project_tasks AFTER UPDATE OF approved_at ON muckwork.p
 	EXECUTE PROCEDURE muckwork.unapprove_project_tasks();
 
 
--- TODO: project finished creates charge
+-- project finished creates charge
+-- TODO: fixed vs hourly (& hey maybe I should profit?)
+CREATE FUNCTION project_creates_charge() RETURNS TRIGGER AS $$
+DECLARE
+	nu_currency char(3);
+	nu_cents integer;
+BEGIN
+	SELECT * INTO nu_currency, nu_cents
+		FROM muckwork.final_project_charges(NEW.id);
+	UPDATE muckwork.projects
+		SET final_currency = nu_currency, final_cents = nu_cents
+		WHERE id = NEW.id;
+	INSERT INTO muckwork.charges (project_id, currency, cents)
+		VALUES (NEW.id, nu_currency, nu_cents);
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER project_creates_charge AFTER UPDATE OF finished_at ON muckwork.projects
+	FOR EACH ROW WHEN (NEW.finished_at IS NOT NULL)
+	EXECUTE PROCEDURE muckwork.project_creates_charge();
+
 
 --------------------------------------
 --------------------------- FUNCTIONS:
@@ -514,6 +533,35 @@ BEGIN
 		AND t.finished_at IS NOT NULL;
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- Sum of all worker_charges for tasks in this project, *converted* to project currency
+CREATE FUNCTION final_project_charges(integer, OUT currency char(3), OUT cents integer) AS $$
+DECLARE
+	project_currency char(3);
+	wc muckwork.worker_charges;
+	sum_cents numeric := 0;
+BEGIN
+	-- figure out what currency to quote in
+	SELECT final_currency INTO project_currency FROM muckwork.projects WHERE id = $1;
+	IF project_currency IS NULL THEN
+		SELECT muckwork.clients.currency INTO project_currency FROM muckwork.clients
+			JOIN muckwork.projects ON muckwork.clients.id=muckwork.projects.client_id
+			WHERE muckwork.projects.id = $1;
+	END IF;
+	-- go through charges for this project:
+	FOR wc IN SELECT * FROM muckwork.worker_charges
+		JOIN muckwork.tasks ON muckwork.worker_charges.task_id=muckwork.tasks.id
+		WHERE muckwork.tasks.project_id = $1 LOOP
+		SELECT sum_cents + amount INTO sum_cents
+			FROM peeps.currency_from_to(wc.cents, wc.currency, project_currency);
+	END LOOP;
+	currency := project_currency;
+	-- round up to cent integer
+	cents := CEIL(sum_cents);
+END;
+$$ LANGUAGE plpgsql;
+
 
 
 -- next tasks.sortid for project
