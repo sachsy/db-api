@@ -419,7 +419,7 @@ class TestPeeps < Minitest::Test
 		assert_equal '2', res[0]['id']
 	end
 
-	def test_from_to
+	def test_currency_from_to
 		res = DB.exec("SELECT * FROM currency_from_to(1000, 'USD', 'EUR')")
 		assert (881..882).cover? res[0]['amount'].to_f 
 		res = DB.exec("SELECT * FROM currency_from_to(1000, 'EUR', 'USD')")
