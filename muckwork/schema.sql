@@ -594,8 +594,9 @@ CREATE OR REPLACE FUNCTION get_clients(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	-- SELECT c.*, p.name, p.email FROM muckwork.clients c, peeps.people p WHERE c.person_id=p.id ORDER BY id DESC
-	js := '[]';
+	js := json_agg(r) FROM (SELECT c.*, p.name, p.email
+		FROM muckwork.clients c, peeps.people p
+		WHERE c.person_id=p.id ORDER BY id DESC) r;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -821,7 +822,6 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION start_task(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
-	-- TODO: if first task in project, mark project started
 	mime := 'application/json';
 	js := '{}';
 END;
@@ -833,7 +833,6 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION finish_task(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
-	-- TODO: if last task in project, mark project finished
 	mime := 'application/json';
 	js := '{}';
 END;
@@ -841,9 +840,6 @@ $$ LANGUAGE plpgsql;
 
 
 
--- TODO: complete_task
---	set finished_at time to now
---	create worker_charge for task
 --  check finality of project
 --  email customer
 
