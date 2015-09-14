@@ -16,8 +16,14 @@ CREATE TABLE countries (
 
 CREATE TABLE currencies (
 	code character(3) NOT NULL primary key,
-	name text,
-	rate numeric
+	name text
+);
+
+CREATE TABLE currency_rates (
+	code character(3) NOT NULL REFERENCES currencies(code),
+	day date not null default CURRENT_DATE,
+	rate numeric,
+	PRIMARY KEY (code, day)
 );
 
 -- Big master table for people
@@ -754,6 +760,25 @@ BEGIN
 				WHERE email=clean_email AND hashpass=peeps.crypt($2, hashpass);
 		END IF;
 	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: JSON of currency rates https://openexchangerates.org/documentation
+CREATE OR REPLACE FUNCTION update_currency_rates(jsonb) RETURNS void AS $$
+DECLARE
+	rates jsonb;
+	acurrency currencies;
+	acode text;
+	arate numeric;
+BEGIN
+	rates := jsonb_extract_path($1, 'rates');
+	FOR acurrency IN SELECT * FROM peeps.currencies LOOP
+		acode := acurrency.code;
+		arate := CAST((rates ->> acode) AS numeric);
+		INSERT INTO peeps.currency_rates (code, rate) VALUES (acode, arate);
+	END LOOP;
+	RETURN;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -16,8 +16,14 @@ CREATE TABLE countries (
 
 CREATE TABLE currencies (
 	code character(3) NOT NULL primary key,
-	name text,
-	rate numeric
+	name text
+);
+
+CREATE TABLE currency_rates (
+	code character(3) NOT NULL REFERENCES currencies(code),
+	day date not null default CURRENT_DATE,
+	rate numeric,
+	PRIMARY KEY (code, day)
 );
 
 -- Big master table for people

@@ -145,7 +145,6 @@ CREATE TRIGGER dates_cant_change_tf BEFORE UPDATE OF finished_at ON muckwork.tas
 
 CREATE FUNCTION task_status() RETURNS TRIGGER AS $$
 BEGIN
-	-- TODO: approved?
 	IF NEW.started_at IS NULL THEN
 		NEW.status := 'created';
 	ELSIF NEW.finished_at IS NULL THEN

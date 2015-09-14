@@ -533,3 +533,22 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- PARAMS: JSON of currency rates https://openexchangerates.org/documentation
+CREATE OR REPLACE FUNCTION update_currency_rates(jsonb) RETURNS void AS $$
+DECLARE
+	rates jsonb;
+	acurrency currencies;
+	acode text;
+	arate numeric;
+BEGIN
+	rates := jsonb_extract_path($1, 'rates');
+	FOR acurrency IN SELECT * FROM peeps.currencies LOOP
+		acode := acurrency.code;
+		arate := CAST((rates ->> acode) AS numeric);
+		INSERT INTO peeps.currency_rates (code, rate) VALUES (acode, arate);
+	END LOOP;
+	RETURN;
+END;
+$$ LANGUAGE plpgsql;
+

@@ -12,303 +12,273 @@ SET client_min_messages = warning;
 SET search_path = peeps, pg_catalog;
 
 --
--- Data for Name: people; Type: TABLE DATA; Schema: peeps; Owner: d50b
+-- Data for Name: countries; Type: TABLE DATA; Schema: peeps; Owner: d50b
 --
--- From http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
--- Please let me know if anything wrong or missing
-INSERT INTO countries(code, name) VALUES 
-('AD', 'Andorra'),
-('AE', 'United Arab Emirates'),
-('AF', 'Afghanistan'),
-('AG', 'Antigua and Barbuda'),
-('AI', 'Anguilla'),
-('AL', 'Albania'),
-('AM', 'Armenia'),
-('AN', 'Netherlands Antilles'),
-('AO', 'Angola'),
-('AR', 'Argentina'),
-('AS', 'American Samoa'),
-('AT', 'Austria'),
-('AU', 'Australia'),
-('AW', 'Aruba'),
-('AX', 'Åland Islands'),
-('AZ', 'Azerbaijan'),
-('BA', 'Bosnia and Herzegovina'),
-('BB', 'Barbados'),
-('BD', 'Bangladesh'),
-('BE', 'Belgium'),
-('BF', 'Burkina Faso'),
-('BG', 'Bulgaria'),
-('BH', 'Bahrain'),
-('BI', 'Burundi'),
-('BJ', 'Benin'),
-('BL', 'Saint Barthélemy'),
-('BM', 'Bermuda'),
-('BN', 'Brunei Darussalam'),
-('BO', 'Bolivia'),
-('BR', 'Brazil'),
-('BS', 'Bahamas'),
-('BT', 'Bhutan'),
-('BW', 'Botswana'),
-('BY', 'Belarus'),
-('BZ', 'Belize'),
-('CA', 'Canada'),
-('CC', 'Cocos Islands'),
-('CD', 'Congo, Democratic Republic'),
-('CF', 'Central African Republic'),
-('CG', 'Congo'),
-('CH', 'Switzerland'),
-('CI', 'Côte d’Ivoire'),
-('CK', 'Cook Islands'),
-('CL', 'Chile'),
-('CM', 'Cameroon'),
-('CN', 'China'),
-('CO', 'Colombia'),
-('CR', 'Costa Rica'),
-('CU', 'Cuba'),
-('CV', 'Cape Verde'),
-('CW', 'Curaçao'),
-('CX', 'Christmas Island'),
-('CY', 'Cyprus'),
-('CZ', 'Czech Republic'),
-('DE', 'Germany'),
-('DJ', 'Djibouti'),
-('DK', 'Denmark'),
-('DM', 'Dominica'),
-('DO', 'Dominican Republic'),
-('DZ', 'Algeria'),
-('EC', 'Ecuador'),
-('EE', 'Estonia'),
-('EG', 'Egypt'),
-('EH', 'Western Sahara'),
-('ER', 'Eritrea'),
-('ES', 'Spain'),
-('ET', 'Ethiopia'),
-('FI', 'Finland'),
-('FJ', 'Fiji'),
-('FK', 'Falkland Islands'),
-('FM', 'Micronesia'),
-('FO', 'Faroe Islands'),
-('FR', 'France'),
-('GA', 'Gabon'),
-('GB', 'United Kingdom'),
-('GD', 'Grenada'),
-('GE', 'Georgia'),
-('GF', 'French Guiana'),
-('GG', 'Guernsey'),
-('GH', 'Ghana'),
-('GI', 'Gibraltar'),
-('GL', 'Greenland'),
-('GM', 'Gambia'),
-('GN', 'Guinea'),
-('GP', 'Guadeloupe'),
-('GQ', 'Equatorial Guinea'),
-('GR', 'Greece'),
-('GT', 'Guatemala'),
-('GU', 'Guam'),
-('GW', 'Guinea-Bissau'),
-('GY', 'Guyana'),
-('HK', 'Hong Kong'),
-('HN', 'Honduras'),
-('HR', 'Croatia'),
-('HT', 'Haiti'),
-('HU', 'Hungary'),
-('ID', 'Indonesia'),
-('IE', 'Ireland'),
-('IL', 'Israel'),
-('IM', 'Isle of Man'),
-('IN', 'India'),
-('IO', 'British Indian Ocean'),
-('IQ', 'Iraq'),
-('IR', 'Iran'),
-('IS', 'Iceland'),
-('IT', 'Italy'),
-('JE', 'Jersey'),
-('JM', 'Jamaica'),
-('JO', 'Jordan'),
-('JP', 'Japan'),
-('KE', 'Kenya'),
-('KG', 'Kyrgyzstan'),
-('KH', 'Cambodia'),
-('KI', 'Kiribati'),
-('KM', 'Comoros'),
-('KN', 'Saint Kitts and Nevis'),
-('KP', 'Korea, North'),
-('KR', 'Korea, South'),
-('KW', 'Kuwait'),
-('KY', 'Cayman Islands'),
-('KZ', 'Kazakhstan'),
-('LA', 'Laos'),
-('LB', 'Lebanon'),
-('LC', 'Saint Lucia'),
-('LI', 'Liechtenstein'),
-('LK', 'Sri Lanka'),
-('LR', 'Liberia'),
-('LS', 'Lesotho'),
-('LT', 'Lithuania'),
-('LU', 'Luxembourg'),
-('LV', 'Latvia'),
-('LY', 'Libyan Arab Jamahiriya'),
-('MA', 'Morocco'),
-('MC', 'Monaco'),
-('MD', 'Moldova, Republic of'),
-('ME', 'Montenegro'),
-('MF', 'Saint Martin (French)'),
-('MG', 'Madagascar'),
-('MH', 'Marshall Islands'),
-('MK', 'Macedonia'),
-('ML', 'Mali'),
-('MM', 'Myanmar'),
-('MN', 'Mongolia'),
-('MO', 'Macao'),
-('MP', 'Northern Mariana Islands'),
-('MQ', 'Martinique'),
-('MR', 'Mauritania'),
-('MS', 'Montserrat'),
-('MT', 'Malta'),
-('MU', 'Mauritius'),
-('MV', 'Maldives'),
-('MW', 'Malawi'),
-('MX', 'Mexico'),
-('MY', 'Malaysia'),
-('MZ', 'Mozambique'),
-('NA', 'Namibia'),
-('NC', 'New Caledonia'),
-('NE', 'Niger'),
-('NF', 'Norfolk Island'),
-('NG', 'Nigeria'),
-('NI', 'Nicaragua'),
-('NL', 'Netherlands'),
-('NO', 'Norway'),
-('NP', 'Nepal'),
-('NR', 'Nauru'),
-('NU', 'Niue'),
-('NZ', 'New Zealand'),
-('OM', 'Oman'),
-('PA', 'Panama'),
-('PE', 'Peru'),
-('PF', 'French Polynesia'),
-('PG', 'Papua New Guinea'),
-('PH', 'Philippines'),
-('PK', 'Pakistan'),
-('PL', 'Poland'),
-('PM', 'Saint Pierre and Miquelon'),
-('PN', 'Pitcairn'),
-('PR', 'Puerto Rico'),
-('PS', 'Palestinian Territory'),
-('PT', 'Portugal'),
-('PW', 'Palau'),
-('PY', 'Paraguay'),
-('QA', 'Qatar'),
-('RE', 'Réunion'),
-('RO', 'Romania'),
-('RS', 'Serbia'),
-('RU', 'Russian Federation'),
-('RW', 'Rwanda'),
-('SA', 'Saudi Arabia'),
-('SB', 'Solomon Islands'),
-('SC', 'Seychelles'),
-('SD', 'Sudan'),
-('SE', 'Sweden'),
-('SG', 'Singapore'),
-('SH', 'Saint Helena'),
-('SI', 'Slovenia'),
-('SJ', 'Svalbard and Jan Mayen'),
-('SK', 'Slovakia'),
-('SL', 'Sierra Leone'),
-('SM', 'San Marino'),
-('SN', 'Senegal'),
-('SO', 'Somalia'),
-('SR', 'Suriname'),
-('SS', 'South Sudan'),
-('ST', 'Sao Tome and Principe'),
-('SV', 'El Salvador'),
-('SX', 'Sint Maarten (Dutch)'),
-('SY', 'Syrian Arab Republic'),
-('SZ', 'Swaziland'),
-('TC', 'Turks and Caicos Islands'),
-('TD', 'Chad'),
-('TG', 'Togo'),
-('TH', 'Thailand'),
-('TJ', 'Tajikistan'),
-('TK', 'Tokelau'),
-('TL', 'Timor-Leste'),
-('TM', 'Turkmenistan'),
-('TN', 'Tunisia'),
-('TO', 'Tonga'),
-('TR', 'Turkey'),
-('TT', 'Trinidad and Tobago'),
-('TV', 'Tuvalu'),
-('TW', 'Taiwan'),
-('TZ', 'Tanzania'),
-('UA', 'Ukraine'),
-('UG', 'Uganda'),
-('US', 'United States'),
-('UY', 'Uruguay'),
-('UZ', 'Uzbekistan'),
-('VC', 'Saint Vincent & Grenadines'),
-('VE', 'Venezuela'),
-('VG', 'Virgin Islands, British'),
-('VI', 'Virgin Islands, U.S.'),
-('VN', 'Vietnam'),
-('VU', 'Vanuatu'),
-('WF', 'Wallis and Futuna'),
-('WS', 'Samoa'),
-('YE', 'Yemen'),
-('YT', 'Mayotte'),
-('ZA', 'South Africa'),
-('ZM', 'Zambia'),
-('ZW', 'Zimbabwe');
-
-INSERT INTO currencies(code, name, rate) VALUES
-('AUD', 'Australian Dollar', 1.5053),
-('BGN', 'Bulgarian Lev', 1.9558),
-('BRL', 'Brazilian Real', 3.2921),
-('BTC', 'Bitcoin', 0.003727865796831314),
-('CAD', 'Canadian Dollar', 1.4164),
-('CHF', 'Swiss Franc', 1.2025),
-('CNY', 'China Yuan Renminbi', 7.5969),
-('CZK', 'Czech Koruna', 27.777),
-('DKK', 'Danish Krone', 7.4396),
-('EUR', 'Euro', 1),
-('GBP', 'Pound Sterling', 0.7865),
-('HKD', 'Hong Kong Dollar', 9.4844),
-('HRK', 'Croatian Kuna', 7.663),
-('HUF', 'Hungary Forint', 316.08),
-('IDR', 'Indonesia Rupiah', 15214.5),
-('ILS', 'Israeli Sheqel', 4.778),
-('INR', 'Indian Rupee', 77.5589),
-('JPY', 'Japan Yen', 147.07),
-('KRW', 'Korea Won', 1347.55),
-('LTL', 'Lithuanian Litas', 3.4528),
-('MXN', 'Mexican Peso', 18.0123),
-('MYR', 'Malaysian Ringgit', 4.2729),
-('NOK', 'Norwegian Krone', 9.1511),
-('NZD', 'New Zealand Dollar', 1.5807),
-('PHP', 'Philippine Peso', 54.596),
-('PLN', 'Polish Zloty', 4.3078),
-('RON', 'New Romanian Leu', 4.4628),
-('RUB', 'Russian Ruble', 66.8863),
-('SEK', 'Swedish Krona', 9.54),
-('SGD', 'Singapore Dollar', 1.616),
-('THB', 'Thai Baht', 40.169),
-('TRY', 'Turkish Lira', 2.841),
-('USD', 'US Dollar', 1.2219),
-('ZAR', 'South African Rand', 14.2498);
-
 
 SET SESSION AUTHORIZATION DEFAULT;
 
+ALTER TABLE countries DISABLE TRIGGER ALL;
+
+INSERT INTO countries (code, name) VALUES ('AD', 'Andorra');
+INSERT INTO countries (code, name) VALUES ('AE', 'United Arab Emirates');
+INSERT INTO countries (code, name) VALUES ('AF', 'Afghanistan');
+INSERT INTO countries (code, name) VALUES ('AG', 'Antigua and Barbuda');
+INSERT INTO countries (code, name) VALUES ('AI', 'Anguilla');
+INSERT INTO countries (code, name) VALUES ('AL', 'Albania');
+INSERT INTO countries (code, name) VALUES ('AM', 'Armenia');
+INSERT INTO countries (code, name) VALUES ('AN', 'Netherlands Antilles');
+INSERT INTO countries (code, name) VALUES ('AO', 'Angola');
+INSERT INTO countries (code, name) VALUES ('AR', 'Argentina');
+INSERT INTO countries (code, name) VALUES ('AS', 'American Samoa');
+INSERT INTO countries (code, name) VALUES ('AT', 'Austria');
+INSERT INTO countries (code, name) VALUES ('AU', 'Australia');
+INSERT INTO countries (code, name) VALUES ('AW', 'Aruba');
+INSERT INTO countries (code, name) VALUES ('AX', 'Åland Islands');
+INSERT INTO countries (code, name) VALUES ('AZ', 'Azerbaijan');
+INSERT INTO countries (code, name) VALUES ('BA', 'Bosnia and Herzegovina');
+INSERT INTO countries (code, name) VALUES ('BB', 'Barbados');
+INSERT INTO countries (code, name) VALUES ('BD', 'Bangladesh');
+INSERT INTO countries (code, name) VALUES ('BE', 'Belgium');
+INSERT INTO countries (code, name) VALUES ('BF', 'Burkina Faso');
+INSERT INTO countries (code, name) VALUES ('BG', 'Bulgaria');
+INSERT INTO countries (code, name) VALUES ('BH', 'Bahrain');
+INSERT INTO countries (code, name) VALUES ('BI', 'Burundi');
+INSERT INTO countries (code, name) VALUES ('BJ', 'Benin');
+INSERT INTO countries (code, name) VALUES ('BL', 'Saint Barthélemy');
+INSERT INTO countries (code, name) VALUES ('BM', 'Bermuda');
+INSERT INTO countries (code, name) VALUES ('BN', 'Brunei Darussalam');
+INSERT INTO countries (code, name) VALUES ('BO', 'Bolivia');
+INSERT INTO countries (code, name) VALUES ('BR', 'Brazil');
+INSERT INTO countries (code, name) VALUES ('BS', 'Bahamas');
+INSERT INTO countries (code, name) VALUES ('BT', 'Bhutan');
+INSERT INTO countries (code, name) VALUES ('BW', 'Botswana');
+INSERT INTO countries (code, name) VALUES ('BY', 'Belarus');
+INSERT INTO countries (code, name) VALUES ('BZ', 'Belize');
+INSERT INTO countries (code, name) VALUES ('CA', 'Canada');
+INSERT INTO countries (code, name) VALUES ('CC', 'Cocos Islands');
+INSERT INTO countries (code, name) VALUES ('CD', 'Congo, Democratic Republic');
+INSERT INTO countries (code, name) VALUES ('CF', 'Central African Republic');
+INSERT INTO countries (code, name) VALUES ('CG', 'Congo');
+INSERT INTO countries (code, name) VALUES ('CH', 'Switzerland');
+INSERT INTO countries (code, name) VALUES ('CI', 'Côte d’Ivoire');
+INSERT INTO countries (code, name) VALUES ('CK', 'Cook Islands');
+INSERT INTO countries (code, name) VALUES ('CL', 'Chile');
+INSERT INTO countries (code, name) VALUES ('CM', 'Cameroon');
+INSERT INTO countries (code, name) VALUES ('CN', 'China');
+INSERT INTO countries (code, name) VALUES ('CO', 'Colombia');
+INSERT INTO countries (code, name) VALUES ('CR', 'Costa Rica');
+INSERT INTO countries (code, name) VALUES ('CU', 'Cuba');
+INSERT INTO countries (code, name) VALUES ('CV', 'Cape Verde');
+INSERT INTO countries (code, name) VALUES ('CW', 'Curaçao');
+INSERT INTO countries (code, name) VALUES ('CX', 'Christmas Island');
+INSERT INTO countries (code, name) VALUES ('CY', 'Cyprus');
+INSERT INTO countries (code, name) VALUES ('CZ', 'Czech Republic');
+INSERT INTO countries (code, name) VALUES ('DE', 'Germany');
+INSERT INTO countries (code, name) VALUES ('DJ', 'Djibouti');
+INSERT INTO countries (code, name) VALUES ('DK', 'Denmark');
+INSERT INTO countries (code, name) VALUES ('DM', 'Dominica');
+INSERT INTO countries (code, name) VALUES ('DO', 'Dominican Republic');
+INSERT INTO countries (code, name) VALUES ('DZ', 'Algeria');
+INSERT INTO countries (code, name) VALUES ('EC', 'Ecuador');
+INSERT INTO countries (code, name) VALUES ('EE', 'Estonia');
+INSERT INTO countries (code, name) VALUES ('EG', 'Egypt');
+INSERT INTO countries (code, name) VALUES ('EH', 'Western Sahara');
+INSERT INTO countries (code, name) VALUES ('ER', 'Eritrea');
+INSERT INTO countries (code, name) VALUES ('ES', 'Spain');
+INSERT INTO countries (code, name) VALUES ('ET', 'Ethiopia');
+INSERT INTO countries (code, name) VALUES ('FI', 'Finland');
+INSERT INTO countries (code, name) VALUES ('FJ', 'Fiji');
+INSERT INTO countries (code, name) VALUES ('FK', 'Falkland Islands');
+INSERT INTO countries (code, name) VALUES ('FM', 'Micronesia');
+INSERT INTO countries (code, name) VALUES ('FO', 'Faroe Islands');
+INSERT INTO countries (code, name) VALUES ('FR', 'France');
+INSERT INTO countries (code, name) VALUES ('GA', 'Gabon');
+INSERT INTO countries (code, name) VALUES ('GB', 'United Kingdom');
+INSERT INTO countries (code, name) VALUES ('GD', 'Grenada');
+INSERT INTO countries (code, name) VALUES ('GE', 'Georgia');
+INSERT INTO countries (code, name) VALUES ('GF', 'French Guiana');
+INSERT INTO countries (code, name) VALUES ('GG', 'Guernsey');
+INSERT INTO countries (code, name) VALUES ('GH', 'Ghana');
+INSERT INTO countries (code, name) VALUES ('GI', 'Gibraltar');
+INSERT INTO countries (code, name) VALUES ('GL', 'Greenland');
+INSERT INTO countries (code, name) VALUES ('GM', 'Gambia');
+INSERT INTO countries (code, name) VALUES ('GN', 'Guinea');
+INSERT INTO countries (code, name) VALUES ('GP', 'Guadeloupe');
+INSERT INTO countries (code, name) VALUES ('GQ', 'Equatorial Guinea');
+INSERT INTO countries (code, name) VALUES ('GR', 'Greece');
+INSERT INTO countries (code, name) VALUES ('GT', 'Guatemala');
+INSERT INTO countries (code, name) VALUES ('GU', 'Guam');
+INSERT INTO countries (code, name) VALUES ('GW', 'Guinea-Bissau');
+INSERT INTO countries (code, name) VALUES ('GY', 'Guyana');
+INSERT INTO countries (code, name) VALUES ('HK', 'Hong Kong');
+INSERT INTO countries (code, name) VALUES ('HN', 'Honduras');
+INSERT INTO countries (code, name) VALUES ('HR', 'Croatia');
+INSERT INTO countries (code, name) VALUES ('HT', 'Haiti');
+INSERT INTO countries (code, name) VALUES ('HU', 'Hungary');
+INSERT INTO countries (code, name) VALUES ('ID', 'Indonesia');
+INSERT INTO countries (code, name) VALUES ('IE', 'Ireland');
+INSERT INTO countries (code, name) VALUES ('IL', 'Israel');
+INSERT INTO countries (code, name) VALUES ('IM', 'Isle of Man');
+INSERT INTO countries (code, name) VALUES ('IN', 'India');
+INSERT INTO countries (code, name) VALUES ('IO', 'British Indian Ocean');
+INSERT INTO countries (code, name) VALUES ('IQ', 'Iraq');
+INSERT INTO countries (code, name) VALUES ('IR', 'Iran');
+INSERT INTO countries (code, name) VALUES ('IS', 'Iceland');
+INSERT INTO countries (code, name) VALUES ('IT', 'Italy');
+INSERT INTO countries (code, name) VALUES ('JE', 'Jersey');
+INSERT INTO countries (code, name) VALUES ('JM', 'Jamaica');
+INSERT INTO countries (code, name) VALUES ('JO', 'Jordan');
+INSERT INTO countries (code, name) VALUES ('JP', 'Japan');
+INSERT INTO countries (code, name) VALUES ('KE', 'Kenya');
+INSERT INTO countries (code, name) VALUES ('KG', 'Kyrgyzstan');
+INSERT INTO countries (code, name) VALUES ('KH', 'Cambodia');
+INSERT INTO countries (code, name) VALUES ('KI', 'Kiribati');
+INSERT INTO countries (code, name) VALUES ('KM', 'Comoros');
+INSERT INTO countries (code, name) VALUES ('KN', 'Saint Kitts and Nevis');
+INSERT INTO countries (code, name) VALUES ('KP', 'Korea, North');
+INSERT INTO countries (code, name) VALUES ('KR', 'Korea, South');
+INSERT INTO countries (code, name) VALUES ('KW', 'Kuwait');
+INSERT INTO countries (code, name) VALUES ('KY', 'Cayman Islands');
+INSERT INTO countries (code, name) VALUES ('KZ', 'Kazakhstan');
+INSERT INTO countries (code, name) VALUES ('LA', 'Laos');
+INSERT INTO countries (code, name) VALUES ('LB', 'Lebanon');
+INSERT INTO countries (code, name) VALUES ('LC', 'Saint Lucia');
+INSERT INTO countries (code, name) VALUES ('LI', 'Liechtenstein');
+INSERT INTO countries (code, name) VALUES ('LK', 'Sri Lanka');
+INSERT INTO countries (code, name) VALUES ('LR', 'Liberia');
+INSERT INTO countries (code, name) VALUES ('LS', 'Lesotho');
+INSERT INTO countries (code, name) VALUES ('LT', 'Lithuania');
+INSERT INTO countries (code, name) VALUES ('LU', 'Luxembourg');
+INSERT INTO countries (code, name) VALUES ('LV', 'Latvia');
+INSERT INTO countries (code, name) VALUES ('LY', 'Libyan Arab Jamahiriya');
+INSERT INTO countries (code, name) VALUES ('MA', 'Morocco');
+INSERT INTO countries (code, name) VALUES ('MC', 'Monaco');
+INSERT INTO countries (code, name) VALUES ('MD', 'Moldova, Republic of');
+INSERT INTO countries (code, name) VALUES ('ME', 'Montenegro');
+INSERT INTO countries (code, name) VALUES ('MF', 'Saint Martin (French)');
+INSERT INTO countries (code, name) VALUES ('MG', 'Madagascar');
+INSERT INTO countries (code, name) VALUES ('MH', 'Marshall Islands');
+INSERT INTO countries (code, name) VALUES ('MK', 'Macedonia');
+INSERT INTO countries (code, name) VALUES ('ML', 'Mali');
+INSERT INTO countries (code, name) VALUES ('MM', 'Myanmar');
+INSERT INTO countries (code, name) VALUES ('MN', 'Mongolia');
+INSERT INTO countries (code, name) VALUES ('MO', 'Macao');
+INSERT INTO countries (code, name) VALUES ('MP', 'Northern Mariana Islands');
+INSERT INTO countries (code, name) VALUES ('MQ', 'Martinique');
+INSERT INTO countries (code, name) VALUES ('MR', 'Mauritania');
+INSERT INTO countries (code, name) VALUES ('MS', 'Montserrat');
+INSERT INTO countries (code, name) VALUES ('MT', 'Malta');
+INSERT INTO countries (code, name) VALUES ('MU', 'Mauritius');
+INSERT INTO countries (code, name) VALUES ('MV', 'Maldives');
+INSERT INTO countries (code, name) VALUES ('MW', 'Malawi');
+INSERT INTO countries (code, name) VALUES ('MX', 'Mexico');
+INSERT INTO countries (code, name) VALUES ('MY', 'Malaysia');
+INSERT INTO countries (code, name) VALUES ('MZ', 'Mozambique');
+INSERT INTO countries (code, name) VALUES ('NA', 'Namibia');
+INSERT INTO countries (code, name) VALUES ('NC', 'New Caledonia');
+INSERT INTO countries (code, name) VALUES ('NE', 'Niger');
+INSERT INTO countries (code, name) VALUES ('NF', 'Norfolk Island');
+INSERT INTO countries (code, name) VALUES ('NG', 'Nigeria');
+INSERT INTO countries (code, name) VALUES ('NI', 'Nicaragua');
+INSERT INTO countries (code, name) VALUES ('NL', 'Netherlands');
+INSERT INTO countries (code, name) VALUES ('NO', 'Norway');
+INSERT INTO countries (code, name) VALUES ('NP', 'Nepal');
+INSERT INTO countries (code, name) VALUES ('NR', 'Nauru');
+INSERT INTO countries (code, name) VALUES ('NU', 'Niue');
+INSERT INTO countries (code, name) VALUES ('NZ', 'New Zealand');
+INSERT INTO countries (code, name) VALUES ('OM', 'Oman');
+INSERT INTO countries (code, name) VALUES ('PA', 'Panama');
+INSERT INTO countries (code, name) VALUES ('PE', 'Peru');
+INSERT INTO countries (code, name) VALUES ('PF', 'French Polynesia');
+INSERT INTO countries (code, name) VALUES ('PG', 'Papua New Guinea');
+INSERT INTO countries (code, name) VALUES ('PH', 'Philippines');
+INSERT INTO countries (code, name) VALUES ('PK', 'Pakistan');
+INSERT INTO countries (code, name) VALUES ('PL', 'Poland');
+INSERT INTO countries (code, name) VALUES ('PM', 'Saint Pierre and Miquelon');
+INSERT INTO countries (code, name) VALUES ('PN', 'Pitcairn');
+INSERT INTO countries (code, name) VALUES ('PR', 'Puerto Rico');
+INSERT INTO countries (code, name) VALUES ('PS', 'Palestinian Territory');
+INSERT INTO countries (code, name) VALUES ('PT', 'Portugal');
+INSERT INTO countries (code, name) VALUES ('PW', 'Palau');
+INSERT INTO countries (code, name) VALUES ('PY', 'Paraguay');
+INSERT INTO countries (code, name) VALUES ('QA', 'Qatar');
+INSERT INTO countries (code, name) VALUES ('RE', 'Réunion');
+INSERT INTO countries (code, name) VALUES ('RO', 'Romania');
+INSERT INTO countries (code, name) VALUES ('RS', 'Serbia');
+INSERT INTO countries (code, name) VALUES ('RU', 'Russian Federation');
+INSERT INTO countries (code, name) VALUES ('RW', 'Rwanda');
+INSERT INTO countries (code, name) VALUES ('SA', 'Saudi Arabia');
+INSERT INTO countries (code, name) VALUES ('SB', 'Solomon Islands');
+INSERT INTO countries (code, name) VALUES ('SC', 'Seychelles');
+INSERT INTO countries (code, name) VALUES ('SD', 'Sudan');
+INSERT INTO countries (code, name) VALUES ('SE', 'Sweden');
+INSERT INTO countries (code, name) VALUES ('SG', 'Singapore');
+INSERT INTO countries (code, name) VALUES ('SH', 'Saint Helena');
+INSERT INTO countries (code, name) VALUES ('SI', 'Slovenia');
+INSERT INTO countries (code, name) VALUES ('SJ', 'Svalbard and Jan Mayen');
+INSERT INTO countries (code, name) VALUES ('SK', 'Slovakia');
+INSERT INTO countries (code, name) VALUES ('SL', 'Sierra Leone');
+INSERT INTO countries (code, name) VALUES ('SM', 'San Marino');
+INSERT INTO countries (code, name) VALUES ('SN', 'Senegal');
+INSERT INTO countries (code, name) VALUES ('SO', 'Somalia');
+INSERT INTO countries (code, name) VALUES ('SR', 'Suriname');
+INSERT INTO countries (code, name) VALUES ('SS', 'South Sudan');
+INSERT INTO countries (code, name) VALUES ('ST', 'Sao Tome and Principe');
+INSERT INTO countries (code, name) VALUES ('SV', 'El Salvador');
+INSERT INTO countries (code, name) VALUES ('SX', 'Sint Maarten (Dutch)');
+INSERT INTO countries (code, name) VALUES ('SY', 'Syrian Arab Republic');
+INSERT INTO countries (code, name) VALUES ('SZ', 'Swaziland');
+INSERT INTO countries (code, name) VALUES ('TC', 'Turks and Caicos Islands');
+INSERT INTO countries (code, name) VALUES ('TD', 'Chad');
+INSERT INTO countries (code, name) VALUES ('TG', 'Togo');
+INSERT INTO countries (code, name) VALUES ('TH', 'Thailand');
+INSERT INTO countries (code, name) VALUES ('TJ', 'Tajikistan');
+INSERT INTO countries (code, name) VALUES ('TK', 'Tokelau');
+INSERT INTO countries (code, name) VALUES ('TL', 'Timor-Leste');
+INSERT INTO countries (code, name) VALUES ('TM', 'Turkmenistan');
+INSERT INTO countries (code, name) VALUES ('TN', 'Tunisia');
+INSERT INTO countries (code, name) VALUES ('TO', 'Tonga');
+INSERT INTO countries (code, name) VALUES ('TR', 'Turkey');
+INSERT INTO countries (code, name) VALUES ('TT', 'Trinidad and Tobago');
+INSERT INTO countries (code, name) VALUES ('TV', 'Tuvalu');
+INSERT INTO countries (code, name) VALUES ('TW', 'Taiwan');
+INSERT INTO countries (code, name) VALUES ('TZ', 'Tanzania');
+INSERT INTO countries (code, name) VALUES ('UA', 'Ukraine');
+INSERT INTO countries (code, name) VALUES ('UG', 'Uganda');
+INSERT INTO countries (code, name) VALUES ('US', 'United States');
+INSERT INTO countries (code, name) VALUES ('UY', 'Uruguay');
+INSERT INTO countries (code, name) VALUES ('UZ', 'Uzbekistan');
+INSERT INTO countries (code, name) VALUES ('VC', 'Saint Vincent & Grenadines');
+INSERT INTO countries (code, name) VALUES ('VE', 'Venezuela');
+INSERT INTO countries (code, name) VALUES ('VG', 'Virgin Islands, British');
+INSERT INTO countries (code, name) VALUES ('VI', 'Virgin Islands, U.S.');
+INSERT INTO countries (code, name) VALUES ('VN', 'Vietnam');
+INSERT INTO countries (code, name) VALUES ('VU', 'Vanuatu');
+INSERT INTO countries (code, name) VALUES ('WF', 'Wallis and Futuna');
+INSERT INTO countries (code, name) VALUES ('WS', 'Samoa');
+INSERT INTO countries (code, name) VALUES ('YE', 'Yemen');
+INSERT INTO countries (code, name) VALUES ('YT', 'Mayotte');
+INSERT INTO countries (code, name) VALUES ('ZA', 'South Africa');
+INSERT INTO countries (code, name) VALUES ('ZM', 'Zambia');
+INSERT INTO countries (code, name) VALUES ('ZW', 'Zimbabwe');
+
+
+ALTER TABLE countries ENABLE TRIGGER ALL;
+
+--
+-- Data for Name: people; Type: TABLE DATA; Schema: peeps; Owner: d50b
+--
+
 ALTER TABLE people DISABLE TRIGGER ALL;
 
-INSERT INTO people (id, email, hashpass, lopass, newpass, name, company, address, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (1, 'derek@sivers.org', '$2a$08$0yI7Vpn3UNEf5q.muDgLL.y5GJRM5ak2awUOnd9z9ZCBFoCz0/Rfy', 'yTAy', 'Dyh15IHs', 'Derek Sivers', '50POP LLC', 'Derek', 'Singapore', NULL, '018980', 'SG', '+65 9763 3568', 'This is me.', 0, 'all', 'derek', '1994-11-01');
-INSERT INTO people (id, email, hashpass, lopass, newpass, name, company, address, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (2, 'willy@wonka.com', '$2a$08$3UjNlK6PbXMXC7Rh.EVIFeRcvmij/b8bSfNZ.MwwmD8QtQ0sy2zje', 'R5Gf', 'NvaGAkHK', 'Willy Wonka', 'Wonka Chocolate Inc', 'Mr. Wonka', 'Hershey', 'PA', '12354', 'US', '+1 215 555 1034', NULL, 2, 'some', NULL, '2000-01-01');
-INSERT INTO people (id, email, hashpass, lopass, newpass, name, company, address, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (3, 'veruca@salt.com', '$2a$08$GcHJDheKQR7zu8qTr1anz.WpLoVPbZG6dA/9zaUkowcypCczUYozy', '8gcr', 'FJKApvpY', 'Veruca Salt', 'Daddy Empires Ltd', 'Veruca', 'London', 'England', 'NW1ER1', 'GB', '+44 9273 7231', NULL, 4, NULL, NULL, '2010-01-01');
-INSERT INTO people (id, email, hashpass, lopass, newpass, name, company, address, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (4, 'charlie@bucket.org', '$2a$08$Nf7VymjLuGGUhMl9lGTPAO0GrNq0bE5yTVMyimlFR2f7SmTMNxN46', 'AgA2', 'fdkeWoID', 'Charlie Buckets', NULL, 'Charlie', 'Hershey', 'PA', '12354', 'US', NULL, NULL, 0, 'all', NULL, '2010-09-01');
-INSERT INTO people (id, email, hashpass, lopass, newpass, name, company, address, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (5, 'oompa@loompa.mm', '$2a$08$vr40BeQAbNFkKaes4WPPw.lCQKPsyzAsNPRVQ2bPgVVatyvtwSKSO', 'LYtp', 'a5JDIleE', 'Oompa Loompa', NULL, 'Oompa Loompa', 'Hershey', 'PA', '12354', 'US', NULL, NULL, 0, NULL, NULL, '2010-10-01');
-INSERT INTO people (id, email, hashpass, lopass, newpass, name, company, address, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (6, 'augustus@gloop.de', '$2a$08$JmphXF9YeW7Fi2IQVUnZtenBU2Ftacz454V1B1Ort4/VZhFgpMzWO', 'AKyv', '8LLRaMwm', 'Augustus Gloop', NULL, 'Master Gloop', 'Munich', NULL, 'E01515', 'DE', NULL, NULL, 0, 'some', NULL, '2010-11-01');
-INSERT INTO people (id, email, hashpass, lopass, newpass, name, company, address, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (7, 'gong@li.cn', '$2a$08$x/C0JU7r7Obp2Ar/1G0kz.t.mrW/r0Nan0sDggw3wjjBdr6jvcpge', 'FBvY', 'xPAJKaRm', '巩俐', 'Gong Li', '巩俐', 'Shanghai', NULL, '987654', 'CN', NULL, NULL, 2, NULL, 'translator', '2010-12-12');
-INSERT INTO people (id, email, hashpass, lopass, newpass, name, company, address, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (8, 'yoko@ono.com', '$2a$08$3yMZNGqUsUH3bQaCE7Rmbeay6FHW/Us2axycwUMDsvGKSDGlVfZPS', 'uUyS', 'ysIFMj3L', 'Yoko Ono', 'yoko@lennon.com', 'Ono-San', 'Tokyo', NULL, '22534', 'JP', NULL, NULL, 0, NULL, 'translator', '2010-12-12');
+INSERT INTO people (id, email, name, address, hashpass, lopass, newpass, company, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (1, 'derek@sivers.org', 'Derek Sivers', 'Derek', '$2a$08$0yI7Vpn3UNEf5q.muDgLL.y5GJRM5ak2awUOnd9z9ZCBFoCz0/Rfy', 'yTAy', 'Dyh15IHs', '50POP LLC', 'Singapore', NULL, '018980', 'SG', '+65 9763 3568', 'This is me.', 0, 'all', 'derek', '1994-11-01');
+INSERT INTO people (id, email, name, address, hashpass, lopass, newpass, company, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (2, 'willy@wonka.com', 'Willy Wonka', 'Mr. Wonka', '$2a$08$3UjNlK6PbXMXC7Rh.EVIFeRcvmij/b8bSfNZ.MwwmD8QtQ0sy2zje', 'R5Gf', 'NvaGAkHK', 'Wonka Chocolate Inc', 'Hershey', 'PA', '12354', 'US', '+1 215 555 1034', NULL, 2, 'some', NULL, '2000-01-01');
+INSERT INTO people (id, email, name, address, hashpass, lopass, newpass, company, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (3, 'veruca@salt.com', 'Veruca Salt', 'Veruca', '$2a$08$GcHJDheKQR7zu8qTr1anz.WpLoVPbZG6dA/9zaUkowcypCczUYozy', '8gcr', 'FJKApvpY', 'Daddy Empires Ltd', 'London', 'England', 'NW1ER1', 'GB', '+44 9273 7231', NULL, 4, NULL, NULL, '2010-01-01');
+INSERT INTO people (id, email, name, address, hashpass, lopass, newpass, company, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (4, 'charlie@bucket.org', 'Charlie Buckets', 'Charlie', '$2a$08$Nf7VymjLuGGUhMl9lGTPAO0GrNq0bE5yTVMyimlFR2f7SmTMNxN46', 'AgA2', 'fdkeWoID', NULL, 'Hershey', 'PA', '12354', 'US', NULL, NULL, 0, 'all', NULL, '2010-09-01');
+INSERT INTO people (id, email, name, address, hashpass, lopass, newpass, company, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (5, 'oompa@loompa.mm', 'Oompa Loompa', 'Oompa Loompa', '$2a$08$vr40BeQAbNFkKaes4WPPw.lCQKPsyzAsNPRVQ2bPgVVatyvtwSKSO', 'LYtp', 'a5JDIleE', NULL, 'Hershey', 'PA', '12354', 'US', NULL, NULL, 0, NULL, NULL, '2010-10-01');
+INSERT INTO people (id, email, name, address, hashpass, lopass, newpass, company, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (6, 'augustus@gloop.de', 'Augustus Gloop', 'Master Gloop', '$2a$08$JmphXF9YeW7Fi2IQVUnZtenBU2Ftacz454V1B1Ort4/VZhFgpMzWO', 'AKyv', '8LLRaMwm', NULL, 'Munich', NULL, 'E01515', 'DE', NULL, NULL, 0, 'some', NULL, '2010-11-01');
+INSERT INTO people (id, email, name, address, hashpass, lopass, newpass, company, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (7, 'gong@li.cn', '巩俐', '巩俐', '$2a$08$x/C0JU7r7Obp2Ar/1G0kz.t.mrW/r0Nan0sDggw3wjjBdr6jvcpge', 'FBvY', 'xPAJKaRm', 'Gong Li', 'Shanghai', NULL, '987654', 'CN', NULL, NULL, 2, NULL, 'translator', '2010-12-12');
+INSERT INTO people (id, email, name, address, hashpass, lopass, newpass, company, city, state, postalcode, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (8, 'yoko@ono.com', 'Yoko Ono', 'Ono-San', '$2a$08$3yMZNGqUsUH3bQaCE7Rmbeay6FHW/Us2axycwUMDsvGKSDGlVfZPS', 'uUyS', 'ysIFMj3L', 'yoko@lennon.com', 'Tokyo', NULL, '22534', 'JP', NULL, NULL, 0, NULL, 'translator', '2010-12-12');
 
 
 ALTER TABLE people ENABLE TRIGGER ALL;
@@ -329,6 +299,128 @@ INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (7, 'mmmmmmmm', 'nnnn
 
 
 ALTER TABLE api_keys ENABLE TRIGGER ALL;
+
+--
+-- Data for Name: currencies; Type: TABLE DATA; Schema: peeps; Owner: d50b
+--
+
+ALTER TABLE currencies DISABLE TRIGGER ALL;
+
+INSERT INTO currencies (code, name) VALUES ('AUD', 'Australian Dollar');
+INSERT INTO currencies (code, name) VALUES ('BGN', 'Bulgarian Lev');
+INSERT INTO currencies (code, name) VALUES ('BRL', 'Brazilian Real');
+INSERT INTO currencies (code, name) VALUES ('BTC', 'Bitcoin');
+INSERT INTO currencies (code, name) VALUES ('CAD', 'Canadian Dollar');
+INSERT INTO currencies (code, name) VALUES ('CHF', 'Swiss Franc');
+INSERT INTO currencies (code, name) VALUES ('CNY', 'China Yuan Renminbi');
+INSERT INTO currencies (code, name) VALUES ('CZK', 'Czech Koruna');
+INSERT INTO currencies (code, name) VALUES ('DKK', 'Danish Krone');
+INSERT INTO currencies (code, name) VALUES ('EUR', 'Euro');
+INSERT INTO currencies (code, name) VALUES ('GBP', 'Pound Sterling');
+INSERT INTO currencies (code, name) VALUES ('HKD', 'Hong Kong Dollar');
+INSERT INTO currencies (code, name) VALUES ('HRK', 'Croatian Kuna');
+INSERT INTO currencies (code, name) VALUES ('HUF', 'Hungary Forint');
+INSERT INTO currencies (code, name) VALUES ('IDR', 'Indonesia Rupiah');
+INSERT INTO currencies (code, name) VALUES ('ILS', 'Israeli Sheqel');
+INSERT INTO currencies (code, name) VALUES ('INR', 'Indian Rupee');
+INSERT INTO currencies (code, name) VALUES ('JPY', 'Japan Yen');
+INSERT INTO currencies (code, name) VALUES ('KRW', 'Korea Won');
+INSERT INTO currencies (code, name) VALUES ('LTL', 'Lithuanian Litas');
+INSERT INTO currencies (code, name) VALUES ('MXN', 'Mexican Peso');
+INSERT INTO currencies (code, name) VALUES ('MYR', 'Malaysian Ringgit');
+INSERT INTO currencies (code, name) VALUES ('NOK', 'Norwegian Krone');
+INSERT INTO currencies (code, name) VALUES ('NZD', 'New Zealand Dollar');
+INSERT INTO currencies (code, name) VALUES ('PHP', 'Philippine Peso');
+INSERT INTO currencies (code, name) VALUES ('PLN', 'Polish Zloty');
+INSERT INTO currencies (code, name) VALUES ('RON', 'New Romanian Leu');
+INSERT INTO currencies (code, name) VALUES ('RUB', 'Russian Ruble');
+INSERT INTO currencies (code, name) VALUES ('SEK', 'Swedish Krona');
+INSERT INTO currencies (code, name) VALUES ('SGD', 'Singapore Dollar');
+INSERT INTO currencies (code, name) VALUES ('THB', 'Thai Baht');
+INSERT INTO currencies (code, name) VALUES ('TRY', 'Turkish Lira');
+INSERT INTO currencies (code, name) VALUES ('USD', 'US Dollar');
+INSERT INTO currencies (code, name) VALUES ('ZAR', 'South African Rand');
+
+
+ALTER TABLE currencies ENABLE TRIGGER ALL;
+
+--
+-- Data for Name: currency_rates; Type: TABLE DATA; Schema: peeps; Owner: d50b
+--
+
+ALTER TABLE currency_rates DISABLE TRIGGER ALL;
+
+INSERT INTO currency_rates (code, day, rate) VALUES ('AUD', '2015-09-13', 1.41017);
+INSERT INTO currency_rates (code, day, rate) VALUES ('BGN', '2015-09-13', 1.724862);
+INSERT INTO currency_rates (code, day, rate) VALUES ('BRL', '2015-09-13', 3.872716);
+INSERT INTO currency_rates (code, day, rate) VALUES ('BTC', '2015-09-13', 0.0042510609);
+INSERT INTO currency_rates (code, day, rate) VALUES ('CAD', '2015-09-13', 1.326437);
+INSERT INTO currency_rates (code, day, rate) VALUES ('CHF', '2015-09-13', 0.969076);
+INSERT INTO currency_rates (code, day, rate) VALUES ('CNY', '2015-09-13', 6.37508);
+INSERT INTO currency_rates (code, day, rate) VALUES ('CZK', '2015-09-13', 23.91434);
+INSERT INTO currency_rates (code, day, rate) VALUES ('DKK', '2015-09-13', 6.579911);
+INSERT INTO currency_rates (code, day, rate) VALUES ('EUR', '2015-09-13', 0.882016);
+INSERT INTO currency_rates (code, day, rate) VALUES ('GBP', '2015-09-13', 0.648278);
+INSERT INTO currency_rates (code, day, rate) VALUES ('HKD', '2015-09-13', 7.750787);
+INSERT INTO currency_rates (code, day, rate) VALUES ('HRK', '2015-09-13', 6.659929);
+INSERT INTO currency_rates (code, day, rate) VALUES ('HUF', '2015-09-13', 276.391);
+INSERT INTO currency_rates (code, day, rate) VALUES ('IDR', '2015-09-13', 14282.75);
+INSERT INTO currency_rates (code, day, rate) VALUES ('ILS', '2015-09-13', 3.864147);
+INSERT INTO currency_rates (code, day, rate) VALUES ('INR', '2015-09-13', 66.339049);
+INSERT INTO currency_rates (code, day, rate) VALUES ('JPY', '2015-09-13', 120.5828);
+INSERT INTO currency_rates (code, day, rate) VALUES ('KRW', '2015-09-13', 1183.271649);
+INSERT INTO currency_rates (code, day, rate) VALUES ('LTL', '2015-09-13', 3.024144);
+INSERT INTO currency_rates (code, day, rate) VALUES ('MXN', '2015-09-13', 16.83589);
+INSERT INTO currency_rates (code, day, rate) VALUES ('MYR', '2015-09-13', 4.306162);
+INSERT INTO currency_rates (code, day, rate) VALUES ('NOK', '2015-09-13', 8.15405);
+INSERT INTO currency_rates (code, day, rate) VALUES ('NZD', '2015-09-13', 1.582998);
+INSERT INTO currency_rates (code, day, rate) VALUES ('PHP', '2015-09-13', 46.82617);
+INSERT INTO currency_rates (code, day, rate) VALUES ('PLN', '2015-09-13', 3.711043);
+INSERT INTO currency_rates (code, day, rate) VALUES ('RON', '2015-09-13', 3.896958);
+INSERT INTO currency_rates (code, day, rate) VALUES ('RUB', '2015-09-13', 67.818659);
+INSERT INTO currency_rates (code, day, rate) VALUES ('SEK', '2015-09-13', 8.237221);
+INSERT INTO currency_rates (code, day, rate) VALUES ('SGD', '2015-09-13', 1.412002);
+INSERT INTO currency_rates (code, day, rate) VALUES ('THB', '2015-09-13', 36.02786);
+INSERT INTO currency_rates (code, day, rate) VALUES ('TRY', '2015-09-13', 3.04605);
+INSERT INTO currency_rates (code, day, rate) VALUES ('USD', '2015-09-13', 1);
+INSERT INTO currency_rates (code, day, rate) VALUES ('ZAR', '2015-09-13', 13.54672);
+INSERT INTO currency_rates (code, day, rate) VALUES ('AUD', '2015-09-14', 1.411198);
+INSERT INTO currency_rates (code, day, rate) VALUES ('BGN', '2015-09-14', 1.723632);
+INSERT INTO currency_rates (code, day, rate) VALUES ('BRL', '2015-09-14', 3.872126);
+INSERT INTO currency_rates (code, day, rate) VALUES ('BTC', '2015-09-14', 0.0043640185);
+INSERT INTO currency_rates (code, day, rate) VALUES ('CAD', '2015-09-14', 1.325562);
+INSERT INTO currency_rates (code, day, rate) VALUES ('CHF', '2015-09-14', 0.968597);
+INSERT INTO currency_rates (code, day, rate) VALUES ('CNY', '2015-09-14', 6.37494);
+INSERT INTO currency_rates (code, day, rate) VALUES ('CZK', '2015-09-14', 23.89345);
+INSERT INTO currency_rates (code, day, rate) VALUES ('DKK', '2015-09-14', 6.574201);
+INSERT INTO currency_rates (code, day, rate) VALUES ('EUR', '2015-09-14', 0.881057);
+INSERT INTO currency_rates (code, day, rate) VALUES ('GBP', '2015-09-14', 0.647524);
+INSERT INTO currency_rates (code, day, rate) VALUES ('HKD', '2015-09-14', 7.750173);
+INSERT INTO currency_rates (code, day, rate) VALUES ('HRK', '2015-09-14', 6.655889);
+INSERT INTO currency_rates (code, day, rate) VALUES ('HUF', '2015-09-14', 276.152);
+INSERT INTO currency_rates (code, day, rate) VALUES ('IDR', '2015-09-14', 14304.583333);
+INSERT INTO currency_rates (code, day, rate) VALUES ('ILS', '2015-09-14', 3.866847);
+INSERT INTO currency_rates (code, day, rate) VALUES ('INR', '2015-09-14', 66.341039);
+INSERT INTO currency_rates (code, day, rate) VALUES ('JPY', '2015-09-14', 120.560899);
+INSERT INTO currency_rates (code, day, rate) VALUES ('KRW', '2015-09-14', 1183.206667);
+INSERT INTO currency_rates (code, day, rate) VALUES ('LTL', '2015-09-14', 3.023184);
+INSERT INTO currency_rates (code, day, rate) VALUES ('MXN', '2015-09-14', 16.83392);
+INSERT INTO currency_rates (code, day, rate) VALUES ('MYR', '2015-09-14', 4.305022);
+INSERT INTO currency_rates (code, day, rate) VALUES ('NOK', '2015-09-14', 8.14338);
+INSERT INTO currency_rates (code, day, rate) VALUES ('NZD', '2015-09-14', 1.582201);
+INSERT INTO currency_rates (code, day, rate) VALUES ('PHP', '2015-09-14', 46.77787);
+INSERT INTO currency_rates (code, day, rate) VALUES ('PLN', '2015-09-14', 3.709163);
+INSERT INTO currency_rates (code, day, rate) VALUES ('RON', '2015-09-14', 3.895618);
+INSERT INTO currency_rates (code, day, rate) VALUES ('RUB', '2015-09-14', 67.800239);
+INSERT INTO currency_rates (code, day, rate) VALUES ('SEK', '2015-09-14', 8.231851);
+INSERT INTO currency_rates (code, day, rate) VALUES ('SGD', '2015-09-14', 1.412496);
+INSERT INTO currency_rates (code, day, rate) VALUES ('THB', '2015-09-14', 36.03304);
+INSERT INTO currency_rates (code, day, rate) VALUES ('TRY', '2015-09-14', 3.04726);
+INSERT INTO currency_rates (code, day, rate) VALUES ('USD', '2015-09-14', 1);
+INSERT INTO currency_rates (code, day, rate) VALUES ('ZAR', '2015-09-14', 13.56145);
+
+
+ALTER TABLE currency_rates ENABLE TRIGGER ALL;
 
 --
 -- Data for Name: emailers; Type: TABLE DATA; Schema: peeps; Owner: d50b
