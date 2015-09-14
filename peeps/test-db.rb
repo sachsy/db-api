@@ -418,5 +418,19 @@ class TestPeeps < Minitest::Test
 		res = DB.exec("SELECT id FROM people WHERE id=2 AND categorize_as IS NULL")
 		assert_equal '2', res[0]['id']
 	end
+
+	def test_from_to
+		res = DB.exec("SELECT * FROM currency_from_to(1000, 'USD', 'EUR')")
+		assert (881..882).cover? res[0]['amount'].to_f 
+		res = DB.exec("SELECT * FROM currency_from_to(1000, 'EUR', 'USD')")
+		assert (1135..1136).cover? res[0]['amount'].to_f 
+		res = DB.exec("SELECT * FROM currency_from_to(1000, 'JPY', 'EUR')")
+		assert (7..8).cover? res[0]['amount'].to_f 
+		res = DB.exec("SELECT * FROM currency_from_to(1000, 'EUR', 'BTC')")
+		assert (4..5).cover? res[0]['amount'].to_f 
+		res = DB.exec("SELECT * FROM currency_from_to(9, 'BTC', 'JPY')")
+		assert (248635..248636).cover? res[0]['amount'].to_f 
+	end
+
 end
 
