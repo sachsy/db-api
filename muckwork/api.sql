@@ -234,7 +234,6 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION start_task(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
-	-- TODO: if first task in project, mark project started
 	mime := 'application/json';
 	js := '{}';
 END;
@@ -246,7 +245,6 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION finish_task(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
-	-- TODO: if last task in project, mark project finished
 	mime := 'application/json';
 	js := '{}';
 END;
@@ -254,9 +252,6 @@ $$ LANGUAGE plpgsql;
 
 
 
--- TODO: complete_task
---	set finished_at time to now
---	create worker_charge for task
 --  check finality of project
 --  email customer
 
