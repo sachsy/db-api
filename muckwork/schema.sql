@@ -585,6 +585,19 @@ $$ LANGUAGE plpgsql;
 --------------- VIEWS FOR JSON RESPONSES:
 ----------------------------------------
 
+DROP VIEW IF EXISTS project_view CASCADE;
+CREATE VIEW project_view AS SELECT id, title, description, created_at,
+	quoted_at, approved_at, started_at, finished_at, status,
+	(SELECT row_to_json(cx) AS client FROM
+		(SELECT c.*, p.name, p.email
+			FROM muckwork.clients c, peeps.people p
+			WHERE c.person_id=p.id AND c.id=client_id) cx),
+	quoted_ratetype,
+	json_build_object('currency', quoted_currency, 'cents', quoted_cents) quoted_money,
+	json_build_object('currency', final_currency, 'cents', final_cents) final_money
+	FROM muckwork.projects
+	ORDER BY muckwork.projects.id DESC;
+
 ----------------------------------------
 ------------------------- API FUNCTIONS:
 ----------------------------------------
@@ -607,8 +620,16 @@ CREATE OR REPLACE FUNCTION get_client(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	-- SELECT c.*, p.name, p.email FROM muckwork.clients c, peeps.people p WHERE c.person_id=p.id AND c.id=$1
-	js := '{}';
+	js := row_to_json(r) FROM (SELECT c.*, p.name, p.email
+		FROM muckwork.clients c, peeps.people p
+		WHERE c.person_id=p.id AND c.id=$1) r;
+	IF js IS NULL THEN 
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'about:blank',
+		'title', 'Not Found',
+		'status', 404);
+ END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -617,9 +638,30 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: person_id
 CREATE OR REPLACE FUNCTION create_client(integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+	new_id integer;
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	INSERT INTO muckwork.clients(person_id) VALUES ($1) RETURNING id INTO new_id;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_client(new_id) x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
 END;
 $$ LANGUAGE plpgsql;
 
@@ -628,9 +670,29 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: client_id, currency
 CREATE OR REPLACE FUNCTION update_client(integer, text,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.clients SET currency=$2 WHERE id=$1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_client($1) x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
 END;
 $$ LANGUAGE plpgsql;
 
@@ -641,7 +703,10 @@ CREATE OR REPLACE FUNCTION get_workers(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := '[]';
+	js := json_agg(r) FROM (SELECT w.*, p.name, p.email
+		FROM muckwork.workers w, peeps.people p
+		WHERE w.person_id=p.id ORDER BY id DESC) r;
+	IF js IS NULL THEN js := '[]'; END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -652,7 +717,16 @@ CREATE OR REPLACE FUNCTION get_worker(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := '{}';
+	js := row_to_json(r) FROM (SELECT w.*, p.name, p.email
+		FROM muckwork.workers w, peeps.people p
+		WHERE w.person_id=p.id AND w.id=$1) r;
+	IF js IS NULL THEN 
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'about:blank',
+		'title', 'Not Found',
+		'status', 404);
+ END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -661,9 +735,30 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: person_id
 CREATE OR REPLACE FUNCTION create_worker(integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+	new_id integer;
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	INSERT INTO muckwork.workers(person_id) VALUES ($1) RETURNING id INTO new_id;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_worker(new_id) x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
 END;
 $$ LANGUAGE plpgsql;
 
@@ -672,9 +767,29 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: worker_id, currency, millicents_per_second
 CREATE OR REPLACE FUNCTION update_worker(integer, text, integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.workers SET currency=$2, millicents_per_second=$3 WHERE id=$1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_worker($1) x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
 END;
 $$ LANGUAGE plpgsql;
 
@@ -685,7 +800,8 @@ CREATE OR REPLACE FUNCTION get_projects(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := '[]';
+	js := json_agg(r) FROM (SELECT * FROM muckwork.project_view) r;
+	IF js IS NULL THEN js := '[]'; END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -696,18 +812,27 @@ CREATE OR REPLACE FUNCTION get_projects_with_status(text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := '[]';
+	js := json_agg(r) FROM (SELECT * FROM muckwork.project_view WHERE status = $1) r;
+	IF js IS NULL THEN js := '[]'; END IF;
 END;
 $$ LANGUAGE plpgsql;
 
 
 
 -- PARAMS: project_id
+-- TODO: tasks? all details? different view?
 CREATE OR REPLACE FUNCTION get_project(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := '{}';
+	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_view WHERE id = $1) r;
+	IF js IS NULL THEN 
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'about:blank',
+		'title', 'Not Found',
+		'status', 404);
+ END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -842,6 +967,4 @@ $$ LANGUAGE plpgsql;
 
 --  check finality of project
 --  email customer
-
-
 
