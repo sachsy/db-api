@@ -967,7 +967,7 @@ CREATE OR REPLACE FUNCTION update_project(integer, text, text,
 BEGIN
 	UPDATE muckwork.projects SET title = $2, description = $3 WHERE id = $1;
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_view WHERE id = new_id) r;
+	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_view WHERE id = $1) r;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -984,8 +984,8 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION quote_project(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
-	UPDATE muckwork.projects SET quoted_at = NOW(),
-		ratetype = $2, quoted_currency = $3, final_currency = $3, cents = $4
+	UPDATE muckwork.projects SET quoted_at = NOW(), quoted_ratetype = $2,
+		quoted_currency = $3, final_currency = $3, quoted_cents = $4
 		WHERE id = $1;
 	UPDATE muckwork.tasks SET status = 'quoted' WHERE project_id = $1;
 	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_project($1) x;
@@ -1018,13 +1018,53 @@ $$ LANGUAGE plpgsql;
 
 
 
+-- PARAMS: task.id
+CREATE OR REPLACE FUNCTION get_task(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := row_to_json(r) FROM
+		(SELECT * FROM muckwork.task_view WHERE id = $1) r;
+	IF js IS NULL THEN 
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'about:blank',
+		'title', 'Not Found',
+		'status', 404);
+ END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
 -- PARAMS: project_id, title, description, sortid(or NULL)
 CREATE OR REPLACE FUNCTION create_task(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+	new_id integer;
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
 BEGIN
-	-- get next sortid for project
-	mime := 'application/json';
-	js := '{}';
+	INSERT INTO muckwork.tasks(project_id, title, description, sortid)
+		VALUES ($1, $2, $3, $4) RETURNING id INTO new_id;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_task(new_id) x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1033,9 +1073,30 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: task.id, title, description, sortid(or NULL)
 CREATE OR REPLACE FUNCTION update_task(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.tasks SET title = $2, description = $3, sortid = $4
+		WHERE id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_task($1) x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1044,9 +1105,29 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: task.id, worker_id
 CREATE OR REPLACE FUNCTION claim_task(integer, integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.tasks SET worker_id = $2, claimed_at = NOW() WHERE id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_task($1) x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1055,9 +1136,29 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: task.id
 CREATE OR REPLACE FUNCTION unclaim_task(integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.tasks SET worker_id = NULL, claimed_at = NULL WHERE id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_task($1) x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1066,9 +1167,29 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: task.id
 CREATE OR REPLACE FUNCTION start_task(integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.tasks SET started_at = NOW() WHERE id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_task($1) x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1077,9 +1198,29 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: task.id
 CREATE OR REPLACE FUNCTION finish_task(integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.tasks SET finished_at = NOW() WHERE id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_task($1) x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
 END;
 $$ LANGUAGE plpgsql;
 

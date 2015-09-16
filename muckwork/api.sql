@@ -173,7 +173,7 @@ CREATE OR REPLACE FUNCTION update_project(integer, text, text,
 BEGIN
 	UPDATE muckwork.projects SET title = $2, description = $3 WHERE id = $1;
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_view WHERE id = new_id) r;
+	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_view WHERE id = $1) r;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -184,8 +184,8 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION quote_project(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
-	UPDATE muckwork.projects SET quoted_at = NOW(),
-		ratetype = $2, quoted_currency = $3, final_currency = $3, cents = $4
+	UPDATE muckwork.projects SET quoted_at = NOW(), quoted_ratetype = $2,
+		quoted_currency = $3, final_currency = $3, quoted_cents = $4
 		WHERE id = $1;
 	UPDATE muckwork.tasks SET status = 'quoted' WHERE project_id = $1;
 	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_project($1) x;
@@ -213,6 +213,19 @@ CREATE OR REPLACE FUNCTION refuse_quote(integer, text,
 BEGIN
 	mime := 'application/json';
 	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: task.id
+CREATE OR REPLACE FUNCTION get_task(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := row_to_json(r) FROM
+		(SELECT * FROM muckwork.task_view WHERE id = $1) r;
+	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;
 
