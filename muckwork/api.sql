@@ -127,8 +127,8 @@ $$ LANGUAGE plpgsql;
 
 
 
--- PARAMS:  status
-CREATE OR REPLACE FUNCTION get_projects_with_status(text,
+-- PARAMS: status ('created','quoted','approved','refused','started','finished')
+CREATE OR REPLACE FUNCTION get_projects_with_status(status,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -138,14 +138,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-
 -- PARAMS: project_id
--- TODO: tasks? all details? different view?
 CREATE OR REPLACE FUNCTION get_project(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_view WHERE id = $1) r;
+	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_detail_view WHERE id = $1) r;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -155,9 +153,15 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: client_id, title, description
 CREATE OR REPLACE FUNCTION create_project(integer, text, text,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+m4_ERRVARS
+	new_id integer;
 BEGIN
+	INSERT INTO muckwork.projects (client_id, title, description)
+		VALUES ($1, $2, $3) RETURNING id INTO new_id;
 	mime := 'application/json';
-	js := '{}';
+	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_view WHERE id = new_id) r;
+m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
 
@@ -167,8 +171,10 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION update_project(integer, text, text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
+	UPDATE muckwork.projects SET title = $2, description = $3 WHERE id = $1;
 	mime := 'application/json';
-	js := '{}';
+	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_view WHERE id = new_id) r;
+	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -178,11 +184,11 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION quote_project(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
-	-- set final_currency same as quoted_currency
-	-- set quoted_at
-	-- set tasks to quoted
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.projects SET quoted_at = NOW(),
+		ratetype = $2, quoted_currency = $3, final_currency = $3, cents = $4
+		WHERE id = $1;
+	UPDATE muckwork.tasks SET status = 'quoted' WHERE project_id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_project($1) x;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -192,9 +198,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION approve_quote(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
-	-- set tasks to approved
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.projects SET approved_at = NOW() WHERE id = $1;
+	UPDATE muckwork.tasks SET status = 'approved' WHERE project_id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_project($1) x;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -215,10 +221,14 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: project_id, title, description, sortid(or NULL)
 CREATE OR REPLACE FUNCTION create_task(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+	new_id integer;
+m4_ERRVARS
 BEGIN
-	-- get next sortid for project
-	mime := 'application/json';
-	js := '{}';
+	INSERT INTO muckwork.tasks(project_id, title, description, sortid)
+		VALUES ($1, $2, $3, $4) RETURNING id INTO new_id;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_task(new_id) x;
+m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
 
@@ -227,9 +237,13 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: task.id, title, description, sortid(or NULL)
 CREATE OR REPLACE FUNCTION update_task(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+m4_ERRVARS
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.tasks SET title = $2, description = $3, sortid = $4
+		WHERE id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_task($1) x;
+m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
 
@@ -238,9 +252,12 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: task.id, worker_id
 CREATE OR REPLACE FUNCTION claim_task(integer, integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+m4_ERRVARS
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.tasks SET worker_id = $2, claimed_at = NOW() WHERE id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_task($1) x;
+m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
 
@@ -249,9 +266,12 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: task.id
 CREATE OR REPLACE FUNCTION unclaim_task(integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+m4_ERRVARS
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.tasks SET worker_id = NULL, claimed_at = NULL WHERE id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_task($1) x;
+m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
 
@@ -260,9 +280,12 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: task.id
 CREATE OR REPLACE FUNCTION start_task(integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+m4_ERRVARS
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.tasks SET started_at = NOW() WHERE id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_task($1) x;
+m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
 
@@ -271,9 +294,24 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: task.id
 CREATE OR REPLACE FUNCTION finish_task(integer,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+m4_ERRVARS
+BEGIN
+	UPDATE muckwork.tasks SET finished_at = NOW() WHERE id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_task($1) x;
+m4_ERRCATCH
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: status ('created','quoted','approved','refused','started','finished')
+CREATE OR REPLACE FUNCTION get_tasks_with_status(status,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := '{}';
+	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view WHERE status = $1) r;
+	IF js IS NULL THEN js := '[]'; END IF;
 END;
 $$ LANGUAGE plpgsql;
 

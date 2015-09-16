@@ -74,14 +74,9 @@ class MuckworkAPITest < Minitest::Test
 	end
 
 	def test_get_projects_with_status
-		qry("muckwork.get_projects_with_status('approved')")
+		qry("muckwork.get_projects_with_status('finished')")
 		assert_equal 1, @j.size
-		assert_equal 3, @j[0][:id]
-		assert_equal 'Unstarted project', @j[0][:title]
-	end
-
-	def test_get_project
-		qry("muckwork.get_project(1)")
+		# example of project_view
 		r = {id: 1,
 title: 'Finished project',
 description: 'by Wonka for Charlie',
@@ -100,6 +95,83 @@ client: {id: 1,
 quoted_ratetype: 'time',
 quoted_money: {currency: 'USD', cents: 5000},
 final_money: {currency: 'USD', cents: 4536}}
+		assert_equal r, @j[0]
+	end
+
+	def test_get_project
+		qry("muckwork.get_project(1)")
+		# example of project_detail_view
+		r = {id: 1,
+title: 'Finished project',
+description: 'by Wonka for Charlie',
+created_at: '2015-07-02T00:34:56+12:00',
+quoted_at: '2015-07-03T00:34:56+12:00',
+approved_at: '2015-07-04T00:34:56+12:00',
+started_at: '2015-07-05T00:34:56+12:00',
+finished_at: '2015-07-05T03:34:56+12:00',
+status: 'finished',
+client: {id: 1,
+	person_id: 2,
+	currency: 'USD',
+	cents_balance:  463,
+	name: 'Willy Wonka',
+	email: 'willy@wonka.com'},
+quoted_ratetype: 'time',
+quoted_money: {currency: 'USD', cents: 5000},
+final_money: {currency: 'USD', cents: 4536},
+tasks: [
+	{id: 2,
+	project_id: 1,
+	worker_id: 1,
+	sortid: 1,
+	title: 'first task',
+	description: 'clean hands',
+	created_at: '2015-07-03T00:34:56+12:00',
+	claimed_at: '2015-07-04T00:34:56+12:00',
+	started_at: '2015-07-05T00:34:56+12:00',
+	finished_at: '2015-07-05T00:35:56+12:00',
+	status: 'finished',
+	worker: {id: 1,
+		person_id: 4,
+		currency: 'USD',
+		millicents_per_second: 42,
+		name: 'Charlie Buckets',
+		email: 'charlie@bucket.org'}},
+	{id: 1,
+	project_id: 1,
+	worker_id: 1,
+	sortid: 2,
+	title: 'second task',
+	description: 'get bucket',
+	created_at: '2015-07-03T00:34:56+12:00',
+	claimed_at: '2015-07-04T00:34:56+12:00',
+	started_at: '2015-07-05T00:35:56+12:00',
+	finished_at: '2015-07-05T00:36:56+12:00',
+	status: 'finished',
+	worker: {id: 1,
+		person_id: 4,
+		currency: 'USD',
+		millicents_per_second: 42,
+		name: 'Charlie Buckets',
+		email: 'charlie@bucket.org'}},
+	{id: 3,
+	project_id: 1,
+	worker_id: 1,
+	sortid: 3,
+	title: 'third task',
+	description: 'clean tank',
+	created_at: '2015-07-03T00:34:56+12:00',
+	claimed_at: '2015-07-04T00:34:56+12:00',
+	started_at: '2015-07-05T00:36:56+12:00',
+	finished_at: '2015-07-05T03:34:56+12:00',
+	status: 'finished',
+	worker: {id: 1,
+		person_id: 4,
+		currency: 'USD',
+		millicents_per_second: 42,
+		name: 'Charlie Buckets',
+		email: 'charlie@bucket.org'}}
+]}
 		assert_equal r, @j
 	end
 end

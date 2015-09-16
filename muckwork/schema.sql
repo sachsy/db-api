@@ -121,7 +121,7 @@ COMMIT;
 ------------------ TRIGGERS:
 ----------------------------
 
-CREATE FUNCTION project_status() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION project_status() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.quoted_at IS NULL THEN
 		NEW.status := 'created';
@@ -137,6 +137,7 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS project_status ON muckwork.projects CASCADE;
 CREATE TRIGGER project_status BEFORE UPDATE OF
 	quoted_at, approved_at, started_at, finished_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.project_status();
@@ -144,7 +145,7 @@ CREATE TRIGGER project_status BEFORE UPDATE OF
 
 -- Dates must always exist in this order:
 -- created_at, quoted_at, approved_at, started_at, finished_at
-CREATE FUNCTION project_dates_in_order() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION project_dates_in_order() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.approved_at IS NOT NULL AND NEW.quoted_at IS NULL)
 		OR (NEW.started_at IS NOT NULL AND NEW.approved_at IS NULL)
@@ -154,6 +155,7 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS project_dates_in_order ON muckwork.projects CASCADE;
 CREATE TRIGGER project_dates_in_order BEFORE UPDATE OF
 	quoted_at, approved_at, started_at, finished_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.project_dates_in_order();
@@ -161,7 +163,7 @@ CREATE TRIGGER project_dates_in_order BEFORE UPDATE OF
 
 -- can't update existing timestamps
 -- not sure what's better: one trigger for all dates, or one trigger per field.
-CREATE FUNCTION dates_cant_change_pc() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION dates_cant_change_pc() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.created_at IS NOT NULL AND OLD.created_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -169,10 +171,11 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS dates_cant_change_pc ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_pc BEFORE UPDATE OF created_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pc();
 
-CREATE FUNCTION dates_cant_change_pq() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION dates_cant_change_pq() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.quoted_at IS NOT NULL AND OLD.quoted_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -180,10 +183,11 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS dates_cant_change_pq ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_pq BEFORE UPDATE OF quoted_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pq();
 
-CREATE FUNCTION dates_cant_change_pa() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION dates_cant_change_pa() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.approved_at IS NOT NULL AND OLD.approved_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -191,10 +195,11 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS dates_cant_change_pa ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_pa BEFORE UPDATE OF approved_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pa();
 
-CREATE FUNCTION dates_cant_change_ps() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION dates_cant_change_ps() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.started_at IS NOT NULL AND OLD.started_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -202,10 +207,11 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS dates_cant_change_ps ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_ps BEFORE UPDATE OF started_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_ps();
 
-CREATE FUNCTION dates_cant_change_pf() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION dates_cant_change_pf() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.finished_at IS NOT NULL AND OLD.finished_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -213,10 +219,11 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS dates_cant_change_pf ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_pf BEFORE UPDATE OF finished_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pf();
 
-CREATE FUNCTION dates_cant_change_tc() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION dates_cant_change_tc() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.created_at IS NOT NULL AND OLD.created_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -224,10 +231,11 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS dates_cant_change_tc ON muckwork.tasks CASCADE;
 CREATE TRIGGER dates_cant_change_tc BEFORE UPDATE OF created_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_tc();
 
-CREATE FUNCTION dates_cant_change_tl() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION dates_cant_change_tl() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.claimed_at IS NOT NULL AND OLD.claimed_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -235,10 +243,11 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS dates_cant_change_tl ON muckwork.tasks CASCADE;
 CREATE TRIGGER dates_cant_change_tl BEFORE UPDATE OF claimed_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_tl();
 
-CREATE FUNCTION dates_cant_change_ts() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION dates_cant_change_ts() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.started_at IS NOT NULL AND OLD.started_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -246,10 +255,11 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS dates_cant_change_ts ON muckwork.tasks CASCADE;
 CREATE TRIGGER dates_cant_change_ts BEFORE UPDATE OF started_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_ts();
 
-CREATE FUNCTION dates_cant_change_tf() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION dates_cant_change_tf() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.finished_at IS NOT NULL AND OLD.finished_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -257,12 +267,13 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS dates_cant_change_tf ON muckwork.tasks CASCADE;
 CREATE TRIGGER dates_cant_change_tf BEFORE UPDATE OF finished_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_tf();
 
 
 
-CREATE FUNCTION task_status() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION task_status() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.started_at IS NULL THEN
 		NEW.status := 'created';
@@ -274,6 +285,7 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS task_status ON muckwork.tasks CASCADE;
 CREATE TRIGGER task_status BEFORE UPDATE OF
 	started_at, finished_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.task_status();
@@ -281,7 +293,7 @@ CREATE TRIGGER task_status BEFORE UPDATE OF
 
 -- Dates must always exist in this order:
 -- created_at, started_at, finished_at
-CREATE FUNCTION task_dates_in_order() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION task_dates_in_order() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.finished_at IS NOT NULL AND NEW.started_at IS NULL)
 		OR (NEW.started_at IS NOT NULL AND NEW.claimed_at IS NULL)
@@ -290,12 +302,13 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS task_dates_in_order ON muckwork.tasks CASCADE;
 CREATE TRIGGER task_dates_in_order BEFORE UPDATE OF
 	claimed_at, started_at, finished_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.task_dates_in_order();
 
 
-CREATE FUNCTION no_cents_without_currency() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION no_cents_without_currency() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.quoted_cents IS NOT NULL AND NEW.quoted_currency IS NULL)
 	OR (NEW.final_cents IS NOT NULL AND NEW.final_currency IS NULL)
@@ -304,13 +317,14 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS no_cents_without_currency ON muckwork.projects CASCADE;
 CREATE TRIGGER no_cents_without_currency BEFORE UPDATE OF
 	quoted_cents, final_cents ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_cents_without_currency();
 
 
 -- tasks.claimed_at and tasks.worker_id must match (both|neither)
-CREATE FUNCTION tasks_claimed_pair() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION tasks_claimed_pair() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.claimed_at IS NOT NULL AND NEW.worker_id IS NULL)
 	OR (NEW.worker_id IS NOT NULL AND NEW.claimed_at IS NULL)
@@ -319,13 +333,14 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS tasks_claimed_pair ON muckwork.tasks CASCADE;
 CREATE TRIGGER tasks_claimed_pair BEFORE UPDATE OF
 	worker_id, claimed_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.tasks_claimed_pair();
 
 
 -- can't delete started projects or tasks
-CREATE FUNCTION no_delete_started() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION no_delete_started() RETURNS TRIGGER AS $$
 BEGIN
 	IF OLD.started_at IS NOT NULL 
 		THEN RAISE 'no_delete_started';
@@ -333,14 +348,16 @@ BEGIN
 	RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS no_delete_started_project ON muckwork.projects CASCADE;
 CREATE TRIGGER no_delete_started_project BEFORE DELETE ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_delete_started();
+DROP TRIGGER IF EXISTS no_delete_started_task ON muckwork.tasks CASCADE;
 CREATE TRIGGER no_delete_started_task BEFORE DELETE ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_delete_started();
 
 
 -- can't update title, description of quoted project
-CREATE FUNCTION no_update_quoted_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION no_update_quoted_project() RETURNS TRIGGER AS $$
 BEGIN
 	IF OLD.quoted_at IS NOT NULL 
 		THEN RAISE 'no_update_quoted';
@@ -348,13 +365,14 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS no_update_quoted_project ON muckwork.projects CASCADE;
 CREATE TRIGGER no_update_quoted_project BEFORE UPDATE OF
 	title, description ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_update_quoted_project();
 
 
 -- can't update title, description of started task
-CREATE FUNCTION no_update_started_task() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION no_update_started_task() RETURNS TRIGGER AS $$
 BEGIN
 	IF OLD.started_at IS NOT NULL 
 		THEN RAISE 'no_update_started';
@@ -362,25 +380,27 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS no_update_started_task ON muckwork.tasks CASCADE;
 CREATE TRIGGER no_update_started_task BEFORE UPDATE OF
 	title, description ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.no_update_started_task();
 
 
 -- first task started marks project as started (see reverse below)
-CREATE FUNCTION task_starts_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION task_starts_project() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.projects SET started_at=NOW()
 		WHERE id=OLD.project_id AND started_at IS NULL;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS task_starts_project ON muckwork.tasks CASCADE;
 CREATE TRIGGER task_starts_project AFTER UPDATE OF started_at ON muckwork.tasks
 	FOR EACH ROW WHEN (NEW.started_at IS NOT NULL)
 	EXECUTE PROCEDURE muckwork.task_starts_project();
 
 -- only started task un-started marks project as un-started
-CREATE FUNCTION task_unstarts_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION task_unstarts_project() RETURNS TRIGGER AS $$
 DECLARE
 	pi integer;
 BEGIN
@@ -393,13 +413,14 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS task_unstarts_project ON muckwork.tasks CASCADE;
 CREATE TRIGGER task_unstarts_project AFTER UPDATE OF started_at ON muckwork.tasks
 	FOR EACH ROW WHEN (NEW.started_at IS NULL)
 	EXECUTE PROCEDURE muckwork.task_unstarts_project();
 
 
 -- last task finished marks project as finished (see reverse below)
-CREATE FUNCTION task_finishes_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION task_finishes_project() RETURNS TRIGGER AS $$
 DECLARE
 	pi integer;
 BEGIN
@@ -416,25 +437,27 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS task_finishes_project ON muckwork.tasks CASCADE;
 CREATE TRIGGER task_finishes_project AFTER UPDATE OF finished_at ON muckwork.tasks
 	FOR EACH ROW WHEN (NEW.finished_at IS NOT NULL)
 	EXECUTE PROCEDURE muckwork.task_finishes_project();
 
 -- last finished task un-finished marks project as un-finished again
-CREATE FUNCTION task_unfinishes_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION task_unfinishes_project() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.projects SET finished_at=NULL
 		WHERE id=OLD.project_id AND finished_at IS NOT NULL;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS task_unfinishes_project ON muckwork.tasks CASCADE;
 CREATE TRIGGER task_unfinishes_project AFTER UPDATE OF finished_at ON muckwork.tasks
 	FOR EACH ROW WHEN (NEW.finished_at IS NULL)
 	EXECUTE PROCEDURE muckwork.task_unfinishes_project();
 
 
 -- task finished creates worker_charge  (see reverse below)
-CREATE FUNCTION task_creates_charge() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION task_creates_charge() RETURNS TRIGGER AS $$
 BEGIN
 	WITH x AS (
 		SELECT NEW.id AS task_id, currency, cents
@@ -443,41 +466,45 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS task_creates_charge ON muckwork.tasks CASCADE;
 CREATE TRIGGER task_creates_charge AFTER UPDATE OF finished_at ON muckwork.tasks
 	FOR EACH ROW WHEN (NEW.finished_at IS NOT NULL)
 	EXECUTE PROCEDURE muckwork.task_creates_charge();
 
 -- task UN-finished deletes associated charge
-CREATE FUNCTION task_uncreates_charge() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION task_uncreates_charge() RETURNS TRIGGER AS $$
 BEGIN
 	DELETE FROM muckwork.worker_charges WHERE task_id = NEW.id;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS task_uncreates_charge ON muckwork.tasks CASCADE;
 CREATE TRIGGER task_uncreates_charge AFTER UPDATE OF finished_at ON muckwork.tasks
 	FOR EACH ROW WHEN (NEW.finished_at IS NULL)
 	EXECUTE PROCEDURE muckwork.task_uncreates_charge();
 
 -- approving project makes tasks approved
-CREATE FUNCTION approve_project_tasks() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION approve_project_tasks() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.tasks SET status='approved'
 		WHERE project_id=OLD.id;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS approve_project_tasks ON muckwork.projects CASCADE;
 CREATE TRIGGER approve_project_tasks AFTER UPDATE OF approved_at ON muckwork.projects
 	FOR EACH ROW WHEN (NEW.approved_at IS NOT NULL)
 	EXECUTE PROCEDURE muckwork.approve_project_tasks();
 
 -- UN-approving project makes tasks UN-approved 
-CREATE FUNCTION unapprove_project_tasks() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION unapprove_project_tasks() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.tasks SET status='quoted'
 		WHERE project_id=OLD.id;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS unapprove_project_tasks ON muckwork.projects CASCADE;
 CREATE TRIGGER unapprove_project_tasks AFTER UPDATE OF approved_at ON muckwork.projects
 	FOR EACH ROW WHEN (NEW.approved_at IS NULL)
 	EXECUTE PROCEDURE muckwork.unapprove_project_tasks();
@@ -485,7 +512,7 @@ CREATE TRIGGER unapprove_project_tasks AFTER UPDATE OF approved_at ON muckwork.p
 
 -- project finished creates charge
 -- SOME DAY: fixed vs hourly (& hey maybe I should profit?)
-CREATE FUNCTION project_creates_charge() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION project_creates_charge() RETURNS TRIGGER AS $$
 DECLARE
 	nu_currency char(3);
 	nu_cents integer;
@@ -500,13 +527,14 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS project_creates_charge ON muckwork.projects CASCADE;
 CREATE TRIGGER project_creates_charge AFTER UPDATE OF finished_at ON muckwork.projects
 	FOR EACH ROW WHEN (NEW.finished_at IS NOT NULL)
 	EXECUTE PROCEDURE muckwork.project_creates_charge();
 
 
 -- project UN-finished UN-creates charge
-CREATE FUNCTION project_uncreates_charge() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION project_uncreates_charge() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.projects
 		SET final_currency = NULL, final_cents = NULL
@@ -515,10 +543,39 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS project_uncreates_charge ON muckwork.projects CASCADE;
 CREATE TRIGGER project_uncreates_charge AFTER UPDATE OF finished_at ON muckwork.projects
 	FOR EACH ROW WHEN (NEW.finished_at IS NULL)
 	EXECUTE PROCEDURE muckwork.project_uncreates_charge();
 
+
+-- template
+CREATE OR REPLACE FUNCTION auto_sortid() RETURNS TRIGGER AS $$
+DECLARE
+	i integer;
+BEGIN
+	SELECT COALESCE(MAX(sortid), 0) INTO i
+		FROM muckwork.tasks WHERE project_id=NEW.project_id;
+	NEW.sortid = (i + 1);
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS auto_sortid ON muckwork.tasks CASCADE;
+CREATE TRIGGER auto_sortid BEFORE INSERT ON muckwork.tasks
+	FOR EACH ROW WHEN (NEW.sortid IS NULL)
+	EXECUTE PROCEDURE muckwork.auto_sortid();
+
+
+-- template
+-- CREATE OR REPLACE FUNCTION xx() RETURNS TRIGGER AS $$
+-- BEGIN
+-- 	RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql;
+-- DROP TRIGGER IF EXISTS xx ON muckwork.projects CASCADE;
+-- CREATE TRIGGER xx AFTER UPDATE OF yy ON muckwork.projects
+-- 	FOR EACH ROW WHEN (NEW.yy IS NULL)
+-- 	EXECUTE PROCEDURE muckwork.xx();
 
 --------------------------------------
 --------------------------- FUNCTIONS:
@@ -597,6 +654,40 @@ CREATE VIEW project_view AS SELECT id, title, description, created_at,
 	json_build_object('currency', final_currency, 'cents', final_cents) final_money
 	FROM muckwork.projects
 	ORDER BY muckwork.projects.id DESC;
+
+DROP VIEW IF EXISTS task_view CASCADE;
+CREATE VIEW task_view AS SELECT t.*,
+	(SELECT row_to_json(px) AS project FROM
+		(SELECT id, title, description
+			FROM muckwork.projects
+			WHERE projects.id=t.project_id) px),
+	(SELECT row_to_json(wx) AS worker FROM
+		(SELECT w.*, p.name, p.email
+			FROM muckwork.workers w, peeps.people p
+			WHERE w.person_id=p.id AND w.id=t.worker_id) wx)
+	FROM muckwork.tasks t
+	ORDER BY t.sortid ASC;
+
+DROP VIEW IF EXISTS project_detail_view CASCADE;
+CREATE VIEW project_detail_view AS SELECT id, title, description, created_at,
+	quoted_at, approved_at, started_at, finished_at, status,
+	(SELECT row_to_json(cx) AS client FROM
+		(SELECT c.*, p.name, p.email
+			FROM muckwork.clients c, peeps.people p
+			WHERE c.person_id=p.id AND c.id=client_id) cx),
+	quoted_ratetype,
+	json_build_object('currency', quoted_currency, 'cents', quoted_cents) quoted_money,
+	json_build_object('currency', final_currency, 'cents', final_cents) final_money,
+	(SELECT json_agg(tx) AS tasks FROM
+		(SELECT t.*,
+			(SELECT row_to_json(wx) AS worker FROM
+				(SELECT w.*, p.name, p.email
+					FROM muckwork.workers w, peeps.people p
+					WHERE w.person_id=p.id AND w.id=t.worker_id) wx)
+			FROM muckwork.tasks t
+			WHERE t.project_id = j.id
+			ORDER BY t.sortid ASC) tx)
+	FROM muckwork.projects j;
 
 ----------------------------------------
 ------------------------- API FUNCTIONS:
@@ -807,8 +898,8 @@ $$ LANGUAGE plpgsql;
 
 
 
--- PARAMS:  status
-CREATE OR REPLACE FUNCTION get_projects_with_status(text,
+-- PARAMS: status ('created','quoted','approved','refused','started','finished')
+CREATE OR REPLACE FUNCTION get_projects_with_status(status,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -818,14 +909,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-
 -- PARAMS: project_id
--- TODO: tasks? all details? different view?
 CREATE OR REPLACE FUNCTION get_project(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_view WHERE id = $1) r;
+	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_detail_view WHERE id = $1) r;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -841,9 +930,32 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: client_id, title, description
 CREATE OR REPLACE FUNCTION create_project(integer, text, text,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
+	new_id integer;
 BEGIN
+	INSERT INTO muckwork.projects (client_id, title, description)
+		VALUES ($1, $2, $3) RETURNING id INTO new_id;
 	mime := 'application/json';
-	js := '{}';
+	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_view WHERE id = new_id) r;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
 END;
 $$ LANGUAGE plpgsql;
 
@@ -853,8 +965,16 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION update_project(integer, text, text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
+	UPDATE muckwork.projects SET title = $2, description = $3 WHERE id = $1;
 	mime := 'application/json';
-	js := '{}';
+	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_view WHERE id = new_id) r;
+	IF js IS NULL THEN 
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'about:blank',
+		'title', 'Not Found',
+		'status', 404);
+ END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -864,11 +984,11 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION quote_project(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
-	-- set final_currency same as quoted_currency
-	-- set quoted_at
-	-- set tasks to quoted
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.projects SET quoted_at = NOW(),
+		ratetype = $2, quoted_currency = $3, final_currency = $3, cents = $4
+		WHERE id = $1;
+	UPDATE muckwork.tasks SET status = 'quoted' WHERE project_id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_project($1) x;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -878,9 +998,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION approve_quote(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
-	-- set tasks to approved
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.projects SET approved_at = NOW() WHERE id = $1;
+	UPDATE muckwork.tasks SET status = 'approved' WHERE project_id = $1;
+	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_project($1) x;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -960,6 +1080,18 @@ CREATE OR REPLACE FUNCTION finish_task(integer,
 BEGIN
 	mime := 'application/json';
 	js := '{}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: status ('created','quoted','approved','refused','started','finished')
+CREATE OR REPLACE FUNCTION get_tasks_with_status(status,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view WHERE status = $1) r;
+	IF js IS NULL THEN js := '[]'; END IF;
 END;
 $$ LANGUAGE plpgsql;
 

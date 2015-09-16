@@ -313,5 +313,16 @@ class TestMuckworkDB < Minitest::Test
 		assert_equal 0, res.ntuples
 	end
 
+	def test_auto_sortid
+		res = DB.exec("INSERT INTO muckwork.tasks(project_id, title, description) VALUES (4, 'a', 'a') RETURNING *");
+		assert_equal '13', res[0]['id']
+		assert_equal '4', res[0]['sortid']
+		res = DB.exec("INSERT INTO muckwork.tasks(project_id, title, description) VALUES (5, 'a', 'a') RETURNING *");
+		assert_equal '14', res[0]['id']
+		assert_equal '1', res[0]['sortid']
+		res = DB.exec("INSERT INTO muckwork.tasks(project_id, title, description) VALUES (4, 'a', 'a') RETURNING *");
+		assert_equal '15', res[0]['id']
+		assert_equal '5', res[0]['sortid']
+	end
 end
 
