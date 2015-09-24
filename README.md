@@ -65,32 +65,32 @@ If POST /login works, it sets the 3 needed cookies (person_id, api_key, api_pass
 * Where to translate ugly errors (probably using regexp matching) into simple i18n keys for the UI to show in user's language?
 * Switch from Mail gem to <https://github.com/ktheory/maildir> once mail is local
 
-## Temporary email download
+## Muckwork Client API:
 
-What do you call that thing in spaceships that's the in-between zone between outside and inside?  De-pressure chamber?  Airlock?
+* initialize with API keys: MuckworkClient
+* update(currency)
+* get projects
+* get project(id)
+* create project(title, description)
+* update project(title, description)
+* approve quote(id)
+* refuse quote(id)
+* get task(id)
+* TODO: create payment, add note(projectId, taskId)
 
-Thinking of other ways to delete spam besides logging into webmail.  Some way to do it here?
+## Muckwork Worker API:
 
-One way is to use getmail to download the emails into Maildir format, then use the ktheory/maildir lib to access the files on the server.  yes/no/yes/yes/no.  Imported one at a time like that.
+* initialize with API keys: MuckworkWorker
+* get project(id)
+* get task(id)
+* claim task(id)
+* unclaim task(id)
+* start task(id)
+* finish task(id)
+* unclaimed tasks
+* TODO: get payments, add note(projectId, taskId)
 
-Another way is a temporary emails database table.  Import ALL new emails into this, then move them over from here to the real peeps.emails table
+## Muckwork Manager API:
 
-````sql
-CREATE TABLE tempemails (
-	id serial primary key,
-	their_email varchar(127),
-	their_name varchar(127),
-	subject varchar(127),
-	headers text,
-	body text,
-	message_id varchar(255) UNIQUE
-);
--- (plus the attachments!)
-````
-
-This feels like unnecessary complication.
-
-Another way is use MyMail::import but one at a time.  POP download: yes/no?  Next POP download: yes/no?  Only question is how to store it reliably inbetween.  Would probably need this database table anyway.
-
-So far I like the Maildir on the server approach, because it lets me use MailRoute.net and my own server for email.  No POP, IMAP, etc.  The Maildir is the temporary storage.
+* everything but init with API keys
 
