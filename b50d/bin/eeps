@@ -46,25 +46,42 @@ def send_one(mandrill, parsed)
 	mandrill.messages.send(msg)
 end
 
+# in case a list_loop crashes and I have to start again,
+# read the log to get the person_ids already emailed
+def already_emailed(outfile)
+	if File.file?(outfile)
+		File.readlines(outfile).map {|line| line.split("\t")[1].to_i }
+	else
+		[]
+	end
+end
+
 # sends to list (or 5 test emails) and logs response from Mandrill
 # LOG FORMAT:
 # time, person id, email, Mandrill id, status, reason if rejected
 def list_loop(list, template, mandrill, outfile, test_email = nil)
 	list = list[0,5] if test_email
+	ids_to_skip = already_emailed(outfile)
 	File.open(outfile, 'a') do |f|
 		list.each do |listitem|
-			parsed = parse_template(template, listitem, test_email)
-			response = send_one(mandrill, parsed)
-			logline = [
-				Time.now.strftime('%Y-%m-%d %H:%M:%S'),
-				parsed[:id],
-				parsed[:email],
-				response[0]['_id'],
-				response[0]['status'],
-				response[0]['reject_reason']
-			].join("\t")
-			puts logline
-			f.puts logline unless test_email
+			person_id = listitem[0]
+			next if ids_to_skip.include? person_id
+			begin
+				parsed = parse_template(template, listitem, test_email)
+				response = send_one(mandrill, parsed)
+				logline = [
+					Time.now.strftime('%Y-%m-%d %H:%M:%S'),
+					parsed[:id],
+					parsed[:email],
+					response[0]['_id'],
+					response[0]['status'],
+					response[0]['reject_reason']
+				].join("\t")
+				puts logline
+				f.puts logline unless test_email
+			rescue
+				f.puts "FAILED: #{person_id}"
+			end
 		end
 	end
 	puts "\n\nDONE! LOG FILE:\n#{outfile}" unless test_email
