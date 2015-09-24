@@ -324,5 +324,12 @@ class TestMuckworkDB < Minitest::Test
 		assert_equal '15', res[0]['id']
 		assert_equal '5', res[0]['sortid']
 	end
+
+	def test_notes_empty
+		assert_raises PG::CheckViolation do
+			DB.exec("INSERT INTO muckwork.notes(project_id, note) VALUES (1, '')")
+		end
+		DB.exec("INSERT INTO muckwork.notes(project_id, note) VALUES (1, 'ok')")
+	end
 end
 

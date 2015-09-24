@@ -94,7 +94,14 @@ class MuckworkAPITest < Minitest::Test
 					millicents_per_second: 42,
 					name: 'Charlie Buckets',
 					email: 'charlie@bucket.org'}}
-			]}
+			],
+			notes: [{id: 1,
+				created_at: '2015-07-07T12:34:56+12:00',
+				task_id: 1,
+				manager_id: nil,
+				client_id: 1,
+				worker_id: nil,
+				note: 'great job, Charlie!'}]}
 		@task_view_1 = {id: 1,
 			project_id: 1,
 			worker_id: 1,
@@ -114,7 +121,13 @@ class MuckworkAPITest < Minitest::Test
 				currency: 'USD',
 				millicents_per_second: 42,
 				name: 'Charlie Buckets',
-				email: 'charlie@bucket.org'}}
+				email: 'charlie@bucket.org'},
+			notes: [{id: 1,
+				created_at: '2015-07-07T12:34:56+12:00',
+				manager_id: nil,
+				client_id: 1,
+				worker_id: nil,
+				note: 'great job, Charlie!'}]}
 	end
 
 	def test_get_clients
@@ -228,9 +241,18 @@ class MuckworkAPITest < Minitest::Test
 	end
 
 	def test_refuse_quote
-		#TODO
-		#qry("muckwork.refuse_quote(integer, text)")
-		#assert_equal x, @j
+		qry("muckwork.refuse_quote(1, 'nah')")
+		assert_equal 'Not Found', @j[:title]
+		qry("muckwork.refuse_quote(9, 'nah')")
+		assert_equal 'Not Found', @j[:title]
+		qry("muckwork.refuse_quote(4, 'nah')")
+		assert_equal 2, @j[:id]
+		assert_equal 'nah', @j[:note]
+		assert_match /\A20[0-9]{2}-[0-9]{2}/, @j[:created_at]
+		assert_equal 4, @j[:project_id]
+		assert_equal 2, @j[:client_id]
+		qry("muckwork.get_project(4)")
+		assert_equal 'refused', @j[:status]
 	end
 
 	def test_get_task

@@ -63,18 +63,18 @@ CREATE INDEX tpi ON tasks(project_id);
 CREATE INDEX twi ON tasks(worker_id);
 CREATE INDEX tst ON tasks(status);
 
--- TODO: notes
--- CREATE TABLE notes (
---	id serial primary key,
---	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
---	project_id integer REFERENCES projects(id),
---	task_id integer REFERENCES tasks(id),
---	manager_id integer REFERENCES managers(id),
---	client_id integer REFERENCES clients(id),
---	worker_id integer REFERENCES workers(id),
---	note text
---);
---CREATE INDEX notpi ON notes(project_id);
+CREATE TABLE notes (
+	id serial primary key,
+	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
+	project_id integer REFERENCES projects(id),
+	task_id integer REFERENCES tasks(id),
+	manager_id integer REFERENCES managers(id),
+	client_id integer REFERENCES clients(id),
+	worker_id integer REFERENCES workers(id),
+	note text not null CONSTRAINT note_not_empty CHECK (length(note) > 0)
+);
+CREATE INDEX notpi ON notes(project_id);
+CREATE INDEX notti ON notes(task_id);
 
 CREATE TABLE charges (
 	id serial primary key,
@@ -664,7 +664,12 @@ CREATE VIEW task_view AS SELECT t.*,
 	(SELECT row_to_json(wx) AS worker FROM
 		(SELECT w.*, p.name, p.email
 			FROM muckwork.workers w, peeps.people p
-			WHERE w.person_id=p.id AND w.id=t.worker_id) wx)
+			WHERE w.person_id=p.id AND w.id=t.worker_id) wx),
+	(SELECT json_agg(nx) AS notes FROM
+		(SELECT id, created_at, manager_id, client_id, worker_id, note
+			FROM muckwork.notes n
+			WHERE n.task_id = t.id
+			ORDER BY n.id ASC) nx)
 	FROM muckwork.tasks t
 	ORDER BY t.sortid ASC;
 
@@ -686,7 +691,12 @@ CREATE VIEW project_detail_view AS SELECT id, title, description, created_at,
 					WHERE w.person_id=p.id AND w.id=t.worker_id) wx)
 			FROM muckwork.tasks t
 			WHERE t.project_id = j.id
-			ORDER BY t.sortid ASC) tx)
+			ORDER BY t.sortid ASC) tx),
+	(SELECT json_agg(nx) AS notes FROM
+		(SELECT id, created_at, task_id, manager_id, client_id, worker_id, note
+			FROM muckwork.notes n
+			WHERE n.project_id = j.id
+			ORDER BY n.id ASC) nx)
 	FROM muckwork.projects j;
 
 ----------------------------------------
@@ -1006,13 +1016,28 @@ $$ LANGUAGE plpgsql;
 
 
 
--- PARAMS: project_id, description
--- TODO: instead of update description, add notes
+-- PARAMS: project_id, explanation
 CREATE OR REPLACE FUNCTION refuse_quote(integer, text,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+	note_id integer;
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.projects SET status = 'refused' WHERE id = $1 AND status = 'quoted';
+	IF FOUND IS FALSE THEN
+
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'about:blank',
+		'title', 'Not Found',
+		'status', 404);
+
+	ELSE
+		INSERT INTO muckwork.notes (project_id, client_id, note)
+			VALUES ($1, (SELECT client_id FROM projects WHERE id = $1), $2)
+			RETURNING id INTO note_id;
+		mime := 'application/json';
+		js := row_to_json(r) FROM (SELECT * FROM muckwork.notes WHERE id = note_id) r;
+	END IF;
 END;
 $$ LANGUAGE plpgsql;
 

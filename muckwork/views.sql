@@ -24,7 +24,12 @@ CREATE VIEW task_view AS SELECT t.*,
 	(SELECT row_to_json(wx) AS worker FROM
 		(SELECT w.*, p.name, p.email
 			FROM muckwork.workers w, peeps.people p
-			WHERE w.person_id=p.id AND w.id=t.worker_id) wx)
+			WHERE w.person_id=p.id AND w.id=t.worker_id) wx),
+	(SELECT json_agg(nx) AS notes FROM
+		(SELECT id, created_at, manager_id, client_id, worker_id, note
+			FROM muckwork.notes n
+			WHERE n.task_id = t.id
+			ORDER BY n.id ASC) nx)
 	FROM muckwork.tasks t
 	ORDER BY t.sortid ASC;
 
@@ -46,6 +51,11 @@ CREATE VIEW project_detail_view AS SELECT id, title, description, created_at,
 					WHERE w.person_id=p.id AND w.id=t.worker_id) wx)
 			FROM muckwork.tasks t
 			WHERE t.project_id = j.id
-			ORDER BY t.sortid ASC) tx)
+			ORDER BY t.sortid ASC) tx),
+	(SELECT json_agg(nx) AS notes FROM
+		(SELECT id, created_at, task_id, manager_id, client_id, worker_id, note
+			FROM muckwork.notes n
+			WHERE n.project_id = j.id
+			ORDER BY n.id ASC) nx)
 	FROM muckwork.projects j;
 

@@ -83,32 +83,6 @@ SELECT pg_catalog.setval('managers_id_seq', 1, true);
 
 
 --
--- Data for Name: payments; Type: TABLE DATA; Schema: muckwork; Owner: d50b
---
-
-ALTER TABLE payments DISABLE TRIGGER ALL;
-
-INSERT INTO payments (id, created_at, client_id, currency, cents, notes) VALUES (1, '2015-07-01 12:00:00+12', 1, 'USD', 5000, 'payment# 4321');
-INSERT INTO payments (id, created_at, client_id, currency, cents, notes) VALUES (2, '2015-07-05 12:00:00+12', 2, 'GBP', 10000, 'payment# 5432');
-
-
-ALTER TABLE payments ENABLE TRIGGER ALL;
-
---
--- Name: payments_id_seq; Type: SEQUENCE SET; Schema: muckwork; Owner: d50b
---
-
-SELECT pg_catalog.setval('payments_id_seq', 2, true);
-
-
---
--- Name: projects_id_seq; Type: SEQUENCE SET; Schema: muckwork; Owner: d50b
---
-
-SELECT pg_catalog.setval('projects_id_seq', 5, true);
-
-
---
 -- Data for Name: workers; Type: TABLE DATA; Schema: muckwork; Owner: d50b
 --
 
@@ -141,6 +115,50 @@ INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, create
 
 
 ALTER TABLE tasks ENABLE TRIGGER ALL;
+
+--
+-- Data for Name: notes; Type: TABLE DATA; Schema: muckwork; Owner: d50b
+--
+
+ALTER TABLE notes DISABLE TRIGGER ALL;
+
+INSERT INTO notes (id, created_at, project_id, task_id, manager_id, client_id, worker_id, note) VALUES (1, '2015-07-07 12:34:56+12', 1, 1, NULL, 1, NULL, 'great job, Charlie!');
+
+
+ALTER TABLE notes ENABLE TRIGGER ALL;
+
+--
+-- Name: notes_id_seq; Type: SEQUENCE SET; Schema: muckwork; Owner: d50b
+--
+
+SELECT pg_catalog.setval('notes_id_seq', 1, true);
+
+
+--
+-- Data for Name: payments; Type: TABLE DATA; Schema: muckwork; Owner: d50b
+--
+
+ALTER TABLE payments DISABLE TRIGGER ALL;
+
+INSERT INTO payments (id, created_at, client_id, currency, cents, notes) VALUES (1, '2015-07-01 12:00:00+12', 1, 'USD', 5000, 'payment# 4321');
+INSERT INTO payments (id, created_at, client_id, currency, cents, notes) VALUES (2, '2015-07-05 12:00:00+12', 2, 'GBP', 10000, 'payment# 5432');
+
+
+ALTER TABLE payments ENABLE TRIGGER ALL;
+
+--
+-- Name: payments_id_seq; Type: SEQUENCE SET; Schema: muckwork; Owner: d50b
+--
+
+SELECT pg_catalog.setval('payments_id_seq', 2, true);
+
+
+--
+-- Name: projects_id_seq; Type: SEQUENCE SET; Schema: muckwork; Owner: d50b
+--
+
+SELECT pg_catalog.setval('projects_id_seq', 5, true);
+
 
 --
 -- Name: tasks_id_seq; Type: SEQUENCE SET; Schema: muckwork; Owner: d50b

@@ -63,18 +63,18 @@ CREATE INDEX tpi ON tasks(project_id);
 CREATE INDEX twi ON tasks(worker_id);
 CREATE INDEX tst ON tasks(status);
 
--- TODO: notes
--- CREATE TABLE notes (
---	id serial primary key,
---	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
---	project_id integer REFERENCES projects(id),
---	task_id integer REFERENCES tasks(id),
---	manager_id integer REFERENCES managers(id),
---	client_id integer REFERENCES clients(id),
---	worker_id integer REFERENCES workers(id),
---	note text
---);
---CREATE INDEX notpi ON notes(project_id);
+CREATE TABLE notes (
+	id serial primary key,
+	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
+	project_id integer REFERENCES projects(id),
+	task_id integer REFERENCES tasks(id),
+	manager_id integer REFERENCES managers(id),
+	client_id integer REFERENCES clients(id),
+	worker_id integer REFERENCES workers(id),
+	note text not null CONSTRAINT note_not_empty CHECK (length(note) > 0)
+);
+CREATE INDEX notpi ON notes(project_id);
+CREATE INDEX notti ON notes(task_id);
 
 CREATE TABLE charges (
 	id serial primary key,

@@ -100,7 +100,14 @@ class TestMuckwork < Minitest::Test
 					millicents_per_second: 42,
 					name: 'Charlie Buckets',
 					email: 'charlie@bucket.org'}}
-			]}
+			],
+			notes: [{id: 1,
+				created_at: '2015-07-07T12:34:56+12:00',
+				task_id: 1,
+				manager_id: nil,
+				client_id: 1,
+				worker_id: nil,
+				note: 'great job, Charlie!'}]}
 		@task_view_1 = {id: 1,
 			project_id: 1,
 			worker_id: 1,
@@ -120,7 +127,13 @@ class TestMuckwork < Minitest::Test
 				currency: 'USD',
 				millicents_per_second: 42,
 				name: 'Charlie Buckets',
-				email: 'charlie@bucket.org'}}
+				email: 'charlie@bucket.org'},
+			notes: [{id: 1,
+				created_at: '2015-07-07T12:34:56+12:00',
+				manager_id: nil,
+				client_id: 1,
+				worker_id: nil,
+				note: 'great job, Charlie!'}]}
 	end
 
 	def test_get_clients
@@ -234,9 +247,18 @@ class TestMuckwork < Minitest::Test
 	end
 
 	def test_refuse_quote
-		#TODO
-		#x = @mw.refuse_quote(integer, text)
-		#assert_equal x, x
+		x = @mw.refuse_quote(1, 'nah')
+		assert_equal false, x
+		x = @mw.refuse_quote(9, 'nah')
+		assert_equal false, x
+		x = @mw.refuse_quote(4, 'nah')
+		assert_equal 2, x[:id]
+		assert_equal 'nah', x[:note]
+		assert_match /\A20[0-9]{2}-[0-9]{2}/, x[:created_at]
+		assert_equal 4, x[:project_id]
+		assert_equal 2, x[:client_id]
+		x = @mw.get_project(4)
+		assert_equal 'refused', x[:status]
 	end
 
 	def test_get_task

@@ -89,6 +89,7 @@ module B50D
 
 		def refuse_quote(project_id, description)
 			return false unless /\A[0-9]+\Z/ === String(project_id)
+			return false unless String(description).strip.size > 0
 			@db.js('muckwork.refuse_quote($1, $2)', [project_id, description])
 		end
 

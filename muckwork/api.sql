@@ -206,13 +206,22 @@ $$ LANGUAGE plpgsql;
 
 
 
--- PARAMS: project_id, description
--- TODO: instead of update description, add notes
+-- PARAMS: project_id, explanation
 CREATE OR REPLACE FUNCTION refuse_quote(integer, text,
 	OUT mime text, OUT js json) AS $$
+DECLARE
+	note_id integer;
 BEGIN
-	mime := 'application/json';
-	js := '{}';
+	UPDATE muckwork.projects SET status = 'refused' WHERE id = $1 AND status = 'quoted';
+	IF FOUND IS FALSE THEN
+m4_NOTFOUND
+	ELSE
+		INSERT INTO muckwork.notes (project_id, client_id, note)
+			VALUES ($1, (SELECT client_id FROM projects WHERE id = $1), $2)
+			RETURNING id INTO note_id;
+		mime := 'application/json';
+		js := row_to_json(r) FROM (SELECT * FROM muckwork.notes WHERE id = note_id) r;
+	END IF;
 END;
 $$ LANGUAGE plpgsql;
 
