@@ -206,7 +206,7 @@ BEGIN
 m4_NOTFOUND
 	ELSE
 		UPDATE peeps.emails SET opened_at=NULL, opened_by=NULL, category=(SELECT
-			substring(concat('not-', split_part(people.email,'@',1)) from 1 for 32)
+			substring(concat('not-', split_part(people.email,'@',1)) from 1 for 8)
 			FROM peeps.emailers JOIN people ON emailers.person_id=people.id
 			WHERE emailers.id = $1) WHERE id = eid;
 		mime := 'application/json';
