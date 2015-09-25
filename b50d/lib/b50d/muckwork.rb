@@ -160,16 +160,54 @@ module B50D
 		def error ; @db.error ; end
 		def message ; @db.message ; end
 
-		def initialize(api1, api2, server='live')
-			# TODO: auth and set @client_id
-			@client_id = 1
+		def initialize(api_key, api_pass, server='live')
+			@db = DbAPI.new(server)
+			res = @db.qry("SELECT c.id FROM peeps.api_keys a, muckwork.clients c" +
+				" WHERE akey=$1 AND apass=$2 AND $3=ANY(apis)" +
+				" AND a.person_id=c.person_id",
+				[api_key, api_pass, 'Peep'])
+			raise 'bad API auth' unless res.ntuples == 1
+			@client_id = res[0]['id']
 			@mw = B50D::Muckwork.new(server)
 		end
 
 		def update(currency)
+			return false unless @mw.client_owns_project(@client_id, project_id)
 			@mw.update_client(@client_id, currency)
 		end
 
+		def get_projects
+			@mw.client_get_projects(@client_id)
+		end
+
+		def get_project(project_id)
+			return false unless @mw.client_owns_project(@client_id, project_id)
+			@mw.get_project(project_id)
+		end
+
+		def create_project(title, description)
+			@mw.create_project(@client_id, title, description)
+		end
+
+		def update_project(project_id, title, description)
+			return false unless @mw.client_owns_project(@client_id, project_id)
+			@mw.update_project(project_id, title, description)
+		end
+
+		def approve_quote(project_id)
+			return false unless @mw.client_owns_project(@client_id, project_id)
+			@mw.approve_quote(project_id)
+		end
+
+		def refuse_quote(project_id, reason)
+			return false unless @mw.client_owns_project(@client_id, project_id)
+			@mw.refuse_quote(project_id)
+		end
+
+		def get_project_task(project_id, task_id)
+			return false unless @mw.client_owns_project(@client_id, project_id)
+			@mw.get_project_task(project_id, task_id)
+		end
 	end
 end
 

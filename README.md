@@ -69,15 +69,6 @@ If POST /login works, it sets the 3 needed cookies (person_id, api_key, api_pass
 
 ## Muckwork Client API:
 
-* initialize with API keys: MuckworkClient
-* update(currency)
-* get projects
-* get project(id)
-* create project(title, description)
-* update project(title, description)
-* approve quote(id)
-* refuse quote(id)
-* get task(id)
 * TODO: create payment, add note(projectId, taskId)
 
 ## Muckwork Worker API:
