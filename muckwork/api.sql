@@ -2,6 +2,38 @@
 ------------------------- API FUNCTIONS:
 ----------------------------------------
 
+-- PARAMS: client_id, project_id
+-- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
+CREATE OR REPLACE FUNCTION client_owns_project(integer, integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	PERFORM 1 FROM muckwork.projects WHERE client_id = $1 AND id = $2;
+	IF FOUND IS TRUE THEN
+		js := '{"ok": true}';
+	ELSE
+		js := '{"ok": false}';
+	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: worker_id, task_id
+-- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
+CREATE OR REPLACE FUNCTION worker_owns_task(integer, integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	PERFORM 1 FROM muckwork.tasks WHERE worker_id = $1 AND id = $2;
+	IF FOUND IS TRUE THEN
+		js := '{"ok": true}';
+	ELSE
+		js := '{"ok": false}';
+	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- PARAMS: (none)
 CREATE OR REPLACE FUNCTION get_clients(
 	OUT mime text, OUT js json) AS $$

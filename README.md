@@ -65,6 +65,13 @@ If POST /login works, it sets the 3 needed cookies (person_id, api_key, api_pass
 * Where to translate ugly errors (probably using regexp matching) into simple i18n keys for the UI to show in user's language?
 * Switch from Mail gem to <https://github.com/ktheory/maildir> once mail is local
 
+## API:
+
+* client get projects(client id)
+* client owns project(client id, project id) = boolean response
+* change get task to (project id, task id) for verification
+* ... then put this before passing through other calls
+
 ## Muckwork Client API:
 
 * initialize with API keys: MuckworkClient

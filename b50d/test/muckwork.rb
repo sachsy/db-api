@@ -136,6 +136,20 @@ class TestMuckwork < Minitest::Test
 				note: 'great job, Charlie!'}]}
 	end
 
+	def test_client_owns_project
+		assert @mw.client_owns_project(1, 1)
+		refute @mw.client_owns_project(2, 1)
+		assert @mw.client_owns_project(2, 2)
+		refute @mw.client_owns_project(9, 99)
+	end
+
+	def test_worker_owns_task
+		assert @mw.worker_owns_task(1, 1)
+		refute @mw.worker_owns_task(2, 1)
+		assert @mw.worker_owns_task(2, 4)
+		refute @mw.worker_owns_task(2, 99)
+	end
+
 	def test_get_clients
 		x = @mw.get_clients
 		r = [

@@ -9,6 +9,16 @@ module B50D
 			@db = DbAPI.new(server)
 		end
 
+		def client_owns_project(client_id, project_id)
+			x = @db.js('muckwork.client_owns_project($1, $2)', [client_id, project_id])
+			{ok: true} == x
+		end
+
+		def worker_owns_task(worker_id, task_id)
+			x = @db.js('muckwork.worker_owns_task($1, $2)', [worker_id, task_id])
+			{ok: true} == x
+		end
+
 		def get_clients
 			@db.js('muckwork.get_clients()')
 		end
@@ -132,6 +142,22 @@ module B50D
 		def get_tasks_with_status(status)
 			return false unless %w(created quoted approved refused started finished).include? status
 			@db.js('muckwork.get_tasks_with_status($1)', [status])
+		end
+
+	end
+
+	class MuckworkClient
+		def error ; @db.error ; end
+		def message ; @db.message ; end
+
+		def initialize(api1, api2, server='live')
+			# TODO: auth and set @client_id
+			@client_id = 1
+			@mw = B50D::Muckwork.new(server)
+		end
+
+		def update(currency)
+			@mw.update_client(@client_id, currency)
 		end
 
 	end

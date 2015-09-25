@@ -130,6 +130,28 @@ class MuckworkAPITest < Minitest::Test
 				note: 'great job, Charlie!'}]}
 	end
 
+	def test_client_owns_project
+		qry("muckwork.client_owns_project(1, 1)")
+		assert_equal({ok: true}, @j)
+		qry("muckwork.client_owns_project(2, 1)")
+		assert_equal({ok: false}, @j)
+		qry("muckwork.client_owns_project(2, 2)")
+		assert_equal({ok: true}, @j)
+		qry("muckwork.client_owns_project(9, 99)")
+		assert_equal({ok: false}, @j)
+	end
+
+	def test_worker_owns_task
+		qry("muckwork.worker_owns_task(1, 1)")
+		assert_equal({ok: true}, @j)
+		qry("muckwork.worker_owns_task(2, 1)")
+		assert_equal({ok: false}, @j)
+		qry("muckwork.worker_owns_task(2, 4)")
+		assert_equal({ok: true}, @j)
+		qry("muckwork.worker_owns_task(2, 99)")
+		assert_equal({ok: false}, @j)
+	end
+
 	def test_get_clients
 		qry("muckwork.get_clients()")
 		r = [
