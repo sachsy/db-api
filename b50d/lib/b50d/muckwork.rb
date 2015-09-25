@@ -64,6 +64,10 @@ module B50D
 			@db.js('muckwork.get_projects()')
 		end
 
+		def client_get_projects(client_id)
+			@db.js('muckwork.client_get_projects($1)', [client_id])
+		end
+
 		def get_projects_with_status(status)
 			return false unless %w(created quoted approved refused started finished).include? status
 			@db.js('muckwork.get_projects_with_status($1)', [status])
@@ -106,6 +110,12 @@ module B50D
 		def get_task(id)
 			return false unless /\A[0-9]+\Z/ === String(id)
 			@db.js('muckwork.get_task($1)', [id])
+		end
+
+		def get_project_task(project_id, task_id)
+			return false unless /\A[0-9]+\Z/ === String(project_id)
+			return false unless /\A[0-9]+\Z/ === String(task_id)
+			@db.js('muckwork.get_project_task($1, $2)', [project_id, task_id])
 		end
 
 		def create_task(project_id, title, description, sortid=nil)

@@ -222,6 +222,11 @@ class MuckworkAPITest < Minitest::Test
 		assert_equal [5,4,3,2,1], @j.map {|p| p[:id]}
 	end
 
+	def test_client_get_projects
+		qry("muckwork.client_get_projects(2)")
+		assert_equal [4,2], @j.map {|p| p[:id]}
+	end
+
 	def test_get_projects_with_status
 		qry("muckwork.get_projects_with_status('finished')")
 		assert_equal 1, @j.size
@@ -280,6 +285,13 @@ class MuckworkAPITest < Minitest::Test
 	def test_get_task
 		qry("muckwork.get_task(1)")
 		assert_equal @task_view_1, @j
+	end
+
+	def test_get_project_task
+		qry("muckwork.get_project_task(1, 1)")
+		assert_equal @task_view_1, @j
+		qry("muckwork.get_project_task(2, 1)")
+		assert_equal 'Not Found', @j[:title]
 	end
 
 	def test_create_task

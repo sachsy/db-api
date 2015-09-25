@@ -220,6 +220,11 @@ class TestMuckwork < Minitest::Test
 		assert_equal [5,4,3,2,1], x.map {|p| p[:id]}
 	end
 
+	def test_client_get_projects
+		x = @mw.client_get_projects(2)
+		assert_equal [4,2], x.map {|p| p[:id]}
+	end
+
 	def test_get_projects_with_status
 		x = @mw.get_projects_with_status('finished')
 		assert_equal 1, x.size
@@ -278,6 +283,12 @@ class TestMuckwork < Minitest::Test
 	def test_get_task
 		x = @mw.get_task(1)
 		assert_equal @task_view_1, x
+	end
+
+	def test_get_project_task
+		x = @mw.get_project_task(1, 1)
+		assert_equal @task_view_1, x
+		refute @mw.get_project_task(2, 1)
 	end
 
 	def test_create_task

@@ -940,6 +940,19 @@ $$ LANGUAGE plpgsql;
 
 
 
+-- PARAMS:  client_id
+CREATE OR REPLACE FUNCTION client_get_projects(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := json_agg(r) FROM (SELECT * FROM muckwork.project_view WHERE id IN
+		(SELECT id FROM muckwork.projects WHERE client_id = $1)) r;
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
 -- PARAMS: status ('created','quoted','approved','refused','started','finished')
 CREATE OR REPLACE FUNCTION get_projects_with_status(status,
 	OUT mime text, OUT js json) AS $$
@@ -1082,6 +1095,26 @@ BEGIN
 	mime := 'application/json';
 	js := row_to_json(r) FROM
 		(SELECT * FROM muckwork.task_view WHERE id = $1) r;
+	IF js IS NULL THEN 
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'about:blank',
+		'title', 'Not Found',
+		'status', 404);
+ END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: project_id, task.id
+-- (Same as get_task but including project_id for ownership verification.)
+CREATE OR REPLACE FUNCTION get_project_task(integer, integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := row_to_json(r) FROM
+		(SELECT * FROM muckwork.task_view WHERE project_id = $1 AND id = $2) r;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
