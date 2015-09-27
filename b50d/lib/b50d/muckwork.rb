@@ -165,14 +165,13 @@ module B50D
 			res = @db.qry("SELECT c.id FROM peeps.api_keys a, muckwork.clients c" +
 				" WHERE akey=$1 AND apass=$2 AND $3=ANY(apis)" +
 				" AND a.person_id=c.person_id",
-				[api_key, api_pass, 'Peep'])
+				[api_key, api_pass, 'MuckworkClient'])
 			raise 'bad API auth' unless res.ntuples == 1
-			@client_id = res[0]['id']
+			@client_id = res[0]['id'].to_i
 			@mw = B50D::Muckwork.new(server)
 		end
 
 		def update(currency)
-			return false unless @mw.client_owns_project(@client_id, project_id)
 			@mw.update_client(@client_id, currency)
 		end
 
@@ -201,7 +200,7 @@ module B50D
 
 		def refuse_quote(project_id, reason)
 			return false unless @mw.client_owns_project(@client_id, project_id)
-			@mw.refuse_quote(project_id)
+			@mw.refuse_quote(project_id, reason)
 		end
 
 		def get_project_task(project_id, task_id)
