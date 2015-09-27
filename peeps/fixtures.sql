@@ -290,11 +290,11 @@ ALTER TABLE people ENABLE TRIGGER ALL;
 ALTER TABLE api_keys DISABLE TRIGGER ALL;
 
 INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (1, 'aaaaaaaa', 'bbbbbbbb', '{Peep,SiversComments,MuckworkManager}');
-INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (2, 'cccccccc', 'dddddddd', '{MuckworkManager}');
+INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (2, 'cccccccc', 'dddddddd', '{MuckworkClient}');
 INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (3, 'eeeeeeee', 'ffffffff', '{MuckworkClient}');
-INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (4, 'gggggggg', 'hhhhhhhh', '{Peep}');
-INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (5, 'iiiiiiii', 'jjjjjjjj', '{}');
-INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (6, 'kkkkkkkk', 'llllllll', '{MuckworkClient,SiversComments,Peep}');
+INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (4, 'gggggggg', 'hhhhhhhh', '{Peep,Muckworker}');
+INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (5, 'iiiiiiii', 'jjjjjjjj', '{Muckworker}');
+INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (6, 'kkkkkkkk', 'llllllll', '{SiversComments,Peep}');
 INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (7, 'mmmmmmmm', 'nnnnnnnn', '{Peep}');
 
 
