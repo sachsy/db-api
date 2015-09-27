@@ -14,6 +14,13 @@ class TestMuckworkClient < Minitest::Test
 		@mc2 = B50D::MuckworkClient.new('e' * 8, 'f' * 8, 'test')
 	end
 
+	def test_get_client
+		x = @mc1.get_client
+		assert_equal 'Willy Wonka', x[:name]
+		x = @mc2.get_client
+		assert_equal 'Veruca Salt', x[:name]
+	end
+
 	def test_update
 		x = @mc2.update('SGD')
 		assert_equal 'SGD', x[:currency]

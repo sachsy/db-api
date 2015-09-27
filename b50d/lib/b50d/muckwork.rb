@@ -171,6 +171,10 @@ module B50D
 			@mw = B50D::Muckwork.new(server)
 		end
 
+		def get_client
+			@mw.get_client(@client_id)
+		end
+
 		def update(currency)
 			@mw.update_client(@client_id, currency)
 		end
