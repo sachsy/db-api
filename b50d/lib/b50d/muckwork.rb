@@ -171,12 +171,25 @@ module B50D
 			@mw = B50D::Muckwork.new(server)
 		end
 
+		def locations
+			@db.js('peeps.all_countries()')
+		end
+
+		def currencies
+			@db.js('peeps.all_currencies()')
+		end
+
 		def get_client
 			@mw.get_client(@client_id)
 		end
 
-		def update(currency)
-			@mw.update_client(@client_id, currency)
+		# TODO? put this into PostgreSQL API?
+		def update(params)
+			client = @mw.get_client(@client_id)
+			if /\A[A-Z]{3}\Z/ === params[:currency]
+				@mw.update_client(@client_id, params[:currency])
+			end
+			@db.js('peeps.update_person($1, $2)', [client[:person_id], params.to_json])
 		end
 
 		def get_projects

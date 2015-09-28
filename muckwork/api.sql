@@ -52,7 +52,8 @@ CREATE OR REPLACE FUNCTION get_client(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT c.*, p.name, p.email
+	js := row_to_json(r) FROM (SELECT c.*, p.name, p.email,
+		p.address, p.company, p.city, p.state, p.country, p.phone
 		FROM muckwork.clients c, peeps.people p
 		WHERE c.person_id=p.id AND c.id=$1) r;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
@@ -109,7 +110,8 @@ CREATE OR REPLACE FUNCTION get_worker(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT w.*, p.name, p.email
+	js := row_to_json(r) FROM (SELECT w.*, p.name, p.email,
+		p.address, p.company, p.city, p.state, p.country, p.phone
 		FROM muckwork.workers w, peeps.people p
 		WHERE w.person_id=p.id AND w.id=$1) r;
 	IF js IS NULL THEN m4_NOTFOUND END IF;

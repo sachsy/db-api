@@ -9,7 +9,7 @@
 * mark new project as ready to be quoted
 * create payment
 * delete unstarted project
-
+* if clients.currency changes, recalculate centsbalance
 
 # THOUGHTS:
 

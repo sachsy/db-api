@@ -22,9 +22,11 @@ class TestMuckworkClient < Minitest::Test
 	end
 
 	def test_update
-		x = @mc2.update('SGD')
-		assert_equal 'SGD', x[:currency]
-		refute @mc2.update('XXX')
+		params = {currency: 'SGD', city: 'New City', ignore: 'this'}
+		@mc2.update(params)
+		x = @mc2.get_client
+		assert_equal params[:currency], x[:currency]
+		assert_equal params[:city], x[:city]
 	end
 
 	def test_get_projects

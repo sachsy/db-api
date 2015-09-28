@@ -162,7 +162,7 @@ class MuckworkAPITest < Minitest::Test
 
 	def test_get_client
 		qry("muckwork.get_client(2)")
-		r = {id:2, person_id:3, currency:'GBP', cents_balance:10000, name:'Veruca Salt', email:'veruca@salt.com'}
+		r = {:id=>2, :person_id=>3, :currency=>'GBP', :cents_balance=>10000, :name=>'Veruca Salt', :email=>'veruca@salt.com', :address=>'Veruca', :company=>'Daddy Empires Ltd', :city=>'London', :state=>'England', :country=>'GB', :phone=>'+44 9273 7231'}
 		assert_equal r, @j
 		qry("muckwork.get_client(99)")
 		assert_equal 'Not Found', @j[:title]
@@ -170,7 +170,7 @@ class MuckworkAPITest < Minitest::Test
 
 	def test_create_client
 		qry("muckwork.create_client(8)")
-		r = {id:3, person_id:8, currency:'USD', cents_balance:0, name:'Yoko Ono', email:'yoko@ono.com'}
+		r = {:id=>3, :person_id=>8, :currency=>'USD', :cents_balance=>0, :name=>'Yoko Ono', :email=>'yoko@ono.com', :address=>'Ono-San', :company=>'yoko@lennon.com', :city=>'Tokyo', :state=>nil, :country=>'JP', :phone=>nil}
 		assert_equal r, @j
 		qry("muckwork.create_client(99)")
 		assert @j[:title].include? 'violates foreign key'
@@ -178,7 +178,7 @@ class MuckworkAPITest < Minitest::Test
 
 	def test_update_client
 		qry("muckwork.update_client(2, 'EUR')")
-		r = {id:2, person_id:3, currency:'EUR', cents_balance:10000, name:'Veruca Salt', email:'veruca@salt.com'}
+		r = {:id=>2, :person_id=>3, :currency=>'EUR', :cents_balance=>10000, :name=>'Veruca Salt', :email=>'veruca@salt.com', :address=>'Veruca', :company=>'Daddy Empires Ltd', :city=>'London', :state=>'England', :country=>'GB', :phone=>'+44 9273 7231'}
 		assert_equal r, @j
 		qry("muckwork.update_client(99, 'EUR')")
 		assert_equal 'Not Found', @j[:title]
@@ -194,7 +194,7 @@ class MuckworkAPITest < Minitest::Test
 
 	def test_get_worker
 		qry("muckwork.get_worker(2)")
-		r = {id:2, person_id:5, currency:'THB', millicents_per_second:1000, name:'Oompa Loompa', email:'oompa@loompa.mm'}
+		r = {:id=>2, :person_id=>5, :currency=>'THB', :millicents_per_second=>1000, :name=>'Oompa Loompa', :email=>'oompa@loompa.mm', :address=>'Oompa Loompa', :company=>nil, :city=>'Hershey', :state=>'PA', :country=>'US', :phone=>nil}
 		assert_equal r, @j
 		qry("muckwork.get_worker(99)")
 		assert_equal 'Not Found', @j[:title]
@@ -202,7 +202,7 @@ class MuckworkAPITest < Minitest::Test
 
 	def test_create_worker
 		qry("muckwork.create_worker(8)")
-		r = {id:3, person_id:8, currency:'USD', millicents_per_second:nil, name:'Yoko Ono', email:'yoko@ono.com'}
+		r = {:id=>3, :person_id=>8, :currency=>'USD', :millicents_per_second => nil, :name=>'Yoko Ono', :email=>'yoko@ono.com', :address=>'Ono-San', :company=>'yoko@lennon.com', :city=>'Tokyo', :state=>nil, :country=>'JP', :phone=>nil}
 		assert_equal r, @j
 		qry("muckwork.create_worker(99)")
 		assert @j[:title].include? 'violates foreign key'
@@ -210,7 +210,7 @@ class MuckworkAPITest < Minitest::Test
 
 	def test_update_worker
 		qry("muckwork.update_worker(2, 'INR', 1234)")
-		r = {id:2, person_id:5, currency:'INR', millicents_per_second:1234, name:'Oompa Loompa', email:'oompa@loompa.mm'}
+		r = {:id=>2, :person_id=>5, :currency=>'INR', :millicents_per_second=>1234, :name=>'Oompa Loompa', :email=>'oompa@loompa.mm', :address=>'Oompa Loompa', :company=>nil, :city=>'Hershey', :state=>'PA', :country=>'US', :phone=>nil}
 		assert_equal r, @j
 		qry("muckwork.update_worker(99, 'INR', 1234)")
 		assert_equal 'Not Found', @j[:title]
@@ -350,3 +350,4 @@ class MuckworkAPITest < Minitest::Test
 	end
 
 end
+
