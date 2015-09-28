@@ -32,9 +32,8 @@ class TestPeep < Minitest::Test
 		assert_equal 1, y.size
 		x = y.pop
 		assert_equal 6, x[:id]
-		assert_match /2014-05-20/, x[:created_at]
+		assert_equal '巩俐', x[:name]
 		assert_equal 'I want that Wood Egg book now', x[:subject]
-		assert_equal 'Veruca Salt', x[:their_name]
 	end
 
 	def test_unknowns
@@ -450,6 +449,20 @@ class TestPeep < Minitest::Test
 	def test_delete_formletter
 		assert @p.delete_formletter(5)
 		refute @p.get_formletter(5)
+	end
+
+	def test_all_currencies
+		x = @p.all_currencies
+		assert_equal 34, x.size
+		assert_equal({code: 'AUD', name: 'Australian Dollar'}, x[0])
+		assert_equal({code: 'ZAR', name: 'South African Rand'}, x[33])
+	end
+
+	def test_currency_names
+		x = @p.currency_names
+		assert_equal 34, x.size
+		assert_equal 'Singapore Dollar', x[:SGD]
+		assert_equal 'Euro', x[:EUR]
 	end
 
 	def test_all_countries

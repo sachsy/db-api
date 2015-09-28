@@ -1,10 +1,15 @@
 # TODO:
 
-* foreign exchange rates
+## Client:
 
-# Some day:
+* sign up anew
+* sign up using existing email + pass
+* update all info
+* locations & currencies
+* mark new project as ready to be quoted
+* create payment
+* delete unstarted project
 
-* ledger accounting for currency exchange
 
 # THOUGHTS:
 

@@ -514,6 +514,20 @@ class TestPeepsAPI < Minitest::Test
 		assert_nil @j[:body]
 	end
 
+	def test_all_currencies
+		qry("all_currencies()")
+		assert_equal 34, @j.size
+		assert_equal({code: 'AUD', name: 'Australian Dollar'}, @j[0])
+		assert_equal({code: 'ZAR', name: 'South African Rand'}, @j[33])
+	end
+
+	def test_currency_names
+		qry("currency_names()")
+		assert_equal 34, @j.size
+		assert_equal 'Singapore Dollar', @j[:SGD]
+		assert_equal 'Euro', @j[:EUR]
+	end
+
 	def test_all_countries
 		qry("all_countries()")
 		assert_equal 242, @j.size
@@ -521,7 +535,7 @@ class TestPeepsAPI < Minitest::Test
 		assert_equal({code: 'ZW', name: 'Zimbabwe'}, @j[241])
 	end
 
-	def test_all_countries
+	def test_country_names
 		qry("country_names()")
 		assert_equal 242, @j.size
 		assert_equal 'Singapore', @j[:SG]

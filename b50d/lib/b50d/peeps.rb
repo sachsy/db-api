@@ -233,6 +233,14 @@ module B50D
 			@db.js('peeps.parsed_formletter($1, $2)', [person_id, formletter_id])
 		end
 
+		def all_currencies
+			@db.js('peeps.all_currencies()')
+		end
+
+		def currency_names
+			@db.js('peeps.currency_names()')
+		end
+
 		def all_countries
 			@db.js('peeps.all_countries()')
 		end
