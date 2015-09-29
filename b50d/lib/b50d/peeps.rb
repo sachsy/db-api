@@ -313,6 +313,10 @@ module B50D
 			@db.js('peeps.sent_emails($1)', [id])
 		end
 
+		def sent_emails_grouped
+			@db.js('peeps.sent_emails_grouped()')
+		end
+
 		def twitter_unfollowed
 			@db.js('peeps.twitter_unfollowed()')
 		end
