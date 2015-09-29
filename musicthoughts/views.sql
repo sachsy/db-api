@@ -22,7 +22,7 @@ CREATE VIEW musicthoughts.contributors_view AS
 		ORDER BY howmany DESC, name ASC;
 
 -- PARAMS: lang, OPTIONAL: thoughts.id, search term, limit
-CREATE FUNCTION musicthoughts.thought_view(char(2), integer, varchar, integer) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION musicthoughts.thought_view(char(2), integer, varchar, integer) RETURNS text AS $$
 DECLARE
 	qry text;
 BEGIN
