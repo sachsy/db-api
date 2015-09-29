@@ -2,12 +2,12 @@
 --------------- VIEWS FOR JSON RESPONSES:
 ----------------------------------------
 
-DROP VIEW IF EXISTS people_view CASCADE;
-CREATE VIEW people_view AS
+DROP VIEW IF EXISTS peeps.people_view CASCADE;
+CREATE VIEW peeps.people_view AS
 	SELECT id, name, email, email_count FROM peeps.people;
 
-DROP VIEW IF EXISTS person_view CASCADE;
-CREATE VIEW person_view AS
+DROP VIEW IF EXISTS peeps.person_view CASCADE;
+CREATE VIEW peeps.person_view AS
 	SELECT id, name, address, email, company, city, state, country, notes, phone, 
 		listype, categorize_as, created_at,
 		(SELECT json_agg(s) AS stats FROM
@@ -21,18 +21,18 @@ CREATE VIEW person_view AS
 				WHERE person_id=peeps.people.id ORDER BY id) e)
 		FROM peeps.people;
 
-DROP VIEW IF EXISTS emails_view CASCADE;
-CREATE VIEW emails_view AS
+DROP VIEW IF EXISTS peeps.emails_view CASCADE;
+CREATE VIEW peeps.emails_view AS
 	SELECT id, subject, created_at, their_name, their_email FROM peeps.emails;
 
-DROP VIEW IF EXISTS emails_full_view CASCADE;
-CREATE VIEW emails_full_view AS
+DROP VIEW IF EXISTS peeps.emails_full_view CASCADE;
+CREATE VIEW peeps.emails_full_view AS
 	SELECT id, message_id, profile, category, created_at, opened_at, closed_at,
 		their_email, their_name, subject, headers, body, outgoing, person_id
 		FROM peeps.emails;
 
-DROP VIEW IF EXISTS email_view CASCADE;
-CREATE VIEW email_view AS
+DROP VIEW IF EXISTS peeps.email_view CASCADE;
+CREATE VIEW peeps.email_view AS
 	SELECT id, profile, category,
 		created_at, (SELECT row_to_json(p1) AS creator FROM
 			(SELECT emailers.id, people.name FROM peeps.emailers
@@ -54,20 +54,20 @@ CREATE VIEW email_view AS
 			(SELECT * FROM peeps.person_view WHERE id = person_id) p)
 		FROM peeps.emails;
 
-DROP VIEW IF EXISTS unknown_view CASCADE;
-CREATE VIEW unknown_view AS
+DROP VIEW IF EXISTS peeps.unknown_view CASCADE;
+CREATE VIEW peeps.unknown_view AS
 	SELECT id, their_email, their_name, headers, subject, body FROM peeps.emails;
 
-DROP VIEW IF EXISTS formletters_view CASCADE;
-CREATE VIEW formletters_view AS
+DROP VIEW IF EXISTS peeps.formletters_view CASCADE;
+CREATE VIEW peeps.formletters_view AS
 	SELECT id, title, explanation, created_at FROM peeps.formletters;
 
-DROP VIEW IF EXISTS formletter_view CASCADE;
-CREATE VIEW formletter_view AS
+DROP VIEW IF EXISTS peeps.formletter_view CASCADE;
+CREATE VIEW peeps.formletter_view AS
 	SELECT id, title, explanation, body, created_at FROM peeps.formletters;
 
-DROP VIEW IF EXISTS stats_view CASCADE;
-CREATE VIEW stats_view AS
+DROP VIEW IF EXISTS peeps.stats_view CASCADE;
+CREATE VIEW peeps.stats_view AS
 	SELECT userstats.id, userstats.created_at, statkey AS name, statvalue AS value,
 		(SELECT row_to_json(p) FROM
 			(SELECT people.id, people.name, people.email) p) AS person

@@ -5,29 +5,29 @@
 -- If, some day, new answers and essays are created, update queries
 -- to add "where payable is true"
 
-DROP VIEW IF EXISTS researcher_view CASCADE;
-CREATE VIEW researcher_view AS
+DROP VIEW IF EXISTS woodegg.researcher_view CASCADE;
+CREATE VIEW woodegg.researcher_view AS
 	SELECT woodegg.researchers.id, peeps.people.name, woodegg.researchers.bio,
 		CONCAT('/images/200/researchers-', woodegg.researchers.id, '.jpg') AS image
 		FROM woodegg.researchers, peeps.people
 		WHERE woodegg.researchers.person_id=peeps.people.id;
 
-DROP VIEW IF EXISTS writer_view CASCADE;
-CREATE VIEW writer_view AS
+DROP VIEW IF EXISTS woodegg.writer_view CASCADE;
+CREATE VIEW woodegg.writer_view AS
 	SELECT woodegg.writers.id, peeps.people.name, woodegg.writers.bio,
 		CONCAT('/images/200/writers-', woodegg.writers.id, '.jpg') AS image
 		FROM woodegg.writers, peeps.people
 		WHERE writers.person_id=peeps.people.id;
 
-DROP VIEW IF EXISTS editor_view CASCADE;
-CREATE VIEW editor_view AS
+DROP VIEW IF EXISTS woodegg.editor_view CASCADE;
+CREATE VIEW woodegg.editor_view AS
 	SELECT woodegg.editors.id, peeps.people.name, woodegg.editors.bio,
 		CONCAT('/images/200/editors-', woodegg.editors.id, '.jpg') AS image
 		FROM woodegg.editors, peeps.people
 		WHERE woodegg.editors.person_id=peeps.people.id;
 
-DROP VIEW IF EXISTS answer_view CASCADE;
-CREATE VIEW answer_view AS
+DROP VIEW IF EXISTS woodegg.answer_view CASCADE;
+CREATE VIEW woodegg.answer_view AS
 	SELECT id, date(started_at) AS date, answer, sources,
 	(SELECT row_to_json(r) AS researcher FROM
 		(SELECT woodegg.researchers.id, peeps.people.name,
@@ -37,8 +37,8 @@ CREATE VIEW answer_view AS
 			AND woodegg.researchers.person_id=peeps.people.id) r)
 	FROM answers;
 
-DROP VIEW IF EXISTS essay_view CASCADE;
-CREATE VIEW essay_view AS
+DROP VIEW IF EXISTS woodegg.essay_view CASCADE;
+CREATE VIEW woodegg.essay_view AS
 	SELECT id, date(started_at) AS date, edited AS essay,
 	(SELECT row_to_json(w) AS writer FROM
 		(SELECT woodegg.writers.id, peeps.people.name,
@@ -54,8 +54,8 @@ CREATE VIEW essay_view AS
 			AND woodegg.editors.person_id=peeps.people.id) e)
 	FROM essays;
 
-DROP VIEW IF EXISTS book_view CASCADE;
-CREATE VIEW book_view AS
+DROP VIEW IF EXISTS woodegg.book_view CASCADE;
+CREATE VIEW woodegg.book_view AS
 	SELECT id, country, title, isbn, asin, leanpub, apple, salescopy, credits,
 	(SELECT json_agg(r) AS researchers FROM
 		(SELECT woodegg.researchers.id, peeps.people.name,
@@ -83,8 +83,8 @@ CREATE VIEW book_view AS
 			ORDER BY woodegg.editors.id) e)
 	FROM books;
 
-DROP VIEW IF EXISTS question_view CASCADE;
-CREATE VIEW question_view AS
+DROP VIEW IF EXISTS woodegg.question_view CASCADE;
+CREATE VIEW woodegg.question_view AS
 	SELECT id, country, template_question_id AS template_id, question,
 	(SELECT json_agg(a) AS answers FROM
 		(SELECT id, date(started_at) AS date, answer, sources,
@@ -114,8 +114,8 @@ CREATE VIEW question_view AS
 
 -- for country_view see API function get_country
 
-DROP VIEW IF EXISTS templates_view CASCADE;
-CREATE VIEW templates_view AS
+DROP VIEW IF EXISTS woodegg.templates_view CASCADE;
+CREATE VIEW woodegg.templates_view AS
 	SELECT id, topic, (SELECT json_agg(sx) AS subtopics FROM
 		(SELECT id, subtopic, (SELECT json_agg(tq) AS questions FROM
 				(SELECT id, question FROM woodegg.template_questions
@@ -123,8 +123,8 @@ CREATE VIEW templates_view AS
 			FROM woodegg.subtopics st WHERE st.topic_id=woodegg.topics.id ORDER BY st.id) sx)
 	FROM woodegg.topics ORDER BY id;
 
-DROP VIEW IF EXISTS template_view CASCADE;
-CREATE VIEW template_view AS
+DROP VIEW IF EXISTS woodegg.template_view CASCADE;
+CREATE VIEW woodegg.template_view AS
 	SELECT id, question, (SELECT json_agg(x) AS countries FROM
 		(SELECT id, country, question,
 			(SELECT json_agg(y) AS answers FROM
@@ -153,13 +153,13 @@ CREATE VIEW template_view AS
 		ORDER BY country) x)
 	FROM woodegg.template_questions;  -- WHERE id=1
 
-DROP VIEW IF EXISTS uploads_view CASCADE;
-CREATE VIEW uploads_view AS
+DROP VIEW IF EXISTS woodegg.uploads_view CASCADE;
+CREATE VIEW woodegg.uploads_view AS
 	SELECT id, country, created_at AS date, our_filename AS filename, notes
 		FROM woodegg.uploads ORDER BY id;  -- WHERE country='KR'
 
-DROP VIEW IF EXISTS upload_view CASCADE;
-CREATE VIEW upload_view AS
+DROP VIEW IF EXISTS woodegg.upload_view CASCADE;
+CREATE VIEW woodegg.upload_view AS
 	SELECT id, country, created_at AS date, our_filename AS filename, notes,
 		mime_type, bytes, transcription FROM woodegg.uploads;  -- WHERE id=1
 

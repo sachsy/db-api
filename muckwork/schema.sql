@@ -642,8 +642,8 @@ $$ LANGUAGE plpgsql;
 --------------- VIEWS FOR JSON RESPONSES:
 ----------------------------------------
 
-DROP VIEW IF EXISTS project_view CASCADE;
-CREATE VIEW project_view AS SELECT id, title, description, created_at,
+DROP VIEW IF EXISTS muckwork.project_view CASCADE;
+CREATE VIEW muckwork.project_view AS SELECT id, title, description, created_at,
 	quoted_at, approved_at, started_at, finished_at, status,
 	(SELECT row_to_json(cx) AS client FROM
 		(SELECT c.*, p.name, p.email
@@ -655,8 +655,8 @@ CREATE VIEW project_view AS SELECT id, title, description, created_at,
 	FROM muckwork.projects
 	ORDER BY muckwork.projects.id DESC;
 
-DROP VIEW IF EXISTS task_view CASCADE;
-CREATE VIEW task_view AS SELECT t.*,
+DROP VIEW IF EXISTS muckwork.task_view CASCADE;
+CREATE VIEW muckwork.task_view AS SELECT t.*,
 	(SELECT row_to_json(px) AS project FROM
 		(SELECT id, title, description
 			FROM muckwork.projects
@@ -673,8 +673,8 @@ CREATE VIEW task_view AS SELECT t.*,
 	FROM muckwork.tasks t
 	ORDER BY t.sortid ASC;
 
-DROP VIEW IF EXISTS project_detail_view CASCADE;
-CREATE VIEW project_detail_view AS SELECT id, title, description, created_at,
+DROP VIEW IF EXISTS muckwork.project_detail_view CASCADE;
+CREATE VIEW muckwork.project_detail_view AS SELECT id, title, description, created_at,
 	quoted_at, approved_at, started_at, finished_at, status,
 	(SELECT row_to_json(cx) AS client FROM
 		(SELECT c.*, p.name, p.email
