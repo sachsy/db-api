@@ -20,7 +20,7 @@ CREATE VIEW task_view AS SELECT t.*,
 	(SELECT row_to_json(px) AS project FROM
 		(SELECT id, title, description
 			FROM muckwork.projects
-			WHERE projects.id=t.project_id) px),
+			WHERE muckwork.projects.id=t.project_id) px),
 	(SELECT row_to_json(wx) AS worker FROM
 		(SELECT w.*, p.name, p.email
 			FROM muckwork.workers w, peeps.people p

@@ -94,7 +94,7 @@ CREATE VIEW question_view AS
 				FROM woodegg.researchers, peeps.people
 				WHERE woodegg.researchers.id=woodegg.answers.researcher_id
 				AND woodegg.researchers.person_id=peeps.people.id) r)
-			FROM woodegg.answers WHERE question_id=questions.id ORDER BY woodegg.answers.id) a),
+			FROM woodegg.answers WHERE question_id=woodegg.questions.id ORDER BY woodegg.answers.id) a),
 	(SELECT json_agg(ess) AS essays FROM
 		(SELECT id, date(started_at) AS date, edited AS essay,
 		(SELECT row_to_json(w) AS writer FROM
@@ -109,7 +109,7 @@ CREATE VIEW question_view AS
 				FROM woodegg.editors, peeps.people
 				WHERE woodegg.editors.id=woodegg.essays.editor_id
 				AND woodegg.editors.person_id=peeps.people.id ORDER BY woodegg.editors.id) e)
-			FROM woodegg.essays WHERE question_id=questions.id ORDER BY woodegg.essays.id) ess)
+			FROM woodegg.essays WHERE question_id=woodegg.questions.id ORDER BY woodegg.essays.id) ess)
 	FROM questions;
 
 -- for country_view see API function get_country
@@ -149,7 +149,7 @@ CREATE VIEW template_view AS
 							FROM woodegg.editors, peeps.people WHERE woodegg.editors.id=e.editor_id
 							AND woodegg.editors.person_id=peeps.people.id) ed)
 				FROM woodegg.essays e WHERE e.question_id=woodegg.questions.id ORDER BY id) z)
-		FROM woodegg.questions WHERE template_question_id=template_questions.id
+		FROM woodegg.questions WHERE template_question_id=woodegg.template_questions.id
 		ORDER BY country) x)
 	FROM woodegg.template_questions;  -- WHERE id=1
 
