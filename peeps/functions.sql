@@ -57,9 +57,9 @@ CREATE OR REPLACE FUNCTION tables_referencing(text, text, text)
 BEGIN
 	RETURN QUERY SELECT CONCAT(n.nspname, '.', k.relname), a.attname
 		FROM pg_constraint c
-		LEFT JOIN pg_class k ON c.conrelid = k.oid
-		LEFT JOIN pg_attribute a ON c.conrelid = a.attrelid
-		LEFT JOIN pg_namespace n ON k.relnamespace = n.oid
+		INNER JOIN pg_class k ON c.conrelid = k.oid
+		INNER JOIN pg_attribute a ON c.conrelid = a.attrelid
+		INNER JOIN pg_namespace n ON k.relnamespace = n.oid
 		WHERE c.confrelid = (SELECT oid FROM pg_class WHERE relname = $2 
 			AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = $1))
 		AND ARRAY[a.attnum] <@ c.conkey

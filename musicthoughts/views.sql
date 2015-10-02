@@ -31,7 +31,7 @@ BEGIN
 			(SELECT id, name FROM musicthoughts.authors WHERE musicthoughts.thoughts.author_id=musicthoughts.authors.id) a) AS author,
 		(SELECT row_to_json(c) FROM
 			(SELECT contributors.id, peeps.people.name FROM musicthoughts.contributors
-				LEFT JOIN peeps.people ON musicthoughts.contributors.person_id=peeps.people.id
+				INNER JOIN peeps.people ON musicthoughts.contributors.person_id=peeps.people.id
 				WHERE musicthoughts.thoughts.contributor_id=musicthoughts.contributors.id) c) AS contributor,
 		(SELECT json_agg(ct) FROM
 			(SELECT categories.id, categories.%I AS category

@@ -225,7 +225,7 @@ CREATE VIEW peeps.stats_view AS
 	SELECT userstats.id, userstats.created_at, statkey AS name, statvalue AS value,
 		(SELECT row_to_json(p) FROM
 			(SELECT people.id, people.name, people.email) p) AS person
-		FROM peeps.userstats LEFT JOIN people ON userstats.person_id=people.id
+		FROM peeps.userstats INNER JOIN people ON userstats.person_id=people.id
 		ORDER BY userstats.id DESC;
 
 ----------------------------
@@ -287,9 +287,9 @@ CREATE OR REPLACE FUNCTION tables_referencing(text, text, text)
 BEGIN
 	RETURN QUERY SELECT CONCAT(n.nspname, '.', k.relname), a.attname
 		FROM pg_constraint c
-		LEFT JOIN pg_class k ON c.conrelid = k.oid
-		LEFT JOIN pg_attribute a ON c.conrelid = a.attrelid
-		LEFT JOIN pg_namespace n ON k.relnamespace = n.oid
+		INNER JOIN pg_class k ON c.conrelid = k.oid
+		INNER JOIN pg_attribute a ON c.conrelid = a.attrelid
+		INNER JOIN pg_namespace n ON k.relnamespace = n.oid
 		WHERE c.confrelid = (SELECT oid FROM pg_class WHERE relname = $2 
 			AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = $1))
 		AND ARRAY[a.attnum] <@ c.conkey
@@ -2762,8 +2762,9 @@ CREATE OR REPLACE FUNCTION queued_emails(OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT e.id, e.profile, e.their_email,
-		e.subject, e.body, e.message_id, r.message_id AS referencing
-		FROM peeps.emails e LEFT JOIN peeps.emails r ON e.reference_id=r.id
+		e.subject, e.body, e.message_id, ref.message_id AS referencing
+		FROM peeps.emails e
+		INNER JOIN peeps.emails ref ON e.reference_id=ref.id
 		WHERE e.outgoing IS NULL ORDER BY e.id) r;
 	IF js IS NULL THEN js := '[]'; END IF;
 END;

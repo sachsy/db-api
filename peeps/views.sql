@@ -71,6 +71,6 @@ CREATE VIEW peeps.stats_view AS
 	SELECT userstats.id, userstats.created_at, statkey AS name, statvalue AS value,
 		(SELECT row_to_json(p) FROM
 			(SELECT people.id, people.name, people.email) p) AS person
-		FROM peeps.userstats LEFT JOIN people ON userstats.person_id=people.id
+		FROM peeps.userstats INNER JOIN people ON userstats.person_id=people.id
 		ORDER BY userstats.id DESC;
 

@@ -600,7 +600,7 @@ BEGIN
 		CEIL((w.millicents_per_second * muckwork.seconds_per_task(t.id)) / 100)
 		INTO currency, cents
 		FROM muckwork.tasks t
-		LEFT JOIN muckwork.workers w ON t.worker_id=w.id
+		INNER JOIN muckwork.workers w ON t.worker_id=w.id
 		WHERE t.id = $1
 		AND t.finished_at IS NOT NULL;
 END;

@@ -266,7 +266,8 @@ BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT u.id, u.person_id, u.statvalue AS value,
 		u.created_at, p.email, p.name
-		FROM peeps.userstats u LEFT JOIN peeps.people p ON u.person_id=p.id
+		FROM peeps.userstats u
+		INNER JOIN peeps.people p ON u.person_id=p.id
 		WHERE statkey LIKE 'proof%' ORDER BY u.id) r;
 	IF js IS NULL THEN
 		js := '[]';

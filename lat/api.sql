@@ -181,8 +181,8 @@ BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT p.id, p.created_at,
 		c1.title AS concept1, c2.title AS concept2
-		FROM lat.pairings p LEFT JOIN lat.concepts c1 ON p.concept1_id=c1.id
-		LEFT JOIN lat.concepts c2 ON p.concept2_id=c2.id ORDER BY p.id) r;
+		FROM lat.pairings p INNER JOIN lat.concepts c1 ON p.concept1_id=c1.id
+		INNER JOIN lat.concepts c2 ON p.concept2_id=c2.id ORDER BY p.id) r;
 END;
 $$ LANGUAGE plpgsql;
 
