@@ -152,6 +152,28 @@ class MuckworkAPITest < Minitest::Test
 		assert_equal({ok: false}, @j)
 	end
 
+	def test_project_has_status
+		qry("muckwork.project_has_status(4, 'quoted')")
+		assert_equal({ok: true}, @j)
+		qry("muckwork.project_has_status(5, 'created')")
+		assert_equal({ok: true}, @j)
+		qry("muckwork.project_has_status(1, 'poop')")
+		assert_equal({ok: false}, @j)
+		qry("muckwork.project_has_status(99, 'started')")
+		assert_equal({ok: false}, @j)
+	end
+
+	def test_task_has_status
+		qry("muckwork.task_has_status(10, 'quoted')")
+		assert_equal({ok: true}, @j)
+		qry("muckwork.task_has_status(9, 'approved')")
+		assert_equal({ok: true}, @j)
+		qry("muckwork.task_has_status(1, 'poop')")
+		assert_equal({ok: false}, @j)
+		qry("muckwork.task_has_status(99, 'started')")
+		assert_equal({ok: false}, @j)
+	end
+
 	def test_get_clients
 		qry("muckwork.get_clients()")
 		r = [
@@ -231,6 +253,8 @@ class MuckworkAPITest < Minitest::Test
 		qry("muckwork.get_projects_with_status('finished')")
 		assert_equal 1, @j.size
 		assert_equal @project_view_1, @j[0]
+		qry("muckwork.get_projects_with_status('poop')")
+		assert_equal [], @j
 	end
 
 	def test_get_project
@@ -341,12 +365,21 @@ class MuckworkAPITest < Minitest::Test
 		assert_match /^20[0-9][0-9]-/, @j[:finished_at]
 	end
 
+	def test_worker_get_tasks
+		qry("muckwork.worker_get_tasks(1)")
+		assert_equal [7, 3, 2, 1], @j.map {|x| x[:id]}
+		qry("muckwork.worker_get_tasks(99)")
+		assert_equal [], @j
+	end
+
 	def test_get_tasks_with_status
 		qry("muckwork.get_tasks_with_status('started')")
 		assert_equal 1, @j.size
 		assert_equal 5, @j[0][:id]
 		assert_equal 'started', @j[0][:status]
 		assert_equal 'Oompa Loompa', @j[0][:worker][:name]
+		qry("muckwork.get_tasks_with_status('poop')")
+		assert_equal [], @j
 	end
 
 end

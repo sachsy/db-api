@@ -735,6 +735,42 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- PARAMS: project_id, status
+-- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
+CREATE OR REPLACE FUNCTION project_has_status(integer, text,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	PERFORM 1 FROM muckwork.projects WHERE id = $1 AND status = $2::status;
+	IF FOUND IS TRUE THEN
+		js := '{"ok": true}';
+	ELSE
+		js := '{"ok": false}';
+	END IF;
+EXCEPTION WHEN OTHERS THEN
+	js := '{"ok": false}';
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: task_id, status
+-- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
+CREATE OR REPLACE FUNCTION task_has_status(integer, text,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	PERFORM 1 FROM muckwork.tasks WHERE id = $1 AND status = $2::status;
+	IF FOUND IS TRUE THEN
+		js := '{"ok": true}';
+	ELSE
+		js := '{"ok": false}';
+	END IF;
+EXCEPTION WHEN OTHERS THEN
+	js := '{"ok": false}';
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- PARAMS: (none)
 CREATE OR REPLACE FUNCTION get_clients(
 	OUT mime text, OUT js json) AS $$
@@ -956,12 +992,14 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: status ('created','quoted','approved','refused','started','finished')
-CREATE OR REPLACE FUNCTION get_projects_with_status(status,
+CREATE OR REPLACE FUNCTION get_projects_with_status(text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := json_agg(r) FROM (SELECT * FROM muckwork.project_view WHERE status = $1) r;
+	js := json_agg(r) FROM (SELECT * FROM muckwork.project_view WHERE status = $1::status) r;
 	IF js IS NULL THEN js := '[]'; END IF;
+EXCEPTION WHEN OTHERS THEN
+	js := '[]';
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1318,13 +1356,29 @@ $$ LANGUAGE plpgsql;
 
 
 
--- PARAMS: status ('created','quoted','approved','refused','started','finished')
-CREATE OR REPLACE FUNCTION get_tasks_with_status(status,
+-- PARAMS:  worker_id
+CREATE OR REPLACE FUNCTION worker_get_tasks(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view WHERE status = $1) r;
+	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view WHERE id IN
+		(SELECT id FROM muckwork.tasks WHERE worker_id = $1)
+		ORDER BY id DESC) r;
 	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- PARAMS: status ('created','quoted','approved','refused','started','finished')
+CREATE OR REPLACE FUNCTION get_tasks_with_status(text,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view WHERE status = $1::status) r;
+	IF js IS NULL THEN js := '[]'; END IF;
+EXCEPTION WHEN OTHERS THEN
+	js := '[]';
 END;
 $$ LANGUAGE plpgsql;
 

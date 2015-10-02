@@ -19,6 +19,16 @@ module B50D
 			{ok: true} == x
 		end
 
+		def project_has_status(project_id, status)
+			x = @db.js('muckwork.project_has_status($1, $2)', [project_id, status])
+			{ok: true} == x
+		end
+
+		def task_has_status(task_id, status)
+			x = @db.js('muckwork.task_has_status($1, $2)', [task_id, status])
+			{ok: true} == x
+		end
+
 		def get_clients
 			@db.js('muckwork.get_clients()')
 		end
@@ -149,12 +159,17 @@ module B50D
 			@db.js('muckwork.finish_task($1)', [id])
 		end
 
+		def worker_get_tasks(worker_id)
+			return false unless /\A[0-9]+\Z/ === String(worker_id)
+			@db.js('muckwork.worker_get_tasks($1)', [worker_id])
+		end
+
 		def get_tasks_with_status(status)
 			return false unless %w(created quoted approved refused started finished).include? status
 			@db.js('muckwork.get_tasks_with_status($1)', [status])
 		end
-
 	end
+
 
 	class MuckworkClient
 		def error ; @db.error ; end
@@ -162,6 +177,7 @@ module B50D
 
 		def initialize(api_key, api_pass, server='live')
 			@db = DbAPI.new(server)
+			# TODO? put this into PostgreSQL API?
 			res = @db.qry("SELECT c.id FROM peeps.api_keys a, muckwork.clients c" +
 				" WHERE akey=$1 AND apass=$2 AND $3=ANY(apis)" +
 				" AND a.person_id=c.person_id",
@@ -223,6 +239,77 @@ module B50D
 		def get_project_task(project_id, task_id)
 			return false unless @mw.client_owns_project(@client_id, project_id)
 			@mw.get_project_task(project_id, task_id)
+		end
+	end
+
+
+	class Muckworker
+		def error ; @db.error ; end
+		def message ; @db.message ; end
+
+		def initialize(api_key, api_pass, server='live')
+			@db = DbAPI.new(server)
+			# TODO? put this into PostgreSQL API?
+			res = @db.qry("SELECT w.id FROM peeps.api_keys a, muckwork.workers w" +
+				" WHERE akey=$1 AND apass=$2 AND $3=ANY(apis)" +
+				" AND a.person_id=w.person_id",
+				[api_key, api_pass, 'Muckworker'])
+			raise 'bad API auth' unless res.ntuples == 1
+			@worker_id = res[0]['id'].to_i
+			@mw = B50D::Muckwork.new(server)
+		end
+
+		def locations
+			@db.js('peeps.all_countries()')
+		end
+
+		def currencies
+			@db.js('peeps.all_currencies()')
+		end
+
+		def get_worker
+			@mw.get_worker(@worker_id)
+		end
+
+		# TODO? put this into PostgreSQL API?
+		def update(params)
+			worker = @mw.get_worker(@worker_id)
+			if /\A[A-Z]{3}\Z/ === params[:currency] && /\A[0-9]+\Z/ === params[:mps]
+				@mw.update_worker(@worker_id, params[:currency], params[:mps])
+			end
+			@db.js('peeps.update_person($1, $2)', [worker[:person_id], params.to_json])
+		end
+
+		def get_tasks
+			@mw.worker_get_tasks(@worker_id)
+		end
+
+		def get_task(task_id)
+			return false unless @mw.worker_owns_task(@worker_id, task_id)
+			@mw.get_task(task_id)
+		end
+
+		def claim_task(task_id)
+			@mw.claim_task(task_id, @worker_id)
+		end
+
+		def unclaim_task(task_id)
+			return false unless @mw.worker_owns_task(@worker_id, task_id)
+			@mw.unclaim_task(task_id)
+		end
+
+		def start_task(task_id)
+			return false unless @mw.worker_owns_task(@worker_id, task_id)
+			@mw.start_task(task_id)
+		end
+
+		def finish_task(task_id)
+			return false unless @mw.worker_owns_task(@worker_id, task_id)
+			@mw.finish_task(task_id)
+		end
+
+		def unclaimed_tasks
+			@mw.get_tasks_with_status('approved')
 		end
 	end
 end

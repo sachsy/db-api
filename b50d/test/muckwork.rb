@@ -150,6 +150,20 @@ class TestMuckwork < Minitest::Test
 		refute @mw.worker_owns_task(2, 99)
 	end
 
+	def test_project_has_status
+		assert @mw.project_has_status(4, 'quoted')
+		assert @mw.project_has_status(5, 'created')
+		refute @mw.project_has_status(1, 'poop')
+		refute @mw.project_has_status(99, 'started')
+	end
+
+	def test_task_has_status
+		assert @mw.task_has_status(10, 'quoted')
+		assert @mw.task_has_status(9, 'approved')
+		refute @mw.task_has_status(1, 'poop')
+		refute @mw.task_has_status(99, 'started')
+	end
+
 	def test_get_clients
 		x = @mw.get_clients
 		r = [
@@ -336,6 +350,13 @@ class TestMuckwork < Minitest::Test
 		x = @mw.finish_task(7)
 		assert_equal 'finished', x[:status]
 		assert_match /^20[0-9][0-9]-/, x[:finished_at]
+	end
+
+	def test_worker_get_tasks
+		x = @mw.worker_get_tasks(1)
+		assert_equal [7, 3, 2, 1], x.map {|y| y[:id]}
+		x = @mw.worker_get_tasks(99)
+		assert_equal [], x
 	end
 
 	def test_get_tasks_with_status
