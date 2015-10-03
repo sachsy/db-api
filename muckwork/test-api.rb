@@ -130,6 +130,33 @@ class MuckworkAPITest < Minitest::Test
 				note: 'great job, Charlie!'}]}
 	end
 
+	def test_auth_client
+		qry("muckwork.auth_client($1, $2)", ['aaaaaaaa', 'bbbbbbbb'])
+		assert_equal 'Not Found', @j[:title]
+		qry("muckwork.auth_client($1, $2)", ['cccccccc', 'dddddddd'])
+		assert_equal({client_id: 1}, @j)
+		qry("muckwork.auth_client($1, $2)", ['eeeeeeee', 'ffffffff'])
+		assert_equal({client_id: 2}, @j)
+	end
+
+	def test_auth_worker
+		qry("muckwork.auth_worker($1, $2)", ['aaaaaaaa', 'bbbbbbbb'])
+		assert_equal 'Not Found', @j[:title]
+		qry("muckwork.auth_worker($1, $2)", ['gggggggg', 'hhhhhhhh'])
+		assert_equal({worker_id: 1}, @j)
+		qry("muckwork.auth_worker($1, $2)", ['iiiiiiii', 'jjjjjjjj'])
+		assert_equal({worker_id: 2}, @j)
+	end
+
+	def test_auth_manager
+		qry("muckwork.auth_manager($1, $2)", ['aaaaaaaa', 'bbbbbbbb'])
+		assert_equal({manager_id: 1}, @j)
+		qry("muckwork.auth_manager($1, $2)", ['gggggggg', 'hhhhhhhh'])
+		assert_equal 'Not Found', @j[:title]
+		qry("muckwork.auth_manager($1, $2)", ['boo', 'hoo'])
+		assert_equal 'Not Found', @j[:title]
+	end
+
 	def test_client_owns_project
 		qry("muckwork.client_owns_project(1, 1)")
 		assert_equal({ok: true}, @j)

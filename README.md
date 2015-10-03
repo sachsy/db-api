@@ -82,6 +82,7 @@ If POST /login works, it sets the 3 needed cookies (person_id, api_key, api_pass
 * finish task(id)
 * unclaimed tasks
 * TODO: get payments, add note(projectId, taskId)
+* TODO?: business rule against # of claimed tasks by worker?
 
 ## Muckwork Manager API:
 

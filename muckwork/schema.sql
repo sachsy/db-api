@@ -703,6 +703,84 @@ CREATE VIEW muckwork.project_detail_view AS SELECT id, title, description, creat
 ------------------------- API FUNCTIONS:
 ----------------------------------------
 
+-- PARAMS: api_key, api_pass
+-- RESPONSE: {client_id: (integer)} or not found
+CREATE OR REPLACE FUNCTION auth_client(text, text,
+	OUT mime text, OUT js json) AS $$
+DECLARE
+	cid integer;
+BEGIN
+	SELECT c.id INTO cid
+		FROM peeps.api_keys a, muckwork.clients c
+		WHERE a.akey=$1 AND a.apass=$2 AND 'MuckworkClient'=ANY(a.apis)
+		AND a.person_id=c.person_id;
+	IF cid IS NULL THEN 
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'about:blank',
+		'title', 'Not Found',
+		'status', 404);
+
+	ELSE
+		mime := 'application/json';
+		js := json_build_object('client_id', cid);
+	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: api_key, api_pass
+-- RESPONSE: {worker_id: (integer)} or not found
+CREATE OR REPLACE FUNCTION auth_worker(text, text,
+	OUT mime text, OUT js json) AS $$
+DECLARE
+	wid integer;
+BEGIN
+	SELECT w.id INTO wid
+		FROM peeps.api_keys a, muckwork.workers w
+		WHERE a.akey=$1 AND a.apass=$2 AND 'Muckworker'=ANY(a.apis)
+		AND a.person_id=w.person_id;
+	IF wid IS NULL THEN 
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'about:blank',
+		'title', 'Not Found',
+		'status', 404);
+
+	ELSE
+		mime := 'application/json';
+		js := json_build_object('worker_id', wid);
+	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: api_key, api_pass
+-- RESPONSE: {manager_id: (integer)} or not found
+CREATE OR REPLACE FUNCTION auth_manager(text, text,
+	OUT mime text, OUT js json) AS $$
+DECLARE
+	mid integer;
+BEGIN
+	SELECT m.id INTO mid
+		FROM peeps.api_keys a, muckwork.managers m
+		WHERE a.akey=$1 AND a.apass=$2 AND 'MuckworkManager'=ANY(a.apis)
+		AND a.person_id=m.person_id;
+	IF mid IS NULL THEN 
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'about:blank',
+		'title', 'Not Found',
+		'status', 404);
+
+	ELSE
+		mime := 'application/json';
+		js := json_build_object('manager_id', mid);
+	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- PARAMS: client_id, project_id
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
 CREATE OR REPLACE FUNCTION client_owns_project(integer, integer,

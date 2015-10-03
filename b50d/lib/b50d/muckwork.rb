@@ -177,13 +177,9 @@ module B50D
 
 		def initialize(api_key, api_pass, server='live')
 			@db = DbAPI.new(server)
-			# TODO? put this into PostgreSQL API?
-			res = @db.qry("SELECT c.id FROM peeps.api_keys a, muckwork.clients c" +
-				" WHERE akey=$1 AND apass=$2 AND $3=ANY(apis)" +
-				" AND a.person_id=c.person_id",
-				[api_key, api_pass, 'MuckworkClient'])
-			raise 'bad API auth' unless res.ntuples == 1
-			@client_id = res[0]['id'].to_i
+			x = @db.js('muckwork.auth_client($1, $2)', [api_key, api_pass])
+			raise 'bad API auth' unless x.key? :client_id
+			@client_id = x[:client_id]
 			@mw = B50D::Muckwork.new(server)
 		end
 
@@ -249,13 +245,9 @@ module B50D
 
 		def initialize(api_key, api_pass, server='live')
 			@db = DbAPI.new(server)
-			# TODO? put this into PostgreSQL API?
-			res = @db.qry("SELECT w.id FROM peeps.api_keys a, muckwork.workers w" +
-				" WHERE akey=$1 AND apass=$2 AND $3=ANY(apis)" +
-				" AND a.person_id=w.person_id",
-				[api_key, api_pass, 'Muckworker'])
-			raise 'bad API auth' unless res.ntuples == 1
-			@worker_id = res[0]['id'].to_i
+			x = @db.js('muckwork.auth_worker($1, $2)', [api_key, api_pass])
+			raise 'bad API auth' unless x.key? :worker_id
+			@worker_id = x[:worker_id]
 			@mw = B50D::Muckwork.new(server)
 		end
 
