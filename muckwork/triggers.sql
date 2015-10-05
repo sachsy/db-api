@@ -205,10 +205,12 @@ CREATE TRIGGER no_cents_without_currency BEFORE UPDATE OF
 
 
 -- tasks.claimed_at and tasks.worker_id must match (both|neither)
+-- also means can't update a worker_id to another. have to go NULL inbetween.
 CREATE OR REPLACE FUNCTION tasks_claimed_pair() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.claimed_at IS NOT NULL AND NEW.worker_id IS NULL)
 	OR (NEW.worker_id IS NOT NULL AND NEW.claimed_at IS NULL)
+	OR (NEW.worker_id IS NOT NULL AND OLD.worker_id IS NOT NULL)
 		THEN RAISE 'tasks_claimed_pair';
 	END IF;
 	RETURN NEW;
@@ -218,6 +220,22 @@ DROP TRIGGER IF EXISTS tasks_claimed_pair ON muckwork.tasks CASCADE;
 CREATE TRIGGER tasks_claimed_pair BEFORE UPDATE OF
 	worker_id, claimed_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.tasks_claimed_pair();
+
+
+-- can't claim a task unless it's approved
+CREATE OR REPLACE FUNCTION only_claim_approved_task() RETURNS TRIGGER AS $$
+BEGIN
+	IF (OLD.status != 'approved') THEN
+		RAISE 'only_claim_approved_task';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS only_claim_approved_task ON muckwork.tasks CASCADE;
+CREATE TRIGGER only_claim_approved_task
+	BEFORE UPDATE OF worker_id ON muckwork.tasks
+	FOR EACH ROW WHEN (NEW.worker_id IS NOT NULL)
+	EXECUTE PROCEDURE muckwork.only_claim_approved_task();
 
 
 -- can't delete started projects or tasks

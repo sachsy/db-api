@@ -56,15 +56,15 @@ class TestMuckworkDB < Minitest::Test
 	end
 
 	def test_task_status_update
-		res = DB.exec("SELECT status FROM muckwork.tasks WHERE id=8")
+		res = DB.exec("SELECT status FROM muckwork.tasks WHERE id=7")
 		assert_equal 'approved', res[0]['status']  # might change
-		res = DB.exec("UPDATE muckwork.tasks SET started_at=NOW() WHERE id=8 RETURNING status")
+		res = DB.exec("UPDATE muckwork.tasks SET started_at=NOW() WHERE id=7 RETURNING status")
 		assert_equal 'started', res[0]['status']
-		res = DB.exec("UPDATE muckwork.tasks SET finished_at=NOW() WHERE id=8 RETURNING status")
+		res = DB.exec("UPDATE muckwork.tasks SET finished_at=NOW() WHERE id=7 RETURNING status")
 		assert_equal 'finished', res[0]['status']
-		res = DB.exec("UPDATE muckwork.tasks SET finished_at=NULL WHERE id=8 RETURNING status")
+		res = DB.exec("UPDATE muckwork.tasks SET finished_at=NULL WHERE id=7 RETURNING status")
 		assert_equal 'started', res[0]['status']
-		res = DB.exec("UPDATE muckwork.tasks SET started_at=NULL WHERE id=8 RETURNING status")
+		res = DB.exec("UPDATE muckwork.tasks SET started_at=NULL WHERE id=7 RETURNING status")
 		assert_equal 'created', res[0]['status']
 	end
 
@@ -113,6 +113,15 @@ class TestMuckworkDB < Minitest::Test
 		end
 		DB.exec("UPDATE muckwork.tasks SET worker_id=1, claimed_at=NOW() WHERE id=9")
 		DB.exec("UPDATE muckwork.tasks SET worker_id=NULL, claimed_at=NULL WHERE id=9")
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.tasks SET worker_id=1 WHERE id=8")
+		end
+	end
+
+	def test_only_claim_approved_task
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.tasks SET claimed_at=NOW(), worker_id=1 WHERE id=12")
+		end
 	end
 
 	def test_dates_cant_change
@@ -292,7 +301,7 @@ class TestMuckworkDB < Minitest::Test
 		DB.exec("UPDATE muckwork.tasks SET finished_at = '2015-07-09 07:00:00+12' WHERE id = 6")
 		res = DB.exec("SELECT * FROM muckwork.final_project_charges(2)")
 		assert_equal 'GBP', res[0]['currency']
-		assert_equal '3882', res[0]['cents']
+		assert_equal '4051', res[0]['cents']
 	end
 
 	def test_project_creates_and_uncreates_charge
@@ -301,11 +310,11 @@ class TestMuckworkDB < Minitest::Test
 		DB.exec("UPDATE muckwork.tasks SET finished_at = '2015-07-09 07:00:00+12' WHERE id = 6")
 		res = DB.exec("SELECT * FROM muckwork.projects WHERE id = 2")
 		assert_equal 'GBP', res[0]['final_currency']
-		assert_equal '3882', res[0]['final_cents']
+		assert_equal '4051', res[0]['final_cents']
 		res = DB.exec("SELECT * FROM muckwork.charges WHERE project_id = 2")
 		assert_equal 1, res.ntuples
 		assert_equal 'GBP', res[0]['currency']
-		assert_equal '3882', res[0]['cents']
+		assert_equal '4051', res[0]['cents']
 		# now uncreate it
 		DB.exec("UPDATE muckwork.tasks SET finished_at = NULL WHERE id = 6")
 		res = DB.exec("SELECT * FROM muckwork.projects WHERE id = 2")

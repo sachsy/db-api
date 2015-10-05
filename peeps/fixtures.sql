@@ -295,7 +295,7 @@ INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (3, 'eeeeeeee', 'ffff
 INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (4, 'gggggggg', 'hhhhhhhh', '{Peep,Muckworker}');
 INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (5, 'iiiiiiii', 'jjjjjjjj', '{Muckworker}');
 INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (6, 'kkkkkkkk', 'llllllll', '{SiversComments,Peep}');
-INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (7, 'mmmmmmmm', 'nnnnnnnn', '{Peep}');
+INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (7, 'mmmmmmmm', 'nnnnnnnn', '{Peep,Muckworker}');
 
 
 ALTER TABLE api_keys ENABLE TRIGGER ALL;

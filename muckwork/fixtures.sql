@@ -90,6 +90,7 @@ ALTER TABLE workers DISABLE TRIGGER ALL;
 
 INSERT INTO workers (id, person_id, currency, millicents_per_second) VALUES (1, 4, 'USD', 42);
 INSERT INTO workers (id, person_id, currency, millicents_per_second) VALUES (2, 5, 'THB', 1000);
+INSERT INTO workers (id, person_id, currency, millicents_per_second) VALUES (3, 7, 'CNY', 200);
 
 
 ALTER TABLE workers ENABLE TRIGGER ALL;
@@ -105,13 +106,13 @@ INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, create
 INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, claimed_at, started_at, finished_at, status) VALUES (3, 1, 1, 3, 'third task', 'clean tank', '2015-07-03 00:34:56+12', '2015-07-04 00:34:56+12', '2015-07-05 00:36:56+12', '2015-07-05 03:34:56+12', 'finished');
 INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, claimed_at, started_at, finished_at, status) VALUES (4, 2, 2, 1, '1st task', '3 hours', '2015-07-08 00:34:56+12', '2015-07-09 00:30:56+12', '2015-07-09 00:34:56+12', '2015-07-09 03:34:56+12', 'finished');
 INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, claimed_at, started_at, finished_at, status) VALUES (5, 2, 2, 2, '2nd task', 'still working', '2015-07-08 00:34:56+12', '2015-07-09 00:30:56+12', '2015-07-09 04:00:00+12', NULL, 'started');
-INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, claimed_at, started_at, finished_at, status) VALUES (6, 2, 2, 3, '3rd task', 'not yet started', '2015-07-08 00:34:56+12', '2015-07-09 00:30:56+12', NULL, NULL, 'approved');
 INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, claimed_at, started_at, finished_at, status) VALUES (7, 3, 1, 1, 'task one', 'claimed, not started', '2015-07-10 00:34:56+12', '2015-07-10 00:39:00+12', NULL, NULL, 'approved');
-INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, claimed_at, started_at, finished_at, status) VALUES (8, 3, 2, 2, 'task two', 'claimed, not started', '2015-07-10 00:34:56+12', '2015-07-10 04:39:00+12', NULL, NULL, 'approved');
 INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, claimed_at, started_at, finished_at, status) VALUES (9, 3, NULL, 3, 'task three', 'not claimed', '2015-07-10 00:34:56+12', NULL, NULL, NULL, 'approved');
 INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, claimed_at, started_at, finished_at, status) VALUES (10, 4, NULL, 3, 'trois', 'not approved', '2015-07-13 00:34:56+12', NULL, NULL, NULL, 'quoted');
 INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, claimed_at, started_at, finished_at, status) VALUES (11, 4, NULL, 2, 'deux', 'not approved', '2015-07-13 00:34:56+12', NULL, NULL, NULL, 'quoted');
 INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, claimed_at, started_at, finished_at, status) VALUES (12, 4, NULL, 1, 'un', 'not approved', '2015-07-13 00:34:56+12', NULL, NULL, NULL, 'quoted');
+INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, claimed_at, started_at, finished_at, status) VALUES (6, 2, 3, 3, '3rd task', 'not yet started', '2015-07-08 00:34:56+12', '2015-07-09 00:30:56+12', NULL, NULL, 'approved');
+INSERT INTO tasks (id, project_id, worker_id, sortid, title, description, created_at, claimed_at, started_at, finished_at, status) VALUES (8, 3, NULL, 2, 'task two', 'not claimed', '2015-07-10 00:34:56+12', NULL, NULL, NULL, 'approved');
 
 
 ALTER TABLE tasks ENABLE TRIGGER ALL;
@@ -211,7 +212,7 @@ SELECT pg_catalog.setval('worker_payments_id_seq', 1, true);
 -- Name: workers_id_seq; Type: SEQUENCE SET; Schema: muckwork; Owner: d50b
 --
 
-SELECT pg_catalog.setval('workers_id_seq', 2, true);
+SELECT pg_catalog.setval('workers_id_seq', 3, true);
 
 
 --

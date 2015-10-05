@@ -200,6 +200,7 @@ class TestMuckwork < Minitest::Test
 	def test_get_workers
 		x = @mw.get_workers
 		r = [
+			{id:3, person_id:7, currency:'CNY', millicents_per_second:200, name:'巩俐', email:'gong@li.cn'},
 			{id:2, person_id:5, currency:'THB', millicents_per_second:1000, name:'Oompa Loompa', email:'oompa@loompa.mm'},
 			{id:1, person_id:4, currency:'USD', millicents_per_second:42, name:'Charlie Buckets', email:'charlie@bucket.org'}]
 		assert_equal r, x
@@ -215,7 +216,7 @@ class TestMuckwork < Minitest::Test
 
 	def test_create_worker
 		x = @mw.create_worker(8)
-		r = {:id=>3, :person_id=>8, :currency=>'USD', :millicents_per_second => nil, :name=>'Yoko Ono', :email=>'yoko@ono.com', :address=>'Ono-San', :company=>'yoko@lennon.com', :city=>'Tokyo', :state=>nil, :country=>'JP', :phone=>nil}
+		r = {:id=>4, :person_id=>8, :currency=>'USD', :millicents_per_second => nil, :name=>'Yoko Ono', :email=>'yoko@ono.com', :address=>'Ono-San', :company=>'yoko@lennon.com', :city=>'Tokyo', :state=>nil, :country=>'JP', :phone=>nil}
 		assert_equal r, x
 		x = @mw.create_worker(99)
 		assert_equal false, x

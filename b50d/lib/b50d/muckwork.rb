@@ -193,6 +193,7 @@ module B50D
 		end
 
 		def update(params)
+			params.delete :person_id
 			@mw.update_client(@client_id, params)
 		end
 
@@ -256,6 +257,7 @@ module B50D
 		end
 
 		def update(params)
+			params.delete :person_id
 			@mw.update_worker(@worker_id, params)
 		end
 
