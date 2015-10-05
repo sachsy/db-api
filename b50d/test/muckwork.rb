@@ -189,10 +189,11 @@ class TestMuckwork < Minitest::Test
 	end
 
 	def test_update_client
-		x = @mw.update_client(2, 'EUR')
-		r = {:id=>2, :person_id=>3, :currency=>'EUR', :cents_balance=>10000, :name=>'Veruca Salt', :email=>'veruca@salt.com', :address=>'Veruca', :company=>'Daddy Empires Ltd', :city=>'London', :state=>'England', :country=>'GB', :phone=>'+44 9273 7231'}
+		up = {currency: 'EUR', name: 'Veruca Darling', cents_balance: 999999, country: 'BE'}
+		x = @mw.update_client(2, up)
+		r = {:id=>2, :person_id=>3, :currency=>'EUR', :cents_balance=>10000, :name=>'Veruca Darling', :email=>'veruca@salt.com', :address=>'Veruca', :company=>'Daddy Empires Ltd', :city=>'London', :state=>'England', :country=>'BE', :phone=>'+44 9273 7231'}
 		assert_equal r, x
-		x = @mw.update_client(99, 'EUR')
+		x = @mw.update_client(99, up)
 		assert_equal false, x
 	end
 
@@ -221,10 +222,11 @@ class TestMuckwork < Minitest::Test
 	end
 
 	def test_update_worker
-		x = @mw.update_worker(2, 'INR', 1234)
-		r = {:id=>2, :person_id=>5, :currency=>'INR', :millicents_per_second=>1234, :name=>'Oompa Loompa', :email=>'oompa@loompa.mm', :address=>'Oompa Loompa', :company=>nil, :city=>'Hershey', :state=>'PA', :country=>'US', :phone=>nil}
+		up = {currency: 'INR', name: 'Oompa Wow', millicents_per_second: 1234, email: 'oompa@loom.pa', company: 'cash', id: 919191}
+		x = @mw.update_worker(2, up)
+		r = {:id=>2, :person_id=>5, :currency=>'INR', :millicents_per_second=>1234, :name=>'Oompa Wow', :email=>'oompa@loom.pa', :address=>'Oompa Loompa', :company=>'cash', :city=>'Hershey', :state=>'PA', :country=>'US', :phone=>nil}
 		assert_equal r, x
-		x = @mw.update_worker(99, 'INR', 1234)
+		x = @mw.update_worker(99, up)
 		assert_equal false, x
 	end
 

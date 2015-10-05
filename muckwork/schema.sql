@@ -915,10 +915,11 @@ $$ LANGUAGE plpgsql;
 
 
 
--- PARAMS: client_id, currency
-CREATE OR REPLACE FUNCTION update_client(integer, text,
+-- PARAMS: client_id, JSON of key=>values to update
+CREATE OR REPLACE FUNCTION update_client(integer, json,
 	OUT mime text, OUT js json) AS $$
 DECLARE
+	pid integer;
 
 	err_code text;
 	err_msg text;
@@ -926,7 +927,11 @@ DECLARE
 	err_context text;
 
 BEGIN
-	UPDATE muckwork.clients SET currency=$2 WHERE id=$1;
+	SELECT person_id INTO pid FROM muckwork.clients WHERE id = $1;
+	PERFORM peeps.jsonupdate('peeps.people', pid, $2,
+		ARRAY['name', 'email', 'address', 'company', 'city', 'state', 'country', 'phone']);
+	PERFORM peeps.jsonupdate('muckwork.clients', $1, $2,
+		ARRAY['person_id', 'currency']);
 	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_client($1) x;
 
 EXCEPTION
@@ -1013,10 +1018,11 @@ $$ LANGUAGE plpgsql;
 
 
 
--- PARAMS: worker_id, currency, millicents_per_second
-CREATE OR REPLACE FUNCTION update_worker(integer, text, integer,
+-- PARAMS: worker_id, JSON of key=>values to update
+CREATE OR REPLACE FUNCTION update_worker(integer, json,
 	OUT mime text, OUT js json) AS $$
 DECLARE
+	pid integer;
 
 	err_code text;
 	err_msg text;
@@ -1024,7 +1030,11 @@ DECLARE
 	err_context text;
 
 BEGIN
-	UPDATE muckwork.workers SET currency=$2, millicents_per_second=$3 WHERE id=$1;
+	SELECT person_id INTO pid FROM muckwork.workers WHERE id = $1;
+	PERFORM peeps.jsonupdate('peeps.people', pid, $2,
+		ARRAY['name', 'email', 'address', 'company', 'city', 'state', 'country', 'phone']);
+	PERFORM peeps.jsonupdate('muckwork.workers', $1, $2,
+		ARRAY['person_id', 'currency', 'millicents_per_second']);
 	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_worker($1) x;
 
 EXCEPTION

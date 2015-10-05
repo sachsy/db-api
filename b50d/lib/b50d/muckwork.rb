@@ -43,10 +43,9 @@ module B50D
 			@db.js('muckwork.create_client($1)', [person_id])
 		end
 
-		def update_client(id, currency)
+		def update_client(id, params)
 			return false unless /\A[0-9]+\Z/ === String(id)
-			return false unless /\A[A-Z]{3}\Z/ === String(currency)
-			@db.js('muckwork.update_client($1, $2)', [id, currency])
+			@db.js('muckwork.update_client($1, $2)', [id, params.to_json])
 		end
 
 		def get_workers
@@ -63,11 +62,9 @@ module B50D
 			@db.js('muckwork.create_worker($1)', [person_id])
 		end
 
-		def update_worker(id, currency, millicents_per_second)
+		def update_worker(id, params)
 			return false unless /\A[0-9]+\Z/ === String(id)
-			return false unless /\A[A-Z]{3}\Z/ === String(currency)
-			return false unless /\A[0-9]+\Z/ === String(millicents_per_second)
-			@db.js('muckwork.update_worker($1, $2, $3)', [id, currency, millicents_per_second])
+			@db.js('muckwork.update_worker($1, $2)', [id, params.to_json])
 		end
 
 		def get_projects
@@ -195,13 +192,8 @@ module B50D
 			@mw.get_client(@client_id)
 		end
 
-		# TODO? put this into PostgreSQL API?
 		def update(params)
-			client = @mw.get_client(@client_id)
-			if /\A[A-Z]{3}\Z/ === params[:currency]
-				@mw.update_client(@client_id, params[:currency])
-			end
-			@db.js('peeps.update_person($1, $2)', [client[:person_id], params.to_json])
+			@mw.update_client(@client_id, params)
 		end
 
 		def get_projects
@@ -263,13 +255,8 @@ module B50D
 			@mw.get_worker(@worker_id)
 		end
 
-		# TODO? put this into PostgreSQL API?
 		def update(params)
-			worker = @mw.get_worker(@worker_id)
-			if /\A[A-Z]{3}\Z/ === params[:currency] && /\A[0-9]+\Z/ === params[:mps]
-				@mw.update_worker(@worker_id, params[:currency], params[:mps])
-			end
-			@db.js('peeps.update_person($1, $2)', [worker[:person_id], params.to_json])
+			@mw.update_worker(@worker_id, params)
 		end
 
 		def get_tasks
