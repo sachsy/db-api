@@ -106,7 +106,7 @@ BEGIN
 	ELSE
 		js := '{"ok": false}';
 	END IF;
-EXCEPTION WHEN OTHERS THEN
+EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
 	js := '{"ok": false}';
 END;
 $$ LANGUAGE plpgsql;
@@ -124,7 +124,7 @@ BEGIN
 	ELSE
 		js := '{"ok": false}';
 	END IF;
-EXCEPTION WHEN OTHERS THEN
+EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
 	js := '{"ok": false}';
 END;
 $$ LANGUAGE plpgsql;
@@ -287,7 +287,7 @@ BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM muckwork.project_view WHERE status = $1::status) r;
 	IF js IS NULL THEN js := '[]'; END IF;
-EXCEPTION WHEN OTHERS THEN
+EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
 	js := '[]';
 END;
 $$ LANGUAGE plpgsql;
@@ -510,6 +510,25 @@ $$ LANGUAGE plpgsql;
 
 
 
+-- lists just the next unclaimed task (lowest sortid) for each project
+-- use this to avoid workers claiming tasks out of order
+-- PARAMS: -none-
+CREATE OR REPLACE FUNCTION next_available_tasks(
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := json_agg(r) FROM (SELECT t.* FROM muckwork.task_view t
+		INNER JOIN (SELECT project_id, MIN(sortid) AS lowest FROM muckwork.tasks
+			WHERE status='approved' AND worker_id IS NULL AND claimed_at IS NULL
+			GROUP BY project_id) x
+		ON t.project_id=x.project_id AND t.sortid=x.lowest
+		ORDER BY t.project_id) r;
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
 -- PARAMS: status ('created','quoted','approved','refused','started','finished')
 CREATE OR REPLACE FUNCTION get_tasks_with_status(text,
 	OUT mime text, OUT js json) AS $$
@@ -517,7 +536,7 @@ BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view WHERE status = $1::status) r;
 	IF js IS NULL THEN js := '[]'; END IF;
-EXCEPTION WHEN OTHERS THEN
+EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
 	js := '[]';
 END;
 $$ LANGUAGE plpgsql;

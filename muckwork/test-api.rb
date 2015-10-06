@@ -404,6 +404,18 @@ class MuckworkAPITest < Minitest::Test
 		assert_equal [], @j
 	end
 
+	def test_next_available_tasks
+		qry("muckwork.next_available_tasks()")
+		assert_equal [7], @j.map {|x| x[:id]}
+		qry("muckwork.approve_quote(4)")
+		qry("muckwork.next_available_tasks()")
+		assert_equal [7,12], @j.map {|x| x[:id]}
+		assert_equal 'by Wonka', @j[0][:project][:description]
+		qry("muckwork.claim_task(7, 1)")
+		qry("muckwork.next_available_tasks()")
+		assert_equal [8,12], @j.map {|x| x[:id]}
+	end
+
 	def test_get_tasks_with_status
 		qry("muckwork.get_tasks_with_status('started')")
 		assert_equal 1, @j.size

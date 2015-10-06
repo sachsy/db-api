@@ -357,15 +357,10 @@ CREATE TRIGGER only_claim_approved_task
 	EXECUTE PROCEDURE muckwork.only_claim_approved_task();
 
 
--- Controversial business rule: can't claim a task until you've finished what you've started
+-- Controversial business rule: can't claim a task unless available
 CREATE OR REPLACE FUNCTION only_claim_when_done() RETURNS TRIGGER AS $$
-DECLARE
-	unfinished integer;
 BEGIN
-	SELECT COUNT(*) INTO unfinished FROM muckwork.tasks
-		WHERE worker_id = NEW.worker_id
-		AND finished_at IS NULL;
-	IF unfinished > 0 THEN
+	IF muckwork.is_worker_available(NEW.worker_id) IS FALSE THEN
 		RAISE 'only_claim_when_done';
 	END IF;
 	RETURN NEW;
@@ -622,7 +617,7 @@ CREATE TRIGGER auto_sortid BEFORE INSERT ON muckwork.tasks
 
 -- PARAMS: tasks.id
 -- USAGE: SELECT SUM(seconds_per_task(id)) FROM muckwork.tasks WHERE project_id=1;
-CREATE FUNCTION seconds_per_task(integer, OUT seconds integer) AS $$
+CREATE OR REPLACE FUNCTION seconds_per_task(integer, OUT seconds integer) AS $$
 BEGIN
 	seconds := (EXTRACT(EPOCH FROM finished_at) - EXTRACT(EPOCH FROM started_at))
 		FROM muckwork.tasks
@@ -633,7 +628,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: tasks.id
 -- NOTE: to convert millicents into cents, rounds UP to the next highest cent
-CREATE FUNCTION worker_charge_for_task(integer, OUT currency char(3), OUT cents integer) AS $$
+CREATE OR REPLACE FUNCTION worker_charge_for_task(integer, OUT currency char(3), OUT cents integer) AS $$
 BEGIN
 	SELECT w.currency,
 		CEIL((w.millicents_per_second * muckwork.seconds_per_task(t.id)) / 100)
@@ -647,7 +642,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- Sum of all worker_charges for tasks in this project, *converted* to project currency
-CREATE FUNCTION final_project_charges(integer, OUT currency char(3), OUT cents integer) AS $$
+CREATE OR REPLACE FUNCTION final_project_charges(integer, OUT currency char(3), OUT cents integer) AS $$
 DECLARE
 	project_currency char(3);
 	wc muckwork.worker_charges;
@@ -673,6 +668,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- Is this worker available to claim another task?
+-- Current rule: not if they have another task claimed and unfinished
+-- Rule might change, so that's why making it a separate function.
+-- INPUT: worker_id
+CREATE OR REPLACE FUNCTION is_worker_available(integer) RETURNS boolean AS $$
+BEGIN
+	RETURN COUNT(*) = 0 FROM muckwork.tasks WHERE worker_id=$1 AND finished_at IS NULL;
+END;
+$$ LANGUAGE plpgsql;
 
 
 -- next tasks.sortid for project
@@ -864,7 +869,7 @@ BEGIN
 	ELSE
 		js := '{"ok": false}';
 	END IF;
-EXCEPTION WHEN OTHERS THEN
+EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
 	js := '{"ok": false}';
 END;
 $$ LANGUAGE plpgsql;
@@ -882,7 +887,7 @@ BEGIN
 	ELSE
 		js := '{"ok": false}';
 	END IF;
-EXCEPTION WHEN OTHERS THEN
+EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
 	js := '{"ok": false}';
 END;
 $$ LANGUAGE plpgsql;
@@ -1125,7 +1130,7 @@ BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM muckwork.project_view WHERE status = $1::status) r;
 	IF js IS NULL THEN js := '[]'; END IF;
-EXCEPTION WHEN OTHERS THEN
+EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
 	js := '[]';
 END;
 $$ LANGUAGE plpgsql;
@@ -1497,6 +1502,25 @@ $$ LANGUAGE plpgsql;
 
 
 
+-- lists just the next unclaimed task (lowest sortid) for each project
+-- use this to avoid workers claiming tasks out of order
+-- PARAMS: -none-
+CREATE OR REPLACE FUNCTION next_available_tasks(
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := json_agg(r) FROM (SELECT t.* FROM muckwork.task_view t
+		INNER JOIN (SELECT project_id, MIN(sortid) AS lowest FROM muckwork.tasks
+			WHERE status='approved' AND worker_id IS NULL AND claimed_at IS NULL
+			GROUP BY project_id) x
+		ON t.project_id=x.project_id AND t.sortid=x.lowest
+		ORDER BY t.project_id) r;
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
 -- PARAMS: status ('created','quoted','approved','refused','started','finished')
 CREATE OR REPLACE FUNCTION get_tasks_with_status(text,
 	OUT mime text, OUT js json) AS $$
@@ -1504,7 +1528,7 @@ BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view WHERE status = $1::status) r;
 	IF js IS NULL THEN js := '[]'; END IF;
-EXCEPTION WHEN OTHERS THEN
+EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
 	js := '[]';
 END;
 $$ LANGUAGE plpgsql;

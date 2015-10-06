@@ -238,15 +238,10 @@ CREATE TRIGGER only_claim_approved_task
 	EXECUTE PROCEDURE muckwork.only_claim_approved_task();
 
 
--- Controversial business rule: can't claim a task until you've finished what you've started
+-- Controversial business rule: can't claim a task unless available
 CREATE OR REPLACE FUNCTION only_claim_when_done() RETURNS TRIGGER AS $$
-DECLARE
-	unfinished integer;
 BEGIN
-	SELECT COUNT(*) INTO unfinished FROM muckwork.tasks
-		WHERE worker_id = NEW.worker_id
-		AND finished_at IS NULL;
-	IF unfinished > 0 THEN
+	IF muckwork.is_worker_available(NEW.worker_id) IS FALSE THEN
 		RAISE 'only_claim_when_done';
 	END IF;
 	RETURN NEW;

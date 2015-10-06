@@ -124,6 +124,16 @@ class TestMuckworkDB < Minitest::Test
 		end
 	end
 
+	def test_only_claim_when_done
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.tasks SET claimed_at=NOW(), worker_id=2 WHERE id=7")
+		end
+		assert_raises PG::RaiseException do
+			DB.exec("UPDATE muckwork.tasks SET claimed_at=NOW(), worker_id=3 WHERE id=7")
+		end
+		DB.exec("UPDATE muckwork.tasks SET claimed_at=NOW(), worker_id=1 WHERE id=7")
+	end
+
 	def test_dates_cant_change
 		assert_raises PG::RaiseException do
 			DB.exec("UPDATE muckwork.projects SET finished_at=NOW() WHERE id=1")
@@ -342,6 +352,17 @@ class TestMuckworkDB < Minitest::Test
 			DB.exec("INSERT INTO muckwork.notes(project_id, note) VALUES (1, '')")
 		end
 		DB.exec("INSERT INTO muckwork.notes(project_id, note) VALUES (1, 'ok')")
+	end
+
+	def test_is_worker_available
+		res = DB.exec("SELECT * FROM is_worker_available(1)")
+		assert_equal 't', res[0]['is_worker_available']
+		res = DB.exec("SELECT * FROM is_worker_available(2)")
+		assert_equal 'f', res[0]['is_worker_available']
+		res = DB.exec("SELECT * FROM is_worker_available(3)")
+		assert_equal 'f', res[0]['is_worker_available']
+		res = DB.exec("SELECT * FROM is_worker_available(99)")
+		assert_equal 't', res[0]['is_worker_available']
 	end
 end
 
