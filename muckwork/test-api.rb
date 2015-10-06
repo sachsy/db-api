@@ -371,7 +371,7 @@ class MuckworkAPITest < Minitest::Test
 	end
 
 	def test_claim_task
-		qry("muckwork.claim_task(9, 1)")
+		qry("muckwork.claim_task(7, 1)")
 		assert_equal 'Charlie Buckets', @j[:worker][:name]
 		assert_equal 'approved', @j[:status]  # 'claimed' is not a status
 		assert_match /^20[0-9][0-9]-/, @j[:claimed_at]
@@ -385,21 +385,21 @@ class MuckworkAPITest < Minitest::Test
 	end
 
 	def test_start_task
-		qry("muckwork.start_task(7)")
+		qry("muckwork.start_task(6)")
 		assert_equal 'started', @j[:status]
 		assert_match /^20[0-9][0-9]-/, @j[:started_at]
 	end
 
 	def test_finish_task
-		qry("muckwork.start_task(7)")
-		qry("muckwork.finish_task(7)")
+		qry("muckwork.start_task(6)")
+		qry("muckwork.finish_task(6)")
 		assert_equal 'finished', @j[:status]
 		assert_match /^20[0-9][0-9]-/, @j[:finished_at]
 	end
 
 	def test_worker_get_tasks
 		qry("muckwork.worker_get_tasks(1)")
-		assert_equal [7, 3, 2, 1], @j.map {|x| x[:id]}
+		assert_equal [3, 2, 1], @j.map {|x| x[:id]}
 		qry("muckwork.worker_get_tasks(99)")
 		assert_equal [], @j
 	end

@@ -238,6 +238,27 @@ CREATE TRIGGER only_claim_approved_task
 	EXECUTE PROCEDURE muckwork.only_claim_approved_task();
 
 
+-- Controversial business rule: can't claim a task until you've finished what you've started
+CREATE OR REPLACE FUNCTION only_claim_when_done() RETURNS TRIGGER AS $$
+DECLARE
+	unfinished integer;
+BEGIN
+	SELECT COUNT(*) INTO unfinished FROM muckwork.tasks
+		WHERE worker_id = NEW.worker_id
+		AND finished_at IS NULL;
+	IF unfinished > 0 THEN
+		RAISE 'only_claim_when_done';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS only_claim_when_done ON muckwork.tasks CASCADE;
+CREATE TRIGGER only_claim_when_done
+	BEFORE UPDATE OF worker_id ON muckwork.tasks
+	FOR EACH ROW WHEN (NEW.worker_id IS NOT NULL)
+	EXECUTE PROCEDURE muckwork.only_claim_when_done();
+
+
 -- can't delete started projects or tasks
 CREATE OR REPLACE FUNCTION no_delete_started() RETURNS TRIGGER AS $$
 BEGIN

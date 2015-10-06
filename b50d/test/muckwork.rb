@@ -343,21 +343,21 @@ class TestMuckwork < Minitest::Test
 	end
 
 	def test_start_task
-		x = @mw.start_task(7)
+		x = @mw.start_task(6)
 		assert_equal 'started', x[:status]
 		assert_match /^20[0-9][0-9]-/, x[:started_at]
 	end
 
 	def test_finish_task
-		@mw.start_task(7)
-		x = @mw.finish_task(7)
+		@mw.start_task(6)
+		x = @mw.finish_task(6)
 		assert_equal 'finished', x[:status]
 		assert_match /^20[0-9][0-9]-/, x[:finished_at]
 	end
 
 	def test_worker_get_tasks
 		x = @mw.worker_get_tasks(1)
-		assert_equal [7, 3, 2, 1], x.map {|y| y[:id]}
+		assert_equal [3, 2, 1], x.map {|y| y[:id]}
 		x = @mw.worker_get_tasks(99)
 		assert_equal [], x
 	end

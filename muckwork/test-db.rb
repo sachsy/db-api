@@ -56,15 +56,15 @@ class TestMuckworkDB < Minitest::Test
 	end
 
 	def test_task_status_update
-		res = DB.exec("SELECT status FROM muckwork.tasks WHERE id=7")
+		res = DB.exec("SELECT status FROM muckwork.tasks WHERE id=6")
 		assert_equal 'approved', res[0]['status']  # might change
-		res = DB.exec("UPDATE muckwork.tasks SET started_at=NOW() WHERE id=7 RETURNING status")
+		res = DB.exec("UPDATE muckwork.tasks SET started_at=NOW() WHERE id=6 RETURNING status")
 		assert_equal 'started', res[0]['status']
-		res = DB.exec("UPDATE muckwork.tasks SET finished_at=NOW() WHERE id=7 RETURNING status")
+		res = DB.exec("UPDATE muckwork.tasks SET finished_at=NOW() WHERE id=6 RETURNING status")
 		assert_equal 'finished', res[0]['status']
-		res = DB.exec("UPDATE muckwork.tasks SET finished_at=NULL WHERE id=7 RETURNING status")
+		res = DB.exec("UPDATE muckwork.tasks SET finished_at=NULL WHERE id=6 RETURNING status")
 		assert_equal 'started', res[0]['status']
-		res = DB.exec("UPDATE muckwork.tasks SET started_at=NULL WHERE id=7 RETURNING status")
+		res = DB.exec("UPDATE muckwork.tasks SET started_at=NULL WHERE id=6 RETURNING status")
 		assert_equal 'created', res[0]['status']
 	end
 
@@ -162,7 +162,7 @@ class TestMuckworkDB < Minitest::Test
 			DB.exec("UPDATE muckwork.tasks SET claimed_at=NOW() WHERE id=6")
 		end
 		DB.exec("UPDATE muckwork.tasks SET claimed_at=NULL, worker_id=NULL WHERE id=6")
-		DB.exec("UPDATE muckwork.tasks SET claimed_at=NOW(), worker_id=2 WHERE id=6")
+		DB.exec("UPDATE muckwork.tasks SET claimed_at=NOW(), worker_id=3 WHERE id=6")
 		assert_raises PG::RaiseException do
 			DB.exec("UPDATE muckwork.tasks SET created_at=NOW() WHERE id=9")
 		end
@@ -205,6 +205,7 @@ class TestMuckworkDB < Minitest::Test
 		res = DB.exec("SELECT started_at, status FROM muckwork.projects WHERE id=3")
 		assert_equal nil, res[0]['started_at']
 		assert_equal 'approved', res[0]['status']
+		DB.exec("UPDATE muckwork.tasks SET worker_id=1, claimed_at=NOW() WHERE id=7")
 		DB.exec("UPDATE muckwork.tasks SET started_at=NOW() WHERE id=7")
 		res = DB.exec("SELECT started_at, status FROM muckwork.projects WHERE id=3")
 		assert_equal Time.now.to_s[0,7], res[0]['started_at'][0,7]
