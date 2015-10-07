@@ -675,7 +675,8 @@ $$ LANGUAGE plpgsql;
 -- INPUT: worker_id
 CREATE OR REPLACE FUNCTION is_worker_available(integer) RETURNS boolean AS $$
 BEGIN
-	RETURN COUNT(*) = 0 FROM muckwork.tasks WHERE worker_id=$1 AND finished_at IS NULL;
+	RETURN NOT EXISTS (SELECT 1 FROM muckwork.tasks
+		WHERE worker_id=$1 AND finished_at IS NULL);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1509,12 +1510,12 @@ CREATE OR REPLACE FUNCTION next_available_tasks(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := json_agg(r) FROM (SELECT t.* FROM muckwork.task_view t
-		INNER JOIN (SELECT project_id, MIN(sortid) AS lowest FROM muckwork.tasks
-			WHERE status='approved' AND worker_id IS NULL AND claimed_at IS NULL
-			GROUP BY project_id) x
-		ON t.project_id=x.project_id AND t.sortid=x.lowest
-		ORDER BY t.project_id) r;
+	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view
+		WHERE (project_id, sortid) IN (SELECT project_id, MIN(sortid)
+			FROM muckwork.tasks WHERE status='approved'
+			AND worker_id IS NULL AND claimed_at IS NULL
+			GROUP BY project_id) 
+		ORDER BY project_id) r;
 	IF js IS NULL THEN js := '[]'; END IF;
 END;
 $$ LANGUAGE plpgsql;

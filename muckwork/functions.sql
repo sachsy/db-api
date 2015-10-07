@@ -62,7 +62,8 @@ $$ LANGUAGE plpgsql;
 -- INPUT: worker_id
 CREATE OR REPLACE FUNCTION is_worker_available(integer) RETURNS boolean AS $$
 BEGIN
-	RETURN COUNT(*) = 0 FROM muckwork.tasks WHERE worker_id=$1 AND finished_at IS NULL;
+	RETURN NOT EXISTS (SELECT 1 FROM muckwork.tasks
+		WHERE worker_id=$1 AND finished_at IS NULL);
 END;
 $$ LANGUAGE plpgsql;
 
