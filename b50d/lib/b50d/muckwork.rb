@@ -177,6 +177,7 @@ module B50D
 			x = @db.js('muckwork.auth_client($1, $2)', [api_key, api_pass])
 			raise 'bad API auth' unless x.key? :client_id
 			@client_id = x[:client_id]
+			@person_id = x[:person_id]
 			@mw = B50D::Muckwork.new(server)
 		end
 
@@ -186,6 +187,10 @@ module B50D
 
 		def currencies
 			@db.js('peeps.all_currencies()')
+		end
+
+		def set_password(newpass)
+			@db.js('peeps.set_password($1, $2)', [@person_id, newpass])
 		end
 
 		def get_client
@@ -241,6 +246,7 @@ module B50D
 			x = @db.js('muckwork.auth_worker($1, $2)', [api_key, api_pass])
 			raise 'bad API auth' unless x.key? :worker_id
 			@worker_id = x[:worker_id]
+			@person_id = x[:person_id]
 			@mw = B50D::Muckwork.new(server)
 		end
 
@@ -250,6 +256,10 @@ module B50D
 
 		def currencies
 			@db.js('peeps.all_currencies()')
+		end
+
+		def set_password(newpass)
+			@db.js('peeps.set_password($1, $2)', [@person_id, newpass])
 		end
 
 		def get_worker

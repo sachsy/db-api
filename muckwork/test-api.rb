@@ -136,23 +136,23 @@ class MuckworkAPITest < Minitest::Test
 		qry("muckwork.auth_client($1, $2)", ['aaaaaaaa', 'bbbbbbbb'])
 		assert_equal 'Not Found', @j[:title]
 		qry("muckwork.auth_client($1, $2)", ['cccccccc', 'dddddddd'])
-		assert_equal({client_id: 1}, @j)
+		assert_equal({client_id: 1, person_id: 2}, @j)
 		qry("muckwork.auth_client($1, $2)", ['eeeeeeee', 'ffffffff'])
-		assert_equal({client_id: 2}, @j)
+		assert_equal({client_id: 2, person_id: 3}, @j)
 	end
 
 	def test_auth_worker
 		qry("muckwork.auth_worker($1, $2)", ['aaaaaaaa', 'bbbbbbbb'])
 		assert_equal 'Not Found', @j[:title]
 		qry("muckwork.auth_worker($1, $2)", ['gggggggg', 'hhhhhhhh'])
-		assert_equal({worker_id: 1}, @j)
+		assert_equal({worker_id: 1, person_id: 4}, @j)
 		qry("muckwork.auth_worker($1, $2)", ['iiiiiiii', 'jjjjjjjj'])
-		assert_equal({worker_id: 2}, @j)
+		assert_equal({worker_id: 2, person_id: 5}, @j)
 	end
 
 	def test_auth_manager
 		qry("muckwork.auth_manager($1, $2)", ['aaaaaaaa', 'bbbbbbbb'])
-		assert_equal({manager_id: 1}, @j)
+		assert_equal({manager_id: 1, person_id: 1}, @j)
 		qry("muckwork.auth_manager($1, $2)", ['gggggggg', 'hhhhhhhh'])
 		assert_equal 'Not Found', @j[:title]
 		qry("muckwork.auth_manager($1, $2)", ['boo', 'hoo'])

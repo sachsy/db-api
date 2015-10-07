@@ -8,15 +8,16 @@ CREATE OR REPLACE FUNCTION auth_client(text, text,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	cid integer;
+	pid integer;
 BEGIN
-	SELECT c.id INTO cid
+	SELECT c.id, c.person_id INTO cid, pid
 		FROM peeps.api_keys a, muckwork.clients c
 		WHERE a.akey=$1 AND a.apass=$2 AND 'MuckworkClient'=ANY(a.apis)
 		AND a.person_id=c.person_id;
 	IF cid IS NULL THEN m4_NOTFOUND
 	ELSE
 		mime := 'application/json';
-		js := json_build_object('client_id', cid);
+		js := json_build_object('client_id', cid, 'person_id', pid);
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -28,15 +29,16 @@ CREATE OR REPLACE FUNCTION auth_worker(text, text,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	wid integer;
+	pid integer;
 BEGIN
-	SELECT w.id INTO wid
+	SELECT w.id, w.person_id INTO wid, pid
 		FROM peeps.api_keys a, muckwork.workers w
 		WHERE a.akey=$1 AND a.apass=$2 AND 'Muckworker'=ANY(a.apis)
 		AND a.person_id=w.person_id;
 	IF wid IS NULL THEN m4_NOTFOUND
 	ELSE
 		mime := 'application/json';
-		js := json_build_object('worker_id', wid);
+		js := json_build_object('worker_id', wid, 'person_id', pid);
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -48,15 +50,16 @@ CREATE OR REPLACE FUNCTION auth_manager(text, text,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	mid integer;
+	pid integer;
 BEGIN
-	SELECT m.id INTO mid
+	SELECT m.id, m.person_id INTO mid, pid
 		FROM peeps.api_keys a, muckwork.managers m
 		WHERE a.akey=$1 AND a.apass=$2 AND 'MuckworkManager'=ANY(a.apis)
 		AND a.person_id=m.person_id;
 	IF mid IS NULL THEN m4_NOTFOUND
 	ELSE
 		mime := 'application/json';
-		js := json_build_object('manager_id', mid);
+		js := json_build_object('manager_id', mid, 'person_id', pid);
 	END IF;
 END;
 $$ LANGUAGE plpgsql;

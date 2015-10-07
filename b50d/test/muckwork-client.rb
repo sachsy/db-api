@@ -14,6 +14,16 @@ class TestMuckworkClient < Minitest::Test
 		@mc2 = B50D::MuckworkClient.new('e' * 8, 'f' * 8, 'test')
 	end
 
+	def test_set_password
+		email = 'willy@wonka.com'
+		newpass = '1q2w3e4r5t'
+		x = @mc1.set_password(newpass)
+		assert_equal email, x[:email]
+		db = DbAPI.new('test')
+		x = db.js('peeps.get_person_password($1, $2)', [email, newpass])
+		assert_equal email, x[:email]
+	end
+
 	def test_get_client
 		x = @mc1.get_client
 		assert_equal 'Willy Wonka', x[:name]
