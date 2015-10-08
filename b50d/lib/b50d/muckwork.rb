@@ -275,6 +275,15 @@ module B50D
 			@mw.worker_get_tasks(@worker_id)
 		end
 
+		def grouped_tasks
+			group = {}
+			@mw.worker_get_tasks(@worker_id).each do |t|
+				group[t[:status]] ||= []
+				group[t[:status]] << t
+			end
+			group
+		end
+
 		def get_task(task_id)
 			return false unless @mw.worker_owns_task(@worker_id, task_id)
 			@mw.get_task(task_id)

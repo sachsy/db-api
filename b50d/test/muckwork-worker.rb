@@ -40,5 +40,14 @@ class TestMuckworker < Minitest::Test
 		assert_equal 'Oompa Loompa', x[:name]
 	end
 
+	def test_grouped_tasks
+		gt = @mc1.grouped_tasks
+		assert_equal ['finished'], gt.keys
+		assert_equal [3, 2, 1], gt['finished'].map {|t| t[:id]}
+		gt = @mc2.grouped_tasks
+		assert_equal ['started', 'finished'], gt.keys
+		assert_equal [4], gt['finished'].map {|t| t[:id]}
+		assert_equal [5], gt['started'].map {|t| t[:id]}
+	end
 
 end
