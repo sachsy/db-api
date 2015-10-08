@@ -308,8 +308,8 @@ module B50D
 			@mw.finish_task(task_id)
 		end
 
-		def unclaimed_tasks
-			@mw.get_tasks_with_status('approved')
+		def next_available_tasks
+			@db.js('muckwork.next_available_tasks()')
 		end
 	end
 end

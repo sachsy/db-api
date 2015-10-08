@@ -50,4 +50,14 @@ class TestMuckworker < Minitest::Test
 		assert_equal [5], gt['started'].map {|t| t[:id]}
 	end
 
+	def test_next_available_tasks
+		tasks = @mc1.next_available_tasks
+		assert_equal [7], tasks.map {|t| t[:id]}
+		assert_equal 'Unstarted project', tasks[0][:project][:title]
+		db = DbAPI.new('test')
+		db.js('muckwork.approve_quote(4)')
+		tasks = @mc1.next_available_tasks
+		assert_equal [7,12], tasks.map {|t| t[:id]}
+		assert_equal 'by Veruca', tasks[1][:project][:description]
+	end
 end
