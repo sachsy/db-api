@@ -55,7 +55,11 @@ When **real people** using it, a **50web** route called **ModAuth** checks for t
 
 If POST /login works, it sets the 3 needed cookies (person_id, api_key, api_pass).  Those are included in all calls, and sent to A50C To init client library.
 
-# NOTE:
+# CHANGES? MIGRATIONS?
+
+For small changes, just use psql to add a function, drop a table, etc.
+
+The easiest way to make major changes is to copy the schema.sql files to /tmp/, the edit them to remove the "DROP SCHEMA" and "CREATE TABLE" lines.  All functions, triggers, and views can be replaced.
 
 When adding a new schema, update the d50b user search_path:
 

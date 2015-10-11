@@ -18,5 +18,28 @@ CREATE TABLE currency_rates (
 	PRIMARY KEY (code, day)
 );
 
+CREATE TABLE translation_files (
+	id serial primary key,
+	filename varchar(64) not null unique,
+	raw text,
+	template text
+);
+
+CREATE TABLE translations (
+	code char(8) primary key,
+	file_id integer REFERENCES translation_files(id),
+	sortid integer,
+	en text,
+	es text,
+	fr text,
+	de text,
+	it text,
+	pt text,
+	ja text,
+	zh text,
+	ar text,
+	ru text
+);
+
 COMMIT;
 

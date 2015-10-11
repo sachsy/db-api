@@ -1,3 +1,7 @@
+---------------------------------
+---------------------- FUNCTIONS:
+---------------------------------
+
 CREATE OR REPLACE FUNCTION gen_random_bytes(integer) RETURNS bytea AS '$libdir/pgcrypto', 'pg_random_bytes' LANGUAGE c STRICT;
 
 
@@ -148,4 +152,80 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- PARAMS:  translation_files.id
+CREATE OR REPLACE FUNCTION parse_translation_file(integer) RETURNS text AS $$
+DECLARE
+	lines text[];
+	line text;
+	new_template text := '';
+	sid integer := 0;
+	one_code char(8);
+BEGIN
+	SELECT regexp_split_to_array(raw, E'\n') INTO lines FROM translation_files WHERE id = $1;
+	FOREACH line IN ARRAY lines LOOP
+		IF E'\t' = substring(line from 1 for 1) THEN
+			sid := sid + 1;
+			INSERT INTO translations(file_id, sortid, en)
+				VALUES ($1, sid, btrim(line, E'\t')) RETURNING code INTO one_code;
+			new_template := new_template || '{' || one_code || '}' || E'\n';
+		ELSE
+			new_template := new_template || line || E'\n';
+		END IF;
+	END LOOP;
+	UPDATE translation_files SET template = rtrim(new_template, E'\n') WHERE id = $1;
+	RETURN rtrim(new_template, E'\n');
+END;
+$$ LANGUAGE plpgsql;
+
+-- PARAMS:  translation_files.id
+CREATE OR REPLACE FUNCTION text_for_translator(integer, OUT text text) AS $$
+BEGIN
+	text := string_agg(en, E'\r\n') FROM
+		(SELECT en FROM translations WHERE file_id = $1 ORDER BY sortid) s;
+END;
+$$ LANGUAGE plpgsql;
+
+-- PARAMS:  translation_files.id, translation file from translator
+CREATE OR REPLACE FUNCTION txn_compare(integer, text)
+RETURNS TABLE(code char(8), en text, theirs text) AS $$
+BEGIN
+	-- TODO: stop and notify if split array has more lines than database?
+	RETURN QUERY
+	WITH t2 AS (SELECT * FROM
+		UNNEST(regexp_split_to_array(replace($2, E'\r', ''), E'\n'))
+		WITH ORDINALITY AS theirs)
+		SELECT t1.code, t1.en, t2.theirs FROM translations t1
+		INNER JOIN t2 ON t1.sortid=t2.ordinality
+		WHERE t1.file_id=$1
+		ORDER BY sortid;
+END;
+$$ LANGUAGE plpgsql;
+
+-- PARAMS:  translation_files.id, 2-char lang code, translation file from translator
+CREATE OR REPLACE FUNCTION txn_update(integer, text, text) RETURNS boolean AS $$
+DECLARE
+	atxn RECORD;
+BEGIN
+	FOR atxn IN SELECT code, theirs FROM txn_compare($1, $3) LOOP
+		EXECUTE 'UPDATE translations SET ' || quote_ident($2) || ' = $2 WHERE code = $1'
+			USING atxn.code, atxn.theirs;
+	END LOOP;
+	RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- PARAMS:  translation_files.id, 2-char lang code
+CREATE OR REPLACE FUNCTION merge_translation_file(integer, text) RETURNS text AS $$
+DECLARE
+	merged text;
+	a RECORD;
+BEGIN
+	SELECT translation_files.template INTO merged FROM translation_files WHERE id = $1;
+	FOR a IN EXECUTE ('SELECT code, ' || quote_ident($2) ||
+		' AS tx FROM translations WHERE file_id = ' || $1) LOOP
+		merged := replace(merged, '{' || a.code || '}', a.tx);
+	END LOOP;
+	RETURN merged;
+END;
+$$ LANGUAGE plpgsql;
 
