@@ -11,7 +11,7 @@ CREATE TRIGGER clean_email BEFORE INSERT OR UPDATE OF email ON peeps.people FOR 
 
 CREATE OR REPLACE FUNCTION clean_their_email() RETURNS TRIGGER AS $$
 BEGIN
-	NEW.their_name = peeps.strip_tags(btrim(regexp_replace(NEW.their_name, '\s+', ' ', 'g')));
+	NEW.their_name = core.strip_tags(btrim(regexp_replace(NEW.their_name, '\s+', ' ', 'g')));
 	NEW.their_email = lower(regexp_replace(NEW.their_email, '\s', '', 'g'));
 	RETURN NEW;
 END;
@@ -23,7 +23,7 @@ CREATE TRIGGER clean_their_email BEFORE INSERT OR UPDATE OF their_name, their_em
 -- Strip all line breaks and spaces around name before storing
 CREATE OR REPLACE FUNCTION clean_name() RETURNS TRIGGER AS $$
 BEGIN
-	NEW.name = peeps.strip_tags(btrim(regexp_replace(NEW.name, '\s+', ' ', 'g')));
+	NEW.name = core.strip_tags(btrim(regexp_replace(NEW.name, '\s+', ' ', 'g')));
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -70,8 +70,8 @@ CREATE TRIGGER clean_url BEFORE INSERT OR UPDATE OF url ON peeps.urls FOR EACH R
 CREATE OR REPLACE FUNCTION generated_person_fields() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.address = split_part(btrim(regexp_replace(NEW.name, '\s+', ' ', 'g')), ' ', 1);
-	NEW.lopass = peeps.random_string(4);
-	NEW.newpass = peeps.unique_for_table_field(8, 'peeps.people', 'newpass');
+	NEW.lopass = core.random_string(4);
+	NEW.newpass = core.unique_for_table_field(8, 'peeps.people', 'newpass');
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -149,8 +149,8 @@ CREATE TRIGGER one_main_url AFTER INSERT OR UPDATE OF main ON peeps.urls FOR EAC
 -- Generate random strings when creating new api_key
 CREATE OR REPLACE FUNCTION generated_api_keys() RETURNS TRIGGER AS $$
 BEGIN
-	NEW.akey = peeps.unique_for_table_field(8, 'peeps.api_keys', 'akey');
-	NEW.apass = peeps.random_string(8);
+	NEW.akey = core.unique_for_table_field(8, 'peeps.api_keys', 'akey');
+	NEW.apass = core.random_string(8);
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

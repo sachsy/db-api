@@ -2,16 +2,6 @@ require '../test_tools.rb'
 
 class TestPeeps < Minitest::Test
 
-	def test_strip_tags
-		res = DB.exec_params("SELECT strip_tags($1)", ['þ <script>alert("poop")</script> <a href="http://something.net">yuck</a>'])
-		assert_equal 'þ alert("poop") yuck', res[0]['strip_tags']
-	end
-
-	def test_escape_html
-		res = DB.exec_params("SELECT escape_html($1)", [%q{I'd "like" <&>}])
-		assert_equal 'I&#39;d &quot;like&quot; &lt;&amp;&gt;', res[0]['escape_html']
-	end
-
 	# peeps.people.country must be 2 uppercase letters existing in peeps.countries.code, or NULL
 	def test_country
 		DB.exec("UPDATE people SET country='BE' WHERE id=1");

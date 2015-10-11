@@ -131,8 +131,8 @@ BEGIN
 	IF eid IS NULL THEN
 m4_NOTFOUND
 	ELSE
-		PERFORM jsonupdate('peeps.emails', eid, $3,
-			cols2update('peeps', 'emails', ARRAY['id', 'created_at']));
+		PERFORM core.jsonupdate('peeps.emails', eid, $3,
+			core.cols2update('peeps', 'emails', ARRAY['id', 'created_at']));
 		mime := 'application/json';
 		js := row_to_json(r) FROM
 			(SELECT * FROM peeps.email_view WHERE id = eid) r;
@@ -360,7 +360,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION make_newpass(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	UPDATE peeps.people
-		SET newpass=peeps.unique_for_table_field(8, 'peeps.people', 'newpass')
+		SET newpass=core.unique_for_table_field(8, 'peeps.people', 'newpass')
 		WHERE id=$1;
 	IF FOUND THEN
 		mime := 'application/json';
@@ -511,8 +511,8 @@ CREATE OR REPLACE FUNCTION update_person(integer, json, OUT mime text, OUT js js
 DECLARE
 m4_ERRVARS
 BEGIN
-	PERFORM jsonupdate('peeps.people', $1, $2,
-		cols2update('peeps', 'people', ARRAY['id', 'created_at']));
+	PERFORM core.jsonupdate('peeps.people', $1, $2,
+		core.cols2update('peeps', 'people', ARRAY['id', 'created_at']));
 	SELECT x.mime, x.js INTO mime, js FROM peeps.get_person($1) x;
 m4_ERRCATCH
 END;
@@ -549,7 +549,7 @@ BEGIN
 	IF js IS NULL THEN
 m4_NOTFOUND
 	ELSE
-		FOR res IN SELECT * FROM peeps.tables_referencing('peeps', 'people', 'id') LOOP
+		FOR res IN SELECT * FROM core.tables_referencing('peeps', 'people', 'id') LOOP
 			EXECUTE format ('DELETE FROM %s WHERE %I=%s',
 				res.tablename, res.colname, $1);
 		END LOOP;
@@ -690,8 +690,8 @@ CREATE OR REPLACE FUNCTION update_stat(integer, json, OUT mime text, OUT js json
 DECLARE
 m4_ERRVARS
 BEGIN
-	PERFORM jsonupdate('peeps.userstats', $1, $2,
-		cols2update('peeps', 'userstats', ARRAY['id', 'created_at']));
+	PERFORM core.jsonupdate('peeps.userstats', $1, $2,
+		core.cols2update('peeps', 'userstats', ARRAY['id', 'created_at']));
 	mime := 'application/json';
 	js := row_to_json(r) FROM (SELECT * FROM peeps.stats_view WHERE id=$1) r;
 	IF js IS NULL THEN
@@ -751,8 +751,8 @@ CREATE OR REPLACE FUNCTION update_url(integer, json, OUT mime text, OUT js json)
 DECLARE
 m4_ERRVARS
 BEGIN
-	PERFORM jsonupdate('peeps.urls', $1, $2,
-		cols2update('peeps', 'urls', ARRAY['id']));
+	PERFORM core.jsonupdate('peeps.urls', $1, $2,
+		core.cols2update('peeps', 'urls', ARRAY['id']));
 	mime := 'application/json';
 	js := row_to_json(r) FROM (SELECT * FROM peeps.urls WHERE id = $1) r;
 	IF js IS NULL THEN
@@ -810,8 +810,8 @@ CREATE OR REPLACE FUNCTION update_formletter(integer, json, OUT mime text, OUT j
 DECLARE
 m4_ERRVARS
 BEGIN
-	PERFORM jsonupdate('peeps.formletters', $1, $2,
-		cols2update('peeps', 'formletters', ARRAY['id', 'created_at']));
+	PERFORM core.jsonupdate('peeps.formletters', $1, $2,
+		core.cols2update('peeps', 'formletters', ARRAY['id', 'created_at']));
 	mime := 'application/json';
 	js := row_to_json(r) FROM
 		(SELECT * FROM peeps.formletter_view WHERE id = $1) r;
@@ -1218,7 +1218,7 @@ DECLARE
 	tablez text[] := ARRAY[]::text[];
 	rowcount integer;
 BEGIN
-	FOR res IN SELECT * FROM peeps.tables_referencing('peeps', 'people', 'id') LOOP
+	FOR res IN SELECT * FROM core.tables_referencing('peeps', 'people', 'id') LOOP
 		EXECUTE format ('SELECT 1 FROM %s WHERE %I=%s',
 			res.tablename, res.colname, $1);
 		GET DIAGNOSTICS rowcount = ROW_COUNT;

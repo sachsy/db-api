@@ -184,9 +184,9 @@ DECLARE
 m4_ERRVARS
 BEGIN
 	SELECT person_id INTO pid FROM muckwork.clients WHERE id = $1;
-	PERFORM peeps.jsonupdate('peeps.people', pid, $2,
+	PERFORM core.jsonupdate('peeps.people', pid, $2,
 		ARRAY['name', 'email', 'address', 'company', 'city', 'state', 'country', 'phone']);
-	PERFORM peeps.jsonupdate('muckwork.clients', $1, $2,
+	PERFORM core.jsonupdate('muckwork.clients', $1, $2,
 		ARRAY['person_id', 'currency']);
 	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_client($1) x;
 m4_ERRCATCH
@@ -247,9 +247,9 @@ DECLARE
 m4_ERRVARS
 BEGIN
 	SELECT person_id INTO pid FROM muckwork.workers WHERE id = $1;
-	PERFORM peeps.jsonupdate('peeps.people', pid, $2,
+	PERFORM core.jsonupdate('peeps.people', pid, $2,
 		ARRAY['name', 'email', 'address', 'company', 'city', 'state', 'country', 'phone']);
-	PERFORM peeps.jsonupdate('muckwork.workers', $1, $2,
+	PERFORM core.jsonupdate('muckwork.workers', $1, $2,
 		ARRAY['person_id', 'currency', 'millicents_per_second']);
 	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_worker($1) x;
 m4_ERRCATCH
