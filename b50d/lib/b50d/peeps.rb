@@ -234,11 +234,11 @@ module B50D
 		end
 
 		def all_currencies
-			@db.js('peeps.all_currencies()')
+			@db.js('core.all_currencies()')
 		end
 
 		def currency_names
-			@db.js('peeps.currency_names()')
+			@db.js('core.currency_names()')
 		end
 
 		def all_countries
