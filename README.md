@@ -55,15 +55,19 @@ When **real people** using it, a **50web** route called **ModAuth** checks for t
 
 If POST /login works, it sets the 3 needed cookies (person_id, api_key, api_pass).  Those are included in all calls, and sent to A50C To init client library.
 
+# NOTE:
+
+When adding a new schema, update the d50b user search_path:
+
+```sql
+ALTER USER d50b SET SEARCH_PATH TO core, peeps, muckwork, lat, musicthoughts, sivers, woodegg;
+```
+
 # TODO:
 
 * email parsing: set personID using email address first before in-reply-to
 * Question why b50d gem is needed. Shouldn't SQL functions be simple enough for routes to call directly?
-* Which of my plpgsql functions could be in language sql immutable strict ?
-* Can a view be generated from an already-selected record, stored in a variable?  If so, the approach of one function looking up just the ids, then passing id to the view to re-select it could be replaced with that approach.  And after doing an update of a status like opened/closed, could do RETURNING * to return its values instead of selecting again.
-* Play with custom types <a href="http://vimeo.com/97507575">as described here</a> and <a href="http://www.sqlines.com/postgresql/how-to/create_user_defined_type">here</a>.
 * Where to translate ugly errors (probably using regexp matching) into simple i18n keys for the UI to show in user's language?
-* Switch from Mail gem to <https://github.com/ktheory/maildir> once mail is local
 
 ## API:
 

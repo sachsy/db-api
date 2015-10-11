@@ -14,18 +14,6 @@ CREATE TABLE countries (
 	name text
 );
 
-CREATE TABLE currencies (
-	code character(3) NOT NULL primary key,
-	name text
-);
-
-CREATE TABLE currency_rates (
-	code character(3) NOT NULL REFERENCES currencies(code),
-	day date not null default CURRENT_DATE,
-	rate numeric,
-	PRIMARY KEY (code, day)
-);
-
 -- Big master table for people
 CREATE TABLE people (
 	id serial primary key,
@@ -762,49 +750,6 @@ BEGIN
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
-
-
--- PARAMS: JSON of currency rates https://openexchangerates.org/documentation
-CREATE OR REPLACE FUNCTION update_currency_rates(jsonb) RETURNS void AS $$
-DECLARE
-	rates jsonb;
-	acurrency currencies;
-	acode text;
-	arate numeric;
-BEGIN
-	rates := jsonb_extract_path($1, 'rates');
-	FOR acurrency IN SELECT * FROM peeps.currencies LOOP
-		acode := acurrency.code;
-		arate := CAST((rates ->> acode) AS numeric);
-		INSERT INTO peeps.currency_rates (code, rate) VALUES (acode, arate);
-	END LOOP;
-	RETURN;
-END;
-$$ LANGUAGE plpgsql;
-
-
--- PARAMS: amount, from.code to.code
-CREATE OR REPLACE FUNCTION currency_from_to(numeric, text, text, OUT amount numeric) AS $$
-BEGIN
-	IF $2 = 'USD' THEN
-		SELECT ($1 * rate) INTO amount
-			FROM peeps.currency_rates WHERE code = $3
-			ORDER BY day DESC LIMIT 1;
-	ELSIF $3 = 'USD' THEN
-		SELECT ($1 / rate) INTO amount
-			FROM peeps.currency_rates WHERE code = $2
-			ORDER BY day DESC LIMIT 1;
-	ELSE
-		SELECT (
-			(SELECT $1 / rate
-				FROM peeps.currency_rates WHERE code = $2
-				ORDER BY day DESC LIMIT 1) * rate) INTO amount
-			FROM peeps.currency_rates WHERE code = $3
-			ORDER BY day DESC LIMIT 1;
-	END IF;
-END;
-$$ LANGUAGE plpgsql;
-
 
 -- Strip spaces and lowercase email address before validating & storing
 CREATE OR REPLACE FUNCTION clean_email() RETURNS TRIGGER AS $$
@@ -2377,32 +2322,6 @@ CREATE OR REPLACE FUNCTION parsed_formletter(integer, integer, OUT mime text, OU
 BEGIN
 	mime := 'application/json';
 	js := json_build_object('body', parse_formletter_body($1, $2));
-END;
-$$ LANGUAGE plpgsql;
-
-
--- GET /currencies
--- PARAMS: -none-
--- RETURNS array of objects:
--- [{"code":"AUD","name":"Australian Dollar"},{"code":"BGN","name":"Bulgarian Lev"}... ]
-CREATE OR REPLACE FUNCTION all_currencies(OUT mime text, OUT js json) AS $$
-BEGIN
-	mime := 'application/json';
-	js := json_agg(r) FROM (SELECT * FROM peeps.currencies ORDER BY code) r;
-END;
-$$ LANGUAGE plpgsql;
-
-
--- GET /currency_names
--- PARAMS: -none-
--- RETURNS single code:name object:
--- {"AUD":"Australian Dollar", "BGN":"Bulgarian Lev", ...}
-CREATE OR REPLACE FUNCTION currency_names(OUT mime text, OUT js json) AS $$
-BEGIN
-	mime := 'application/json';
-	js := json_object(
-		ARRAY(SELECT code FROM currencies ORDER BY code),
-		ARRAY(SELECT name FROM currencies ORDER BY code));
 END;
 $$ LANGUAGE plpgsql;
 

@@ -47,7 +47,7 @@ BEGIN
 		JOIN muckwork.tasks ON muckwork.worker_charges.task_id=muckwork.tasks.id
 		WHERE muckwork.tasks.project_id = $1 LOOP
 		SELECT sum_cents + amount INTO sum_cents
-			FROM peeps.currency_from_to(wc.cents, wc.currency, project_currency);
+			FROM core.currency_from_to(wc.cents, wc.currency, project_currency);
 	END LOOP;
 	currency := project_currency;
 	-- round up to cent integer

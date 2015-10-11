@@ -13,14 +13,14 @@ CREATE TABLE managers (
 CREATE TABLE clients (
 	id serial primary key,
 	person_id integer not null unique REFERENCES peeps.people(id),
-	currency char(3) not null DEFAULT 'USD' REFERENCES peeps.currencies(code),
+	currency char(3) not null DEFAULT 'USD' REFERENCES core.currencies(code),
 	cents_balance integer not null default 0
 );
 
 CREATE TABLE workers (
 	id serial primary key,
 	person_id integer not null unique REFERENCES peeps.people(id),
-	currency char(3) not null DEFAULT 'USD' REFERENCES peeps.currencies(code),
+	currency char(3) not null DEFAULT 'USD' REFERENCES core.currencies(code),
 	millicents_per_second integer CHECK (millicents_per_second >= 0)
 );
 
@@ -37,10 +37,10 @@ CREATE TABLE projects (
 	started_at timestamp(0) with time zone CHECK (started_at >= approved_at),
 	finished_at timestamp(0) with time zone CHECK (finished_at >= started_at),
 	status status not null default 'created',
-	quoted_currency char(3) REFERENCES peeps.currencies(code),
+	quoted_currency char(3) REFERENCES core.currencies(code),
 	quoted_cents integer CHECK (quoted_cents >= 0),
 	quoted_ratetype varchar(4) CHECK (quoted_ratetype = 'fix' OR quoted_ratetype = 'time'),
-	final_currency char(3) REFERENCES peeps.currencies(code),
+	final_currency char(3) REFERENCES core.currencies(code),
 	final_cents integer CHECK (final_cents >= 0)
 );
 CREATE INDEX pjci ON projects(client_id);
@@ -80,7 +80,7 @@ CREATE TABLE charges (
 	id serial primary key,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
 	project_id integer REFERENCES projects(id),
-	currency char(3) not null REFERENCES peeps.currencies(code),
+	currency char(3) not null REFERENCES core.currencies(code),
 	cents integer not null CHECK (cents >= 0),
 	notes text
 );
@@ -90,7 +90,7 @@ CREATE TABLE payments (
 	id serial primary key,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
 	client_id integer REFERENCES clients(id),
-	currency char(3) not null REFERENCES peeps.currencies(code),
+	currency char(3) not null REFERENCES core.currencies(code),
 	cents integer not null CHECK (cents > 0),
 	notes text
 );
@@ -99,7 +99,7 @@ CREATE INDEX pyci ON payments(client_id);
 CREATE TABLE worker_payments (
 	id serial primary key,
 	worker_id integer not null REFERENCES workers(id),
-	currency char(3) not null REFERENCES peeps.currencies(code),
+	currency char(3) not null REFERENCES core.currencies(code),
 	cents integer CHECK (cents > 0),
 	created_at date not null default CURRENT_DATE,
 	notes text
@@ -109,7 +109,7 @@ CREATE INDEX wpwi ON worker_payments(worker_id);
 CREATE TABLE worker_charges (
 	id serial primary key,
 	task_id integer not null REFERENCES tasks(id),
-	currency char(3) not null REFERENCES peeps.currencies(code),
+	currency char(3) not null REFERENCES core.currencies(code),
 	cents integer not null CHECK (cents >= 0),
 	payment_id integer REFERENCES worker_payments(id) -- NULL until paid
 );

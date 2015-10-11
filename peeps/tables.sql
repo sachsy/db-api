@@ -14,18 +14,6 @@ CREATE TABLE countries (
 	name text
 );
 
-CREATE TABLE currencies (
-	code character(3) NOT NULL primary key,
-	name text
-);
-
-CREATE TABLE currency_rates (
-	code character(3) NOT NULL REFERENCES currencies(code),
-	day date not null default CURRENT_DATE,
-	rate numeric,
-	PRIMARY KEY (code, day)
-);
-
 -- Big master table for people
 CREATE TABLE people (
 	id serial primary key,
