@@ -2595,7 +2595,6 @@ $$ LANGUAGE plpgsql;
 -- GET /stats/:key/:value
 -- PARAMS: stats.name, stats.value
 CREATE OR REPLACE FUNCTION get_stats(text, text, OUT mime text, OUT js json) AS $$
-DECLARE
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.stats_view
@@ -2610,7 +2609,6 @@ $$ LANGUAGE plpgsql;
 -- GET /stats/:key
 -- PARAMS: stats.name
 CREATE OR REPLACE FUNCTION get_stats(text, OUT mime text, OUT js json) AS $$
-DECLARE
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.stats_view WHERE name = $1) r;
@@ -2624,7 +2622,6 @@ $$ LANGUAGE plpgsql;
 -- GET /statcount/:key
 -- PARAMS: stats.name
 CREATE OR REPLACE FUNCTION get_stat_value_count(text, OUT mime text, OUT js json) AS $$
-DECLARE
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT statvalue AS value, COUNT(*) AS count
@@ -2639,7 +2636,6 @@ $$ LANGUAGE plpgsql;
 -- GET /statcount
 -- PARAMS: -none-
 CREATE OR REPLACE FUNCTION get_stat_name_count(OUT mime text, OUT js json) AS $$
-DECLARE
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT statkey AS name, COUNT(*) AS count
@@ -2900,7 +2896,6 @@ $$ LANGUAGE plpgsql;
 -- Array of people's [[id, email, address, lopass]] for emailing
 -- PARAMS: key,val to be used in WHERE _key_ = _val_
 CREATE OR REPLACE FUNCTION ieal_where(text, text, OUT mime text, OUT js json) AS $$
-DECLARE
 BEGIN
 	mime := 'application/json';
 	EXECUTE format ('SELECT json_agg(json_build_array(id, email, address, lopass))
