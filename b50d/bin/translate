@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+require 'pg'
+require 'b50d-config.rb'
+require 'gengo'
+
+# GET RAW INPUT FILE
+raise 'USAGE: translate {filename}' unless ARGV[0] && File.exist?(ARGV[0])
+raw_filename = ARGV[0].strip
+raw = File.read(raw_filename).strip
+
+# CHANGE FILENAME?
+print "Unless you want the filename to be #{raw_filename}, type new one now: "
+new_filename = STDIN.gets.strip
+filename = (new_filename.size > 0) ? new_filename : raw_filename
+puts "OK. Filename is «#{filename}»"
+
+DB = PG::Connection.new(dbname: 'd50b_test', user: 'd50b')
+
+# INSERT INTO DATABASE:
+res = DB.exec_params("INSERT INTO core.translation_files(filename, raw) VALUES ($1, $2) RETURNING id", [filename, raw])
+raise 'error' unless /\A[0-9]+\Z/ === res[0]['id']
+id = Integer(res[0]['id'])
+puts "ID is #{id}"
+
+# parse into sentences
+res = DB.exec_params("SELECT * FROM core.parse_translation_file($1)", [id])
+puts "TEMPLATE:"
+puts res[0]
+
+# get text to send to Gengo
+res = DB.exec_params("SELECT text FROM core.text_for_translator($1)", [id])
+text = res[0]['text']
+puts "TEXT:"
+puts text
+
+# TODO: review before sending. showing 30 lines at a time, getting OK.
+# http://developers.gengo.com/v2/api_methods/jobs/
+# http://developers.gengo.com/v2/api_methods/payloads/index.html
+job = {
+	type: 'text',
+	lc_src: 'en',
+	lc_tgt: 'es-la',  # TODO: multiple! + es = es-la & pt = pt-br
+	slug: filename,
+	custom_data: filename,
+	body_src: text,
+	tier: 'standard',
+	auto_approve: 1,
+	force: 1,
+	pupose: 'Online content',
+	tone: 'Informal',
+	comment: ('Keep strange format of one sentence per line. Should be %d lines. Thank you!' % text.lines.size)
+}
+
+gengo = Gengo::API.new(public_key: GENGO_PUBLIC, private_key: GENGO_PRIVATE, sandbox: false)
+puts gengo.postTranslationJobs(jobs: {filename: job})
+

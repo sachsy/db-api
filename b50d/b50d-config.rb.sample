@@ -9,6 +9,8 @@ TWITTER_CONSUMER_KEY = ''
 TWITTER_CONSUMER_SECRET = ''
 TWITTER_ACCESS_TOKEN = ''
 TWITTER_ACCESS_SECRET = ''
+GENGO_PUBLIC = ''
+GENGO_PRIVATE = ''
 INP = 'https://some.url/person/%d'
 SCP = 'https://anot.her/person/%d/comments'
 PROFILES = {'derek@sivers' => {
