@@ -4,7 +4,7 @@ class CoreTest < Minitest::Test
 	include JDB
 
 	def setup
-		@raw = "<h1>\r\n\tThis is a title\r\n</h1><p>\r\n\tAnd this?\r\n\tThis is a translation.\r\n</p>"
+		@raw = "<!-- This is a title -->\r\n<p>\r\n\tAnd this?\r\n\tThis is a translation.\r\n</p>"
 		@lines = ['This is a title', 'And this?', 'This is a translation.']
 		@fr = ['Ceci est un titre', 'Et ça?', 'Ceci est une phrase.']
 		super
@@ -74,7 +74,7 @@ class CoreTest < Minitest::Test
 		assert_equal '3', res[2]['sortid']
 		assert_equal @lines[2], res[2]['en']
 		res = DB.exec("SELECT template FROM core.translation_files WHERE id = 1")
-		assert_match /<h1>\n\{[A-Za-z0-9]{8}\}\n<\/h1><p>\n\{[A-Za-z0-9]{8}\}\n\{[A-Za-z0-9]{8}\}\n<\/p>/, res[0]['template']
+		assert_match /<!-- \{[A-Za-z0-9]{8}\} -->\n<p>\n\{[A-Za-z0-9]{8}\}\n\{[A-Za-z0-9]{8}\}\n<\/p>/, res[0]['template']
 	end
 
 	def test_text_for_translator
