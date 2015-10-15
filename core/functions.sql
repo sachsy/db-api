@@ -195,17 +195,17 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS:  translation_files.id, translation file from translator
 CREATE OR REPLACE FUNCTION txn_compare(integer, text)
-RETURNS TABLE(code char(8), en text, theirs text) AS $$
+RETURNS TABLE(sortid integer, code char(8), en text, theirs text) AS $$
 BEGIN
 	-- TODO: stop and notify if split array has more lines than database?
 	RETURN QUERY
 	WITH t2 AS (SELECT * FROM
 		UNNEST(regexp_split_to_array(replace($2, E'\r', ''), E'\n'))
 		WITH ORDINALITY AS theirs)
-		SELECT t1.code, t1.en, t2.theirs FROM core.translations t1
+		SELECT t1.sortid, t1.code, t1.en, t2.theirs FROM core.translations t1
 		INNER JOIN t2 ON t1.sortid=t2.ordinality
 		WHERE t1.file_id=$1
-		ORDER BY sortid;
+		ORDER BY t1.sortid;
 END;
 $$ LANGUAGE plpgsql;
 

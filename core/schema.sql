@@ -216,7 +216,8 @@ BEGIN
 			new_template := new_template || '{' || one_code || '}' || E'\n';
 		ELSIF line ~ '<!-- (.*) -->' THEN
 			sid := sid + 1;
-			SELECT unnest(regexp_matches) INTO STRICT templine FROM regexp_matches(line, '<!-- (.*) -->');
+			SELECT unnest(regexp_matches) INTO templine
+				FROM regexp_matches(line, '<!-- (.*) -->');
 			INSERT INTO core.translations(file_id, sortid, en)
 				VALUES ($1, sid, btrim(templine)) RETURNING code INTO one_code;
 			new_template := new_template || '<!-- {' || one_code || '} -->' || E'\n';
@@ -239,17 +240,17 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS:  translation_files.id, translation file from translator
 CREATE OR REPLACE FUNCTION txn_compare(integer, text)
-RETURNS TABLE(code char(8), en text, theirs text) AS $$
+RETURNS TABLE(sortid integer, code char(8), en text, theirs text) AS $$
 BEGIN
 	-- TODO: stop and notify if split array has more lines than database?
 	RETURN QUERY
 	WITH t2 AS (SELECT * FROM
 		UNNEST(regexp_split_to_array(replace($2, E'\r', ''), E'\n'))
 		WITH ORDINALITY AS theirs)
-		SELECT t1.code, t1.en, t2.theirs FROM core.translations t1
+		SELECT t1.sortid, t1.code, t1.en, t2.theirs FROM core.translations t1
 		INNER JOIN t2 ON t1.sortid=t2.ordinality
 		WHERE t1.file_id=$1
-		ORDER BY sortid;
+		ORDER BY t1.sortid;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -285,28 +286,29 @@ $$ LANGUAGE plpgsql;
 ------------ TRIGGERS
 ---------------------
 
-CREATE OR REPLACE FUNCTION clean_raw() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION core.clean_raw() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.raw = replace(NEW.raw, E'\r', '');
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS clean_raw ON translation_files CASCADE;
+DROP TRIGGER IF EXISTS clean_raw ON core.translation_files CASCADE;
 CREATE TRIGGER clean_raw
-	BEFORE INSERT OR UPDATE OF raw ON translation_files
-	FOR EACH ROW EXECUTE PROCEDURE clean_raw();
+	BEFORE INSERT OR UPDATE OF raw ON core.translation_files
+	FOR EACH ROW EXECUTE PROCEDURE core.clean_raw();
 
 
-CREATE FUNCTION translations_code_gen() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION core.translations_code_gen() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.code = core.unique_for_table_field(8, 'core.translations', 'code');
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS translations_code_gen ON core.translations CASCADE;
 CREATE TRIGGER translations_code_gen
-	BEFORE INSERT ON translations
+	BEFORE INSERT ON core.translations
 	FOR EACH ROW WHEN (NEW.code IS NULL)
-	EXECUTE PROCEDURE translations_code_gen();
+	EXECUTE PROCEDURE core.translations_code_gen();
 
 
 ------------------------------------------------

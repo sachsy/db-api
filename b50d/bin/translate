@@ -2,6 +2,7 @@
 require 'pg'
 require 'b50d-config.rb'
 require 'gengo'
+DB = PG::Connection.new(dbname: 'd50b', user: 'd50b')
 
 # GET RAW INPUT FILE
 raise 'USAGE: translate {filename}' unless ARGV[0] && File.exist?(ARGV[0])
@@ -13,8 +14,6 @@ print "Unless you want the filename to be #{raw_filename}, type new one now: "
 new_filename = STDIN.gets.strip
 filename = (new_filename.size > 0) ? new_filename : raw_filename
 puts "OK. Filename is «#{filename}»"
-
-DB = PG::Connection.new(dbname: 'd50b_test', user: 'd50b')
 
 # INSERT INTO DATABASE:
 res = DB.exec_params("INSERT INTO core.translation_files(filename, raw) VALUES ($1, $2) RETURNING id", [filename, raw])
