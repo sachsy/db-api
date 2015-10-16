@@ -6,6 +6,10 @@ DB = PG::Connection.new(dbname: 'd50b', user: 'd50b')
 raise 'USAGE: import-translation {filename}' unless ARGV[0] && File.exist?(ARGV[0])
 text = File.read(ARGV[0])
 
+# ask language
+print "What language code? "
+lang = STDIN.gets.strip
+
 # show recent file IDs:
 res = DB.exec("SELECT id, filename FROM core.translation_files ORDER BY id DESC LIMIT 10")
 res.each do |r|
@@ -26,4 +30,12 @@ end
 print "\nDOES THAT LOOK RIGHT?  TYPE 'ok' TO CONTINUE: "
 exit unless 'ok' == STDIN.gets.strip
 
+# IMPORT / UPDATE DB with translation
+DB.exec_params("SELECT * FROM core.txn_update($1, $2, $3)", [file_id, lang, text])
+
+# output to /tmp/ for verification
+res = DB.exec_params("SELECT * FROM core.merge_translation_file($1, $2)", [file_id, lang])
+outfile = '/tmp/%d-%s.txt' % [file_id, lang]
+File.open(outfile, 'w') {|f| f.puts res[0]['merge_translation_file'] }
+puts "see #{outfile}"
 
