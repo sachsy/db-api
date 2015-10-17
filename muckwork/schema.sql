@@ -1145,7 +1145,7 @@ CREATE OR REPLACE FUNCTION get_project(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_detail_view WHERE id = $1) r;
+	js := row_to_json(r.*) FROM muckwork.project_detail_view r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -1173,7 +1173,7 @@ BEGIN
 	INSERT INTO muckwork.projects (client_id, title, description)
 		VALUES ($1, $2, $3) RETURNING id INTO new_id;
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_view WHERE id = new_id) r;
+	js := row_to_json(r.*) FROM muckwork.project_view r WHERE id = new_id;
 
 EXCEPTION
 	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
@@ -1198,7 +1198,7 @@ CREATE OR REPLACE FUNCTION update_project(integer, text, text,
 BEGIN
 	UPDATE muckwork.projects SET title = $2, description = $3 WHERE id = $1;
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM muckwork.project_view WHERE id = $1) r;
+	js := row_to_json(r.*) FROM muckwork.project_view r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -1257,7 +1257,7 @@ BEGIN
 			VALUES ($1, (SELECT client_id FROM projects WHERE id = $1), $2)
 			RETURNING id INTO note_id;
 		mime := 'application/json';
-		js := row_to_json(r) FROM (SELECT * FROM muckwork.notes WHERE id = note_id) r;
+		js := row_to_json(r.*) FROM muckwork.notes r WHERE id = note_id;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1269,8 +1269,7 @@ CREATE OR REPLACE FUNCTION get_task(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM
-		(SELECT * FROM muckwork.task_view WHERE id = $1) r;
+	js := row_to_json(r.*) FROM muckwork.task_view r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -1289,8 +1288,8 @@ CREATE OR REPLACE FUNCTION get_project_task(integer, integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM
-		(SELECT * FROM muckwork.task_view WHERE project_id = $1 AND id = $2) r;
+	js := row_to_json(r.*) FROM muckwork.task_view r
+		WHERE project_id = $1 AND id = $2;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(

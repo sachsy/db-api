@@ -143,10 +143,10 @@ CREATE VIEW lat.concept_view AS
 DROP VIEW IF EXISTS lat.pairing_view CASCADE;
 CREATE VIEW lat.pairing_view AS
 	SELECT id, created_at, thoughts,
-		(SELECT row_to_json(c1) AS concept1 FROM
-			(SELECT * FROM lat.concept_view WHERE id=lat.pairings.concept1_id) c1),
-		(SELECT row_to_json(c2) AS concept2 FROM
-			(SELECT * FROM lat.concept_view WHERE id=lat.pairings.concept2_id) c2)
+		(SELECT row_to_json(c1.*) AS concept1
+			FROM lat.concept_view c1 WHERE id=lat.pairings.concept1_id),
+		(SELECT row_to_json(c2.*) AS concept2
+			FROM lat.concept_view c2 WHERE id=lat.pairings.concept2_id)
 	FROM lat.pairings;
 
 ----------------------------------------
@@ -166,7 +166,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_concept(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM lat.concept_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM lat.concept_view r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -316,7 +316,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_url(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM lat.urls WHERE id = $1) r;
+	js := row_to_json(r.*) FROM lat.urls r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -445,7 +445,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_pairing(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM lat.pairing_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM lat.pairing_view r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(

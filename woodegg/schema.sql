@@ -571,7 +571,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_researcher(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM woodegg.researcher_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM woodegg.researcher_view r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -588,7 +588,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_writer(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM woodegg.writer_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM woodegg.writer_view r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -605,7 +605,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_editor(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM woodegg.editor_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM woodegg.editor_view r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -650,7 +650,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_question(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM woodegg.question_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM woodegg.question_view r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -667,7 +667,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_book(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM woodegg.book_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM woodegg.book_view r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -693,7 +693,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_template(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM woodegg.template_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM woodegg.template_view r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -710,7 +710,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_topic(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM woodegg.templates_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM woodegg.templates_view r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(
@@ -744,7 +744,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_upload(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM woodegg.upload_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM woodegg.upload_view r WHERE id = $1;
 	IF js IS NULL THEN 
 	mime := 'application/problem+json';
 	js := json_build_object(

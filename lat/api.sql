@@ -15,7 +15,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_concept(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM lat.concept_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM lat.concept_view r WHERE id = $1;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -102,7 +102,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_url(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM lat.urls WHERE id = $1) r;
+	js := row_to_json(r.*) FROM lat.urls r WHERE id = $1;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -191,7 +191,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_pairing(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM lat.pairing_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM lat.pairing_view r WHERE id = $1;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;

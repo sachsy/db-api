@@ -41,8 +41,7 @@ BEGIN
 		VALUES (new_uri, new_name, new_email, new_html, new_person_id)
 		RETURNING id INTO new_id;
 	mime := 'application/json';
-	js := row_to_json(r) FROM
-		(SELECT * FROM sivers.comments WHERE id=new_id) r;
+	js := row_to_json(r.*) FROM sivers.comments r WHERE id = new_id;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
@@ -57,8 +56,7 @@ BEGIN
 	PERFORM core.jsonupdate('sivers.comments', $1, $2,
 		core.cols2update('sivers', 'comments', ARRAY['id','created_at']));
 	mime := 'application/json';
-	js := row_to_json(r) FROM
-		(SELECT * FROM sivers.comments WHERE id=$1) r;
+	js := row_to_json(r.*) FROM sivers.comments r WHERE id = $1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
@@ -76,8 +74,7 @@ BEGIN
 		'<img src="/images/icon_smile.gif" width="15" height="15" alt="smile">'),
 		' -- Derek</span>') WHERE id = $1;
 	mime := 'application/json';
-	js := row_to_json(r) FROM
-		(SELECT * FROM sivers.comments WHERE id = $1) r;
+	js := row_to_json(r.*) FROM sivers.comments r WHERE id = $1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
@@ -92,8 +89,7 @@ DECLARE
 m4_ERRVARS
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM
-		(SELECT * FROM sivers.comments WHERE id = $1) r;
+	js := row_to_json(r.*) FROM sivers.comments r WHERE id = $1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
@@ -112,8 +108,7 @@ m4_ERRVARS
 BEGIN
 	SELECT person_id INTO pid FROM sivers.comments WHERE id = $1;
 	mime := 'application/json';
-	js := row_to_json(r) FROM
-		(SELECT * FROM sivers.comments WHERE id = $1) r;
+	js := row_to_json(r.*) FROM sivers.comments r WHERE id = $1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
