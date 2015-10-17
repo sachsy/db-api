@@ -11,13 +11,10 @@ DECLARE
 m4_ERRVARS
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM
-		(SELECT * FROM peeps.api_keys WHERE
-			person_id=(SELECT id FROM peeps.person_email_pass($1, $2))
-			AND $3=ANY(apis)) r;
-	IF js IS NULL THEN
-m4_NOTFOUND
-	END IF;
+	js := row_to_json(r.*) FROM peeps.api_keys r
+		WHERE person_id = (SELECT id FROM peeps.person_email_pass($1, $2))
+		AND $3 = ANY(apis);
+	IF js IS NULL THEN m4_NOTFOUND END IF;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
@@ -77,8 +74,7 @@ m4_NOTFOUND
 	ELSE
 		mime := 'application/json';
 		PERFORM open_email($1, eid);
-		js := row_to_json(r) FROM
-			(SELECT * FROM peeps.email_view WHERE id = eid) r;
+		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -113,8 +109,7 @@ BEGIN
 m4_NOTFOUND
 	ELSE
 		mime := 'application/json';
-		js := row_to_json(r) FROM
-			(SELECT * FROM peeps.email_view WHERE id = eid) r;
+		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -134,8 +129,7 @@ m4_NOTFOUND
 		PERFORM core.jsonupdate('peeps.emails', eid, $3,
 			core.cols2update('peeps', 'emails', ARRAY['id', 'created_at']));
 		mime := 'application/json';
-		js := row_to_json(r) FROM
-			(SELECT * FROM peeps.email_view WHERE id = eid) r;
+		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 	END IF;
 m4_ERRCATCH
 END;
@@ -153,8 +147,7 @@ BEGIN
 m4_NOTFOUND
 	ELSE
 		mime := 'application/json';
-		js := row_to_json(r) FROM
-			(SELECT * FROM peeps.email_view WHERE id = eid) r;
+		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 		DELETE FROM peeps.emails WHERE id = eid;
 	END IF;
 END;
@@ -173,8 +166,7 @@ m4_NOTFOUND
 	ELSE
 		UPDATE peeps.emails SET closed_at=NOW(), closed_by=$1 WHERE id = eid;
 		mime := 'application/json';
-		js := row_to_json(r) FROM
-			(SELECT * FROM peeps.email_view WHERE id = eid) r;
+		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -192,8 +184,7 @@ m4_NOTFOUND
 	ELSE
 		UPDATE peeps.emails SET opened_at=NULL, opened_by=NULL WHERE id = eid;
 		mime := 'application/json';
-		js := row_to_json(r) FROM
-			(SELECT * FROM peeps.email_view WHERE id = eid) r;
+		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -214,8 +205,7 @@ m4_NOTFOUND
 			FROM peeps.emailers JOIN people ON emailers.person_id=people.id
 			WHERE emailers.id = $1) WHERE id = eid;
 		mime := 'application/json';
-		js := row_to_json(r) FROM
-			(SELECT * FROM peeps.email_view WHERE id = eid) r;
+		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -283,8 +273,8 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_next_unknown(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.unknown_view WHERE id IN
-		(SELECT * FROM peeps.unknown_email_ids($1) LIMIT 1)) r;
+	js := row_to_json(r.*) FROM peeps.unknown_view r
+		WHERE id IN (SELECT * FROM peeps.unknown_email_ids($1) LIMIT 1);
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
@@ -316,7 +306,7 @@ BEGIN
 	END IF;
 	UPDATE peeps.emails SET person_id=newperson.id, category=profile WHERE id = $2;
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.email_view WHERE id = $2) r;
+	js := row_to_json(r.*) FROM peeps.email_view r WHERE id = $2;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
@@ -327,8 +317,8 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION delete_unknown(integer, integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.unknown_view
-		WHERE id IN (SELECT * FROM peeps.unknown_email_ids($1)) AND id = $2) r;
+	js := row_to_json(r.*) FROM peeps.unknown_view r
+		WHERE id IN (SELECT * FROM peeps.unknown_email_ids($1)) AND id = $2;
 	IF js IS NULL THEN
 m4_NOTFOUND RETURN;
 	ELSE
@@ -349,7 +339,7 @@ m4_ERRVARS
 BEGIN
 	SELECT id INTO pid FROM peeps.person_create($1, $2);
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.person_view WHERE id = pid) r;
+	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = pid;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
@@ -377,7 +367,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_person(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.person_view WHERE id = $1) r;
+	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = $1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
@@ -395,7 +385,7 @@ BEGIN
 	clean_email := lower(regexp_replace($1, '\s', '', 'g'));
 	IF clean_email !~ '\A\S+@\S+\.\S+\Z' THEN m4_NOTFOUND END IF;
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.person_view WHERE email = clean_email) r;
+	js := row_to_json(r.*) FROM peeps.person_view r WHERE email = clean_email;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -526,7 +516,7 @@ DECLARE
 m4_ERRVARS
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.person_view WHERE id = $1) r;
+	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = $1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	ELSE
@@ -545,7 +535,7 @@ DECLARE
 m4_ERRVARS
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.person_view WHERE id = $1) r;
+	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = $1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	ELSE
@@ -569,7 +559,7 @@ BEGIN
 	mime := 'application/json';
 	WITH nu AS (INSERT INTO urls(person_id, url)
 		VALUES ($1, $2) RETURNING *)
-		SELECT row_to_json(r) INTO js FROM (SELECT * FROM nu) r;
+		SELECT row_to_json(r.*) INTO js FROM nu r;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
@@ -601,7 +591,7 @@ BEGIN
 	-- PARAMS: emailer_id, person_id, profile, category, subject, body, reference_id (NULL unless reply)
 	SELECT * INTO new_id FROM peeps.outgoing_email($1, $2, $3, $3, $4, $5, NULL);
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.email_view WHERE id = new_id) r;
+	js := row_to_json(r.*) FROM peeps.email_view r WHERE id = new_id;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
@@ -629,7 +619,7 @@ m4_ERRVARS
 BEGIN
 	PERFORM person_merge_from_to($2, $1);
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.person_view WHERE id = $1) r;
+	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = $1;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
@@ -675,7 +665,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_stat(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.stats_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM peeps.stats_view r WHERE id=$1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
@@ -693,7 +683,7 @@ BEGIN
 	PERFORM core.jsonupdate('peeps.userstats', $1, $2,
 		core.cols2update('peeps', 'userstats', ARRAY['id', 'created_at']));
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.stats_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM peeps.stats_view r WHERE id=$1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
@@ -707,7 +697,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION delete_stat(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.stats_view WHERE id=$1) r;
+	js := row_to_json(r.*) FROM peeps.stats_view r WHERE id=$1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	ELSE
@@ -722,7 +712,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_url(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.urls WHERE id=$1) r;
+	js := row_to_json(r.*) FROM peeps.urls r WHERE id=$1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
@@ -735,7 +725,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION delete_url(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.urls WHERE id = $1) r;
+	js := row_to_json(r.*) FROM peeps.urls r WHERE id = $1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	ELSE
@@ -754,7 +744,7 @@ BEGIN
 	PERFORM core.jsonupdate('peeps.urls', $1, $2,
 		core.cols2update('peeps', 'urls', ARRAY['id']));
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.urls WHERE id = $1) r;
+	js := row_to_json(r.*) FROM peeps.urls r WHERE id = $1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
@@ -783,8 +773,7 @@ m4_ERRVARS
 BEGIN
 	INSERT INTO formletters(title) VALUES ($1) RETURNING id INTO new_id;
 	mime := 'application/json';
-	js := row_to_json(r) FROM
-		(SELECT * FROM peeps.formletter_view WHERE id = new_id) r;
+	js := row_to_json(r.*) FROM peeps.formletter_view r WHERE id = new_id;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
@@ -795,8 +784,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_formletter(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM
-		(SELECT * FROM peeps.formletter_view WHERE id = $1) r;
+	js := row_to_json(r.*) FROM peeps.formletter_view r WHERE id = $1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
@@ -813,8 +801,7 @@ BEGIN
 	PERFORM core.jsonupdate('peeps.formletters', $1, $2,
 		core.cols2update('peeps', 'formletters', ARRAY['id', 'created_at']));
 	mime := 'application/json';
-	js := row_to_json(r) FROM
-		(SELECT * FROM peeps.formletter_view WHERE id = $1) r;
+	js := row_to_json(r.*) FROM peeps.formletter_view r WHERE id = $1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	END IF;
@@ -828,8 +815,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION delete_formletter(integer, OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := row_to_json(r) FROM
-		(SELECT * FROM peeps.formletter_view WHERE id = $1) r;
+	js := row_to_json(r.*) FROM peeps.formletter_view r WHERE id = $1;
 	IF js IS NULL THEN
 m4_NOTFOUND
 	ELSE
@@ -1095,7 +1081,7 @@ BEGIN
 			json_populate_recordset(null::peeps.email_attachments, $1 -> 'attachments');
 	END IF;
 	mime := 'application/json';
-	js := row_to_json(r) FROM (SELECT * FROM peeps.email_view WHERE id=eid) r;
+	js := row_to_json(r.*) FROM peeps.email_view r WHERE id=eid;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
