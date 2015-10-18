@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+require 'pg'
+require 'b50d-config.rb'
+require 'gengo'
+require 'json'
+DB = PG::Connection.new(dbname: 'd50b', user: 'd50b')
+
+gengo = Gengo::API.new(public_key: GENGO_PUBLIC, private_key: GENGO_PRIVATE, sandbox: false)
+
+# get reviewable jobs
+#res = gengo.getTranslationJobs(status: 'reviewable', count: 9999)
+#job_ids = res['response'].map {|j| j['job_id'].to_i}
+res = gengo.jobs_in_order(12345)  # TODO: change to order_id  (NOT job_id)
+job_ids = res['response']['order']['jobs_reviewable']
+job_ids.each do |id|
+	j = gengo.getTranslationJob(id: id)['response']['job']
+	DB.exec_params("UPDATE core.translations SET xx=$1 WHERE code=$2", [j['body_tgt'], j['custom_data']])  # TODO: xx to lang code
+end
+
+# Then if it looks OK:
+job_ids.each {|id| gengo.updateTranslationJob(id: id, action: 'approve')}
+
