@@ -4,7 +4,7 @@
 
 -- PARAMS: api_key, api_pass
 -- RESPONSE: {client_id: (integer)} or not found
-CREATE OR REPLACE FUNCTION auth_client(text, text,
+CREATE OR REPLACE FUNCTION muckwork.auth_client(text, text,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	cid integer;
@@ -25,7 +25,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: api_key, api_pass
 -- RESPONSE: {worker_id: (integer)} or not found
-CREATE OR REPLACE FUNCTION auth_worker(text, text,
+CREATE OR REPLACE FUNCTION muckwork.auth_worker(text, text,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	wid integer;
@@ -46,7 +46,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: api_key, api_pass
 -- RESPONSE: {manager_id: (integer)} or not found
-CREATE OR REPLACE FUNCTION auth_manager(text, text,
+CREATE OR REPLACE FUNCTION muckwork.auth_manager(text, text,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	mid integer;
@@ -67,7 +67,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: client_id, project_id
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
-CREATE OR REPLACE FUNCTION client_owns_project(integer, integer,
+CREATE OR REPLACE FUNCTION muckwork.client_owns_project(integer, integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -83,7 +83,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: worker_id, task_id
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
-CREATE OR REPLACE FUNCTION worker_owns_task(integer, integer,
+CREATE OR REPLACE FUNCTION muckwork.worker_owns_task(integer, integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -99,7 +99,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: project_id, status
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
-CREATE OR REPLACE FUNCTION project_has_status(integer, text,
+CREATE OR REPLACE FUNCTION muckwork.project_has_status(integer, text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -117,7 +117,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: task_id, status
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
-CREATE OR REPLACE FUNCTION task_has_status(integer, text,
+CREATE OR REPLACE FUNCTION muckwork.task_has_status(integer, text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -134,7 +134,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: (none)
-CREATE OR REPLACE FUNCTION get_clients(
+CREATE OR REPLACE FUNCTION muckwork.get_clients(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -147,7 +147,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: client_id
-CREATE OR REPLACE FUNCTION get_client(integer,
+CREATE OR REPLACE FUNCTION muckwork.get_client(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -162,7 +162,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION create_client(integer,
+CREATE OR REPLACE FUNCTION muckwork.create_client(integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	new_id integer;
@@ -177,7 +177,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: client_id, JSON of key=>values to update
-CREATE OR REPLACE FUNCTION update_client(integer, json,
+CREATE OR REPLACE FUNCTION muckwork.update_client(integer, json,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
@@ -196,7 +196,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: (none)
-CREATE OR REPLACE FUNCTION get_workers(
+CREATE OR REPLACE FUNCTION muckwork.get_workers(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -210,7 +210,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: worker_id
-CREATE OR REPLACE FUNCTION get_worker(integer,
+CREATE OR REPLACE FUNCTION muckwork.get_worker(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -225,7 +225,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION create_worker(integer,
+CREATE OR REPLACE FUNCTION muckwork.create_worker(integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	new_id integer;
@@ -240,7 +240,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: worker_id, JSON of key=>values to update
-CREATE OR REPLACE FUNCTION update_worker(integer, json,
+CREATE OR REPLACE FUNCTION muckwork.update_worker(integer, json,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
@@ -259,7 +259,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS:  (none)
-CREATE OR REPLACE FUNCTION get_projects(
+CREATE OR REPLACE FUNCTION muckwork.get_projects(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -271,7 +271,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS:  client_id
-CREATE OR REPLACE FUNCTION client_get_projects(integer,
+CREATE OR REPLACE FUNCTION muckwork.client_get_projects(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -284,7 +284,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: status ('created','quoted','approved','refused','started','finished')
-CREATE OR REPLACE FUNCTION get_projects_with_status(text,
+CREATE OR REPLACE FUNCTION muckwork.get_projects_with_status(text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -297,7 +297,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id
-CREATE OR REPLACE FUNCTION get_project(integer,
+CREATE OR REPLACE FUNCTION muckwork.get_project(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -309,7 +309,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: client_id, title, description
-CREATE OR REPLACE FUNCTION create_project(integer, text, text,
+CREATE OR REPLACE FUNCTION muckwork.create_project(integer, text, text,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
@@ -326,7 +326,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id, title, description
-CREATE OR REPLACE FUNCTION update_project(integer, text, text,
+CREATE OR REPLACE FUNCTION muckwork.update_project(integer, text, text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	UPDATE muckwork.projects SET title = $2, description = $3 WHERE id = $1;
@@ -339,7 +339,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id, ratetype, currency, cents
-CREATE OR REPLACE FUNCTION quote_project(integer, text, text, integer,
+CREATE OR REPLACE FUNCTION muckwork.quote_project(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	UPDATE muckwork.projects SET quoted_at = NOW(), quoted_ratetype = $2,
@@ -353,7 +353,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id
-CREATE OR REPLACE FUNCTION approve_quote(integer,
+CREATE OR REPLACE FUNCTION muckwork.approve_quote(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	UPDATE muckwork.projects SET approved_at = NOW() WHERE id = $1;
@@ -365,7 +365,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id, explanation
-CREATE OR REPLACE FUNCTION refuse_quote(integer, text,
+CREATE OR REPLACE FUNCTION muckwork.refuse_quote(integer, text,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	note_id integer;
@@ -386,7 +386,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id
-CREATE OR REPLACE FUNCTION get_task(integer,
+CREATE OR REPLACE FUNCTION muckwork.get_task(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -399,7 +399,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: project_id, task.id
 -- (Same as get_task but including project_id for ownership verification.)
-CREATE OR REPLACE FUNCTION get_project_task(integer, integer,
+CREATE OR REPLACE FUNCTION muckwork.get_project_task(integer, integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -412,7 +412,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id, title, description, sortid(or NULL)
-CREATE OR REPLACE FUNCTION create_task(integer, text, text, integer,
+CREATE OR REPLACE FUNCTION muckwork.create_task(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	new_id integer;
@@ -428,7 +428,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id, title, description, sortid(or NULL)
-CREATE OR REPLACE FUNCTION update_task(integer, text, text, integer,
+CREATE OR REPLACE FUNCTION muckwork.update_task(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
@@ -443,7 +443,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id, worker_id
-CREATE OR REPLACE FUNCTION claim_task(integer, integer,
+CREATE OR REPLACE FUNCTION muckwork.claim_task(integer, integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
@@ -457,7 +457,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id
-CREATE OR REPLACE FUNCTION unclaim_task(integer,
+CREATE OR REPLACE FUNCTION muckwork.unclaim_task(integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
@@ -471,7 +471,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id
-CREATE OR REPLACE FUNCTION start_task(integer,
+CREATE OR REPLACE FUNCTION muckwork.start_task(integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
@@ -485,7 +485,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id
-CREATE OR REPLACE FUNCTION finish_task(integer,
+CREATE OR REPLACE FUNCTION muckwork.finish_task(integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
@@ -499,7 +499,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS:  worker_id
-CREATE OR REPLACE FUNCTION worker_get_tasks(integer,
+CREATE OR REPLACE FUNCTION muckwork.worker_get_tasks(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -515,7 +515,7 @@ $$ LANGUAGE plpgsql;
 -- lists just the next unclaimed task (lowest sortid) for each project
 -- use this to avoid workers claiming tasks out of order
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION next_available_tasks(
+CREATE OR REPLACE FUNCTION muckwork.next_available_tasks(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -532,7 +532,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: status ('created','quoted','approved','refused','started','finished')
-CREATE OR REPLACE FUNCTION get_tasks_with_status(text,
+CREATE OR REPLACE FUNCTION muckwork.get_tasks_with_status(text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';

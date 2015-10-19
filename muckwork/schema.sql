@@ -5,19 +5,19 @@ BEGIN;
 CREATE SCHEMA muckwork;
 SET search_path = muckwork;
 
-CREATE TABLE managers (
+CREATE TABLE muckwork.managers (
 	id serial primary key,
 	person_id integer not null unique REFERENCES peeps.people(id)
 );
 
-CREATE TABLE clients (
+CREATE TABLE muckwork.clients (
 	id serial primary key,
 	person_id integer not null unique REFERENCES peeps.people(id),
 	currency char(3) not null DEFAULT 'USD' REFERENCES core.currencies(code),
 	cents_balance integer not null default 0
 );
 
-CREATE TABLE workers (
+CREATE TABLE muckwork.workers (
 	id serial primary key,
 	person_id integer not null unique REFERENCES peeps.people(id),
 	currency char(3) not null DEFAULT 'USD' REFERENCES core.currencies(code),
@@ -26,7 +26,7 @@ CREATE TABLE workers (
 
 CREATE TYPE muckwork.status AS ENUM('created', 'quoted', 'approved', 'refused', 'started', 'finished');
 
-CREATE TABLE projects (
+CREATE TABLE muckwork.projects (
 	id serial primary key,
 	client_id integer not null REFERENCES clients(id),
 	title text,
@@ -43,10 +43,10 @@ CREATE TABLE projects (
 	final_currency char(3) REFERENCES core.currencies(code),
 	final_cents integer CHECK (final_cents >= 0)
 );
-CREATE INDEX pjci ON projects(client_id);
-CREATE INDEX pjst ON projects(status);
+CREATE INDEX pjci ON muckwork.projects(client_id);
+CREATE INDEX pjst ON muckwork.projects(status);
 
-CREATE TABLE tasks (
+CREATE TABLE muckwork.tasks (
 	id serial primary key,
 	project_id integer REFERENCES projects(id) ON DELETE CASCADE,
 	worker_id integer REFERENCES workers(id),
@@ -59,11 +59,11 @@ CREATE TABLE tasks (
 	finished_at timestamp(0) with time zone CHECK (finished_at >= started_at),
 	status muckwork.status not null default 'created'
 );
-CREATE INDEX tpi ON tasks(project_id);
-CREATE INDEX twi ON tasks(worker_id);
-CREATE INDEX tst ON tasks(status);
+CREATE INDEX tpi ON muckwork.tasks(project_id);
+CREATE INDEX twi ON muckwork.tasks(worker_id);
+CREATE INDEX tst ON muckwork.tasks(status);
 
-CREATE TABLE notes (
+CREATE TABLE muckwork.notes (
 	id serial primary key,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
 	project_id integer REFERENCES projects(id),
@@ -73,10 +73,10 @@ CREATE TABLE notes (
 	worker_id integer REFERENCES workers(id),
 	note text not null CONSTRAINT note_not_empty CHECK (length(note) > 0)
 );
-CREATE INDEX notpi ON notes(project_id);
-CREATE INDEX notti ON notes(task_id);
+CREATE INDEX notpi ON muckwork.notes(project_id);
+CREATE INDEX notti ON muckwork.notes(task_id);
 
-CREATE TABLE charges (
+CREATE TABLE muckwork.charges (
 	id serial primary key,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
 	project_id integer REFERENCES projects(id),
@@ -84,9 +84,9 @@ CREATE TABLE charges (
 	cents integer not null CHECK (cents >= 0),
 	notes text
 );
-CREATE INDEX chpi ON charges(project_id);
+CREATE INDEX chpi ON muckwork.charges(project_id);
 
-CREATE TABLE payments (
+CREATE TABLE muckwork.payments (
 	id serial primary key,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
 	client_id integer REFERENCES clients(id),
@@ -94,9 +94,9 @@ CREATE TABLE payments (
 	cents integer not null CHECK (cents > 0),
 	notes text
 );
-CREATE INDEX pyci ON payments(client_id);
+CREATE INDEX pyci ON muckwork.payments(client_id);
 
-CREATE TABLE worker_payments (
+CREATE TABLE muckwork.worker_payments (
 	id serial primary key,
 	worker_id integer not null REFERENCES workers(id),
 	currency char(3) not null REFERENCES core.currencies(code),
@@ -104,24 +104,24 @@ CREATE TABLE worker_payments (
 	created_at date not null default CURRENT_DATE,
 	notes text
 );
-CREATE INDEX wpwi ON worker_payments(worker_id);
+CREATE INDEX wpwi ON muckwork.worker_payments(worker_id);
 
-CREATE TABLE worker_charges (
+CREATE TABLE muckwork.worker_charges (
 	id serial primary key,
 	task_id integer not null REFERENCES tasks(id),
 	currency char(3) not null REFERENCES core.currencies(code),
 	cents integer not null CHECK (cents >= 0),
 	payment_id integer REFERENCES worker_payments(id) -- NULL until paid
 );
-CREATE INDEX wcpi ON worker_charges(payment_id);
-CREATE INDEX wcti ON worker_charges(task_id);
+CREATE INDEX wcpi ON muckwork.worker_charges(payment_id);
+CREATE INDEX wcti ON muckwork.worker_charges(task_id);
 
 COMMIT;
 ----------------------------
 ------------------ TRIGGERS:
 ----------------------------
 
-CREATE OR REPLACE FUNCTION project_status() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.project_status() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.quoted_at IS NULL THEN
 		NEW.status := 'created';
@@ -145,7 +145,7 @@ CREATE TRIGGER project_status BEFORE UPDATE OF
 
 -- Dates must always exist in this order:
 -- created_at, quoted_at, approved_at, started_at, finished_at
-CREATE OR REPLACE FUNCTION project_dates_in_order() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.project_dates_in_order() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.approved_at IS NOT NULL AND NEW.quoted_at IS NULL)
 		OR (NEW.started_at IS NOT NULL AND NEW.approved_at IS NULL)
@@ -163,7 +163,7 @@ CREATE TRIGGER project_dates_in_order BEFORE UPDATE OF
 
 -- can't update existing timestamps
 -- not sure what's better: one trigger for all dates, or one trigger per field.
-CREATE OR REPLACE FUNCTION dates_cant_change_pc() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_pc() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.created_at IS NOT NULL AND OLD.created_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -175,7 +175,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_pc ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_pc BEFORE UPDATE OF created_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pc();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_pq() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_pq() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.quoted_at IS NOT NULL AND OLD.quoted_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -187,7 +187,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_pq ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_pq BEFORE UPDATE OF quoted_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pq();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_pa() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_pa() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.approved_at IS NOT NULL AND OLD.approved_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -199,7 +199,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_pa ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_pa BEFORE UPDATE OF approved_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pa();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_ps() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_ps() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.started_at IS NOT NULL AND OLD.started_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -211,7 +211,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_ps ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_ps BEFORE UPDATE OF started_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_ps();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_pf() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_pf() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.finished_at IS NOT NULL AND OLD.finished_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -223,7 +223,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_pf ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_pf BEFORE UPDATE OF finished_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pf();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_tc() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_tc() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.created_at IS NOT NULL AND OLD.created_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -235,7 +235,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_tc ON muckwork.tasks CASCADE;
 CREATE TRIGGER dates_cant_change_tc BEFORE UPDATE OF created_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_tc();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_tl() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_tl() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.claimed_at IS NOT NULL AND OLD.claimed_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -247,7 +247,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_tl ON muckwork.tasks CASCADE;
 CREATE TRIGGER dates_cant_change_tl BEFORE UPDATE OF claimed_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_tl();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_ts() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_ts() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.started_at IS NOT NULL AND OLD.started_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -259,7 +259,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_ts ON muckwork.tasks CASCADE;
 CREATE TRIGGER dates_cant_change_ts BEFORE UPDATE OF started_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_ts();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_tf() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_tf() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.finished_at IS NOT NULL AND OLD.finished_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -273,7 +273,7 @@ CREATE TRIGGER dates_cant_change_tf BEFORE UPDATE OF finished_at ON muckwork.tas
 
 
 
-CREATE OR REPLACE FUNCTION task_status() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_status() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.started_at IS NULL THEN
 		NEW.status := 'created';
@@ -293,7 +293,7 @@ CREATE TRIGGER task_status BEFORE UPDATE OF
 
 -- Dates must always exist in this order:
 -- created_at, started_at, finished_at
-CREATE OR REPLACE FUNCTION task_dates_in_order() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_dates_in_order() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.finished_at IS NOT NULL AND NEW.started_at IS NULL)
 		OR (NEW.started_at IS NOT NULL AND NEW.claimed_at IS NULL)
@@ -308,7 +308,7 @@ CREATE TRIGGER task_dates_in_order BEFORE UPDATE OF
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.task_dates_in_order();
 
 
-CREATE OR REPLACE FUNCTION no_cents_without_currency() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.no_cents_without_currency() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.quoted_cents IS NOT NULL AND NEW.quoted_currency IS NULL)
 	OR (NEW.final_cents IS NOT NULL AND NEW.final_currency IS NULL)
@@ -325,7 +325,7 @@ CREATE TRIGGER no_cents_without_currency BEFORE UPDATE OF
 
 -- tasks.claimed_at and tasks.worker_id must match (both|neither)
 -- also means can't update a worker_id to another. have to go NULL inbetween.
-CREATE OR REPLACE FUNCTION tasks_claimed_pair() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.tasks_claimed_pair() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.claimed_at IS NOT NULL AND NEW.worker_id IS NULL)
 	OR (NEW.worker_id IS NOT NULL AND NEW.claimed_at IS NULL)
@@ -342,7 +342,7 @@ CREATE TRIGGER tasks_claimed_pair BEFORE UPDATE OF
 
 
 -- can't claim a task unless it's approved
-CREATE OR REPLACE FUNCTION only_claim_approved_task() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.only_claim_approved_task() RETURNS TRIGGER AS $$
 BEGIN
 	IF (OLD.status != 'approved') THEN
 		RAISE 'only_claim_approved_task';
@@ -358,7 +358,7 @@ CREATE TRIGGER only_claim_approved_task
 
 
 -- Controversial business rule: can't claim a task unless available
-CREATE OR REPLACE FUNCTION only_claim_when_done() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.only_claim_when_done() RETURNS TRIGGER AS $$
 BEGIN
 	IF muckwork.is_worker_available(NEW.worker_id) IS FALSE THEN
 		RAISE 'only_claim_when_done';
@@ -374,7 +374,7 @@ CREATE TRIGGER only_claim_when_done
 
 
 -- can't delete started projects or tasks
-CREATE OR REPLACE FUNCTION no_delete_started() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.no_delete_started() RETURNS TRIGGER AS $$
 BEGIN
 	IF OLD.started_at IS NOT NULL 
 		THEN RAISE 'no_delete_started';
@@ -391,7 +391,7 @@ CREATE TRIGGER no_delete_started_task BEFORE DELETE ON muckwork.tasks
 
 
 -- can't update title, description of quoted project
-CREATE OR REPLACE FUNCTION no_update_quoted_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.no_update_quoted_project() RETURNS TRIGGER AS $$
 BEGIN
 	IF OLD.quoted_at IS NOT NULL 
 		THEN RAISE 'no_update_quoted';
@@ -406,7 +406,7 @@ CREATE TRIGGER no_update_quoted_project BEFORE UPDATE OF
 
 
 -- can't update title, description of started task
-CREATE OR REPLACE FUNCTION no_update_started_task() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.no_update_started_task() RETURNS TRIGGER AS $$
 BEGIN
 	IF OLD.started_at IS NOT NULL 
 		THEN RAISE 'no_update_started';
@@ -421,7 +421,7 @@ CREATE TRIGGER no_update_started_task BEFORE UPDATE OF
 
 
 -- first task started marks project as started (see reverse below)
-CREATE OR REPLACE FUNCTION task_starts_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_starts_project() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.projects SET started_at=NOW()
 		WHERE id=OLD.project_id AND started_at IS NULL;
@@ -434,7 +434,7 @@ CREATE TRIGGER task_starts_project AFTER UPDATE OF started_at ON muckwork.tasks
 	EXECUTE PROCEDURE muckwork.task_starts_project();
 
 -- only started task un-started marks project as un-started
-CREATE OR REPLACE FUNCTION task_unstarts_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_unstarts_project() RETURNS TRIGGER AS $$
 DECLARE
 	pi integer;
 BEGIN
@@ -454,7 +454,7 @@ CREATE TRIGGER task_unstarts_project AFTER UPDATE OF started_at ON muckwork.task
 
 
 -- last task finished marks project as finished (see reverse below)
-CREATE OR REPLACE FUNCTION task_finishes_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_finishes_project() RETURNS TRIGGER AS $$
 DECLARE
 	pi integer;
 BEGIN
@@ -477,7 +477,7 @@ CREATE TRIGGER task_finishes_project AFTER UPDATE OF finished_at ON muckwork.tas
 	EXECUTE PROCEDURE muckwork.task_finishes_project();
 
 -- last finished task un-finished marks project as un-finished again
-CREATE OR REPLACE FUNCTION task_unfinishes_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_unfinishes_project() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.projects SET finished_at=NULL
 		WHERE id=OLD.project_id AND finished_at IS NOT NULL;
@@ -491,7 +491,7 @@ CREATE TRIGGER task_unfinishes_project AFTER UPDATE OF finished_at ON muckwork.t
 
 
 -- task finished creates worker_charge  (see reverse below)
-CREATE OR REPLACE FUNCTION task_creates_charge() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_creates_charge() RETURNS TRIGGER AS $$
 BEGIN
 	WITH x AS (
 		SELECT NEW.id AS task_id, currency, cents
@@ -506,7 +506,7 @@ CREATE TRIGGER task_creates_charge AFTER UPDATE OF finished_at ON muckwork.tasks
 	EXECUTE PROCEDURE muckwork.task_creates_charge();
 
 -- task UN-finished deletes associated charge
-CREATE OR REPLACE FUNCTION task_uncreates_charge() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_uncreates_charge() RETURNS TRIGGER AS $$
 BEGIN
 	DELETE FROM muckwork.worker_charges WHERE task_id = NEW.id;
 	RETURN NEW;
@@ -518,7 +518,7 @@ CREATE TRIGGER task_uncreates_charge AFTER UPDATE OF finished_at ON muckwork.tas
 	EXECUTE PROCEDURE muckwork.task_uncreates_charge();
 
 -- approving project makes tasks approved
-CREATE OR REPLACE FUNCTION approve_project_tasks() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.approve_project_tasks() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.tasks SET status='approved'
 		WHERE project_id=OLD.id;
@@ -531,7 +531,7 @@ CREATE TRIGGER approve_project_tasks AFTER UPDATE OF approved_at ON muckwork.pro
 	EXECUTE PROCEDURE muckwork.approve_project_tasks();
 
 -- UN-approving project makes tasks UN-approved 
-CREATE OR REPLACE FUNCTION unapprove_project_tasks() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.unapprove_project_tasks() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.tasks SET status='quoted'
 		WHERE project_id=OLD.id;
@@ -546,7 +546,7 @@ CREATE TRIGGER unapprove_project_tasks AFTER UPDATE OF approved_at ON muckwork.p
 
 -- project finished creates charge
 -- SOME DAY: fixed vs hourly (& hey maybe I should profit?)
-CREATE OR REPLACE FUNCTION project_creates_charge() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.project_creates_charge() RETURNS TRIGGER AS $$
 DECLARE
 	nu_currency char(3);
 	nu_cents integer;
@@ -568,7 +568,7 @@ CREATE TRIGGER project_creates_charge AFTER UPDATE OF finished_at ON muckwork.pr
 
 
 -- project UN-finished UN-creates charge
-CREATE OR REPLACE FUNCTION project_uncreates_charge() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.project_uncreates_charge() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.projects
 		SET final_currency = NULL, final_cents = NULL
@@ -584,7 +584,7 @@ CREATE TRIGGER project_uncreates_charge AFTER UPDATE OF finished_at ON muckwork.
 
 
 -- template
-CREATE OR REPLACE FUNCTION auto_sortid() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.auto_sortid() RETURNS TRIGGER AS $$
 DECLARE
 	i integer;
 BEGIN
@@ -601,7 +601,7 @@ CREATE TRIGGER auto_sortid BEFORE INSERT ON muckwork.tasks
 
 
 -- template
--- CREATE OR REPLACE FUNCTION xx() RETURNS TRIGGER AS $$
+-- CREATE OR REPLACE FUNCTION muckwork.xx() RETURNS TRIGGER AS $$
 -- BEGIN
 -- 	RETURN NEW;
 -- END;
@@ -617,7 +617,7 @@ CREATE TRIGGER auto_sortid BEFORE INSERT ON muckwork.tasks
 
 -- PARAMS: tasks.id
 -- USAGE: SELECT SUM(seconds_per_task(id)) FROM muckwork.tasks WHERE project_id=1;
-CREATE OR REPLACE FUNCTION seconds_per_task(integer, OUT seconds integer) AS $$
+CREATE OR REPLACE FUNCTION muckwork.seconds_per_task(integer, OUT seconds integer) AS $$
 BEGIN
 	seconds := (EXTRACT(EPOCH FROM finished_at) - EXTRACT(EPOCH FROM started_at))
 		FROM muckwork.tasks
@@ -628,7 +628,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: tasks.id
 -- NOTE: to convert millicents into cents, rounds UP to the next highest cent
-CREATE OR REPLACE FUNCTION worker_charge_for_task(integer, OUT currency char(3), OUT cents integer) AS $$
+CREATE OR REPLACE FUNCTION muckwork.worker_charge_for_task(integer, OUT currency char(3), OUT cents integer) AS $$
 BEGIN
 	SELECT w.currency,
 		CEIL((w.millicents_per_second * muckwork.seconds_per_task(t.id)) / 100)
@@ -642,7 +642,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- Sum of all worker_charges for tasks in this project, *converted* to project currency
-CREATE OR REPLACE FUNCTION final_project_charges(integer, OUT currency char(3), OUT cents integer) AS $$
+CREATE OR REPLACE FUNCTION muckwork.final_project_charges(integer, OUT currency char(3), OUT cents integer) AS $$
 DECLARE
 	project_currency char(3);
 	wc muckwork.worker_charges;
@@ -673,7 +673,7 @@ $$ LANGUAGE plpgsql;
 -- Current rule: not if they have another task claimed and unfinished
 -- Rule might change, so that's why making it a separate function.
 -- INPUT: worker_id
-CREATE OR REPLACE FUNCTION is_worker_available(integer) RETURNS boolean AS $$
+CREATE OR REPLACE FUNCTION muckwork.is_worker_available(integer) RETURNS boolean AS $$
 BEGIN
 	RETURN NOT EXISTS (SELECT 1 FROM muckwork.tasks
 		WHERE worker_id=$1 AND finished_at IS NULL);
@@ -750,7 +750,7 @@ CREATE VIEW muckwork.project_detail_view AS SELECT id, title, description, creat
 
 -- PARAMS: api_key, api_pass
 -- RESPONSE: {client_id: (integer)} or not found
-CREATE OR REPLACE FUNCTION auth_client(text, text,
+CREATE OR REPLACE FUNCTION muckwork.auth_client(text, text,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	cid integer;
@@ -777,7 +777,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: api_key, api_pass
 -- RESPONSE: {worker_id: (integer)} or not found
-CREATE OR REPLACE FUNCTION auth_worker(text, text,
+CREATE OR REPLACE FUNCTION muckwork.auth_worker(text, text,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	wid integer;
@@ -804,7 +804,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: api_key, api_pass
 -- RESPONSE: {manager_id: (integer)} or not found
-CREATE OR REPLACE FUNCTION auth_manager(text, text,
+CREATE OR REPLACE FUNCTION muckwork.auth_manager(text, text,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	mid integer;
@@ -831,7 +831,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: client_id, project_id
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
-CREATE OR REPLACE FUNCTION client_owns_project(integer, integer,
+CREATE OR REPLACE FUNCTION muckwork.client_owns_project(integer, integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -847,7 +847,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: worker_id, task_id
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
-CREATE OR REPLACE FUNCTION worker_owns_task(integer, integer,
+CREATE OR REPLACE FUNCTION muckwork.worker_owns_task(integer, integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -863,7 +863,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: project_id, status
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
-CREATE OR REPLACE FUNCTION project_has_status(integer, text,
+CREATE OR REPLACE FUNCTION muckwork.project_has_status(integer, text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -881,7 +881,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: task_id, status
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
-CREATE OR REPLACE FUNCTION task_has_status(integer, text,
+CREATE OR REPLACE FUNCTION muckwork.task_has_status(integer, text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -898,7 +898,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: (none)
-CREATE OR REPLACE FUNCTION get_clients(
+CREATE OR REPLACE FUNCTION muckwork.get_clients(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -911,7 +911,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: client_id
-CREATE OR REPLACE FUNCTION get_client(integer,
+CREATE OR REPLACE FUNCTION muckwork.get_client(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -932,7 +932,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION create_client(integer,
+CREATE OR REPLACE FUNCTION muckwork.create_client(integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	new_id integer;
@@ -964,7 +964,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: client_id, JSON of key=>values to update
-CREATE OR REPLACE FUNCTION update_client(integer, json,
+CREATE OR REPLACE FUNCTION muckwork.update_client(integer, json,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
@@ -1000,7 +1000,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: (none)
-CREATE OR REPLACE FUNCTION get_workers(
+CREATE OR REPLACE FUNCTION muckwork.get_workers(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -1014,7 +1014,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: worker_id
-CREATE OR REPLACE FUNCTION get_worker(integer,
+CREATE OR REPLACE FUNCTION muckwork.get_worker(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -1035,7 +1035,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION create_worker(integer,
+CREATE OR REPLACE FUNCTION muckwork.create_worker(integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	new_id integer;
@@ -1067,7 +1067,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: worker_id, JSON of key=>values to update
-CREATE OR REPLACE FUNCTION update_worker(integer, json,
+CREATE OR REPLACE FUNCTION muckwork.update_worker(integer, json,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
@@ -1103,7 +1103,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS:  (none)
-CREATE OR REPLACE FUNCTION get_projects(
+CREATE OR REPLACE FUNCTION muckwork.get_projects(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -1115,7 +1115,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS:  client_id
-CREATE OR REPLACE FUNCTION client_get_projects(integer,
+CREATE OR REPLACE FUNCTION muckwork.client_get_projects(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -1128,7 +1128,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: status ('created','quoted','approved','refused','started','finished')
-CREATE OR REPLACE FUNCTION get_projects_with_status(text,
+CREATE OR REPLACE FUNCTION muckwork.get_projects_with_status(text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -1141,7 +1141,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id
-CREATE OR REPLACE FUNCTION get_project(integer,
+CREATE OR REPLACE FUNCTION muckwork.get_project(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -1159,7 +1159,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: client_id, title, description
-CREATE OR REPLACE FUNCTION create_project(integer, text, text,
+CREATE OR REPLACE FUNCTION muckwork.create_project(integer, text, text,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 
@@ -1193,7 +1193,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id, title, description
-CREATE OR REPLACE FUNCTION update_project(integer, text, text,
+CREATE OR REPLACE FUNCTION muckwork.update_project(integer, text, text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	UPDATE muckwork.projects SET title = $2, description = $3 WHERE id = $1;
@@ -1212,7 +1212,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id, ratetype, currency, cents
-CREATE OR REPLACE FUNCTION quote_project(integer, text, text, integer,
+CREATE OR REPLACE FUNCTION muckwork.quote_project(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	UPDATE muckwork.projects SET quoted_at = NOW(), quoted_ratetype = $2,
@@ -1226,7 +1226,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id
-CREATE OR REPLACE FUNCTION approve_quote(integer,
+CREATE OR REPLACE FUNCTION muckwork.approve_quote(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	UPDATE muckwork.projects SET approved_at = NOW() WHERE id = $1;
@@ -1238,7 +1238,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id, explanation
-CREATE OR REPLACE FUNCTION refuse_quote(integer, text,
+CREATE OR REPLACE FUNCTION muckwork.refuse_quote(integer, text,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	note_id integer;
@@ -1265,7 +1265,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id
-CREATE OR REPLACE FUNCTION get_task(integer,
+CREATE OR REPLACE FUNCTION muckwork.get_task(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -1284,7 +1284,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: project_id, task.id
 -- (Same as get_task but including project_id for ownership verification.)
-CREATE OR REPLACE FUNCTION get_project_task(integer, integer,
+CREATE OR REPLACE FUNCTION muckwork.get_project_task(integer, integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -1303,7 +1303,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id, title, description, sortid(or NULL)
-CREATE OR REPLACE FUNCTION create_task(integer, text, text, integer,
+CREATE OR REPLACE FUNCTION muckwork.create_task(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 	new_id integer;
@@ -1336,7 +1336,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id, title, description, sortid(or NULL)
-CREATE OR REPLACE FUNCTION update_task(integer, text, text, integer,
+CREATE OR REPLACE FUNCTION muckwork.update_task(integer, text, text, integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 
@@ -1368,7 +1368,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id, worker_id
-CREATE OR REPLACE FUNCTION claim_task(integer, integer,
+CREATE OR REPLACE FUNCTION muckwork.claim_task(integer, integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 
@@ -1399,7 +1399,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id
-CREATE OR REPLACE FUNCTION unclaim_task(integer,
+CREATE OR REPLACE FUNCTION muckwork.unclaim_task(integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 
@@ -1430,7 +1430,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id
-CREATE OR REPLACE FUNCTION start_task(integer,
+CREATE OR REPLACE FUNCTION muckwork.start_task(integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 
@@ -1461,7 +1461,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id
-CREATE OR REPLACE FUNCTION finish_task(integer,
+CREATE OR REPLACE FUNCTION muckwork.finish_task(integer,
 	OUT mime text, OUT js json) AS $$
 DECLARE
 
@@ -1492,7 +1492,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS:  worker_id
-CREATE OR REPLACE FUNCTION worker_get_tasks(integer,
+CREATE OR REPLACE FUNCTION muckwork.worker_get_tasks(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -1508,7 +1508,7 @@ $$ LANGUAGE plpgsql;
 -- lists just the next unclaimed task (lowest sortid) for each project
 -- use this to avoid workers claiming tasks out of order
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION next_available_tasks(
+CREATE OR REPLACE FUNCTION muckwork.next_available_tasks(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -1525,7 +1525,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: status ('created','quoted','approved','refused','started','finished')
-CREATE OR REPLACE FUNCTION get_tasks_with_status(text,
+CREATE OR REPLACE FUNCTION muckwork.get_tasks_with_status(text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';

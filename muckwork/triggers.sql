@@ -2,7 +2,7 @@
 ------------------ TRIGGERS:
 ----------------------------
 
-CREATE OR REPLACE FUNCTION project_status() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.project_status() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.quoted_at IS NULL THEN
 		NEW.status := 'created';
@@ -26,7 +26,7 @@ CREATE TRIGGER project_status BEFORE UPDATE OF
 
 -- Dates must always exist in this order:
 -- created_at, quoted_at, approved_at, started_at, finished_at
-CREATE OR REPLACE FUNCTION project_dates_in_order() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.project_dates_in_order() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.approved_at IS NOT NULL AND NEW.quoted_at IS NULL)
 		OR (NEW.started_at IS NOT NULL AND NEW.approved_at IS NULL)
@@ -44,7 +44,7 @@ CREATE TRIGGER project_dates_in_order BEFORE UPDATE OF
 
 -- can't update existing timestamps
 -- not sure what's better: one trigger for all dates, or one trigger per field.
-CREATE OR REPLACE FUNCTION dates_cant_change_pc() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_pc() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.created_at IS NOT NULL AND OLD.created_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -56,7 +56,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_pc ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_pc BEFORE UPDATE OF created_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pc();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_pq() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_pq() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.quoted_at IS NOT NULL AND OLD.quoted_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -68,7 +68,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_pq ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_pq BEFORE UPDATE OF quoted_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pq();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_pa() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_pa() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.approved_at IS NOT NULL AND OLD.approved_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -80,7 +80,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_pa ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_pa BEFORE UPDATE OF approved_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pa();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_ps() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_ps() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.started_at IS NOT NULL AND OLD.started_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -92,7 +92,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_ps ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_ps BEFORE UPDATE OF started_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_ps();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_pf() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_pf() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.finished_at IS NOT NULL AND OLD.finished_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -104,7 +104,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_pf ON muckwork.projects CASCADE;
 CREATE TRIGGER dates_cant_change_pf BEFORE UPDATE OF finished_at ON muckwork.projects
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_pf();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_tc() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_tc() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.created_at IS NOT NULL AND OLD.created_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -116,7 +116,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_tc ON muckwork.tasks CASCADE;
 CREATE TRIGGER dates_cant_change_tc BEFORE UPDATE OF created_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_tc();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_tl() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_tl() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.claimed_at IS NOT NULL AND OLD.claimed_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -128,7 +128,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_tl ON muckwork.tasks CASCADE;
 CREATE TRIGGER dates_cant_change_tl BEFORE UPDATE OF claimed_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_tl();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_ts() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_ts() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.started_at IS NOT NULL AND OLD.started_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -140,7 +140,7 @@ DROP TRIGGER IF EXISTS dates_cant_change_ts ON muckwork.tasks CASCADE;
 CREATE TRIGGER dates_cant_change_ts BEFORE UPDATE OF started_at ON muckwork.tasks
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.dates_cant_change_ts();
 
-CREATE OR REPLACE FUNCTION dates_cant_change_tf() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.dates_cant_change_tf() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.finished_at IS NOT NULL AND OLD.finished_at IS NOT NULL)
 		THEN RAISE 'dates_cant_change';
@@ -154,7 +154,7 @@ CREATE TRIGGER dates_cant_change_tf BEFORE UPDATE OF finished_at ON muckwork.tas
 
 
 
-CREATE OR REPLACE FUNCTION task_status() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_status() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.started_at IS NULL THEN
 		NEW.status := 'created';
@@ -174,7 +174,7 @@ CREATE TRIGGER task_status BEFORE UPDATE OF
 
 -- Dates must always exist in this order:
 -- created_at, started_at, finished_at
-CREATE OR REPLACE FUNCTION task_dates_in_order() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_dates_in_order() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.finished_at IS NOT NULL AND NEW.started_at IS NULL)
 		OR (NEW.started_at IS NOT NULL AND NEW.claimed_at IS NULL)
@@ -189,7 +189,7 @@ CREATE TRIGGER task_dates_in_order BEFORE UPDATE OF
 	FOR EACH ROW EXECUTE PROCEDURE muckwork.task_dates_in_order();
 
 
-CREATE OR REPLACE FUNCTION no_cents_without_currency() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.no_cents_without_currency() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.quoted_cents IS NOT NULL AND NEW.quoted_currency IS NULL)
 	OR (NEW.final_cents IS NOT NULL AND NEW.final_currency IS NULL)
@@ -206,7 +206,7 @@ CREATE TRIGGER no_cents_without_currency BEFORE UPDATE OF
 
 -- tasks.claimed_at and tasks.worker_id must match (both|neither)
 -- also means can't update a worker_id to another. have to go NULL inbetween.
-CREATE OR REPLACE FUNCTION tasks_claimed_pair() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.tasks_claimed_pair() RETURNS TRIGGER AS $$
 BEGIN
 	IF (NEW.claimed_at IS NOT NULL AND NEW.worker_id IS NULL)
 	OR (NEW.worker_id IS NOT NULL AND NEW.claimed_at IS NULL)
@@ -223,7 +223,7 @@ CREATE TRIGGER tasks_claimed_pair BEFORE UPDATE OF
 
 
 -- can't claim a task unless it's approved
-CREATE OR REPLACE FUNCTION only_claim_approved_task() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.only_claim_approved_task() RETURNS TRIGGER AS $$
 BEGIN
 	IF (OLD.status != 'approved') THEN
 		RAISE 'only_claim_approved_task';
@@ -239,7 +239,7 @@ CREATE TRIGGER only_claim_approved_task
 
 
 -- Controversial business rule: can't claim a task unless available
-CREATE OR REPLACE FUNCTION only_claim_when_done() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.only_claim_when_done() RETURNS TRIGGER AS $$
 BEGIN
 	IF muckwork.is_worker_available(NEW.worker_id) IS FALSE THEN
 		RAISE 'only_claim_when_done';
@@ -255,7 +255,7 @@ CREATE TRIGGER only_claim_when_done
 
 
 -- can't delete started projects or tasks
-CREATE OR REPLACE FUNCTION no_delete_started() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.no_delete_started() RETURNS TRIGGER AS $$
 BEGIN
 	IF OLD.started_at IS NOT NULL 
 		THEN RAISE 'no_delete_started';
@@ -272,7 +272,7 @@ CREATE TRIGGER no_delete_started_task BEFORE DELETE ON muckwork.tasks
 
 
 -- can't update title, description of quoted project
-CREATE OR REPLACE FUNCTION no_update_quoted_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.no_update_quoted_project() RETURNS TRIGGER AS $$
 BEGIN
 	IF OLD.quoted_at IS NOT NULL 
 		THEN RAISE 'no_update_quoted';
@@ -287,7 +287,7 @@ CREATE TRIGGER no_update_quoted_project BEFORE UPDATE OF
 
 
 -- can't update title, description of started task
-CREATE OR REPLACE FUNCTION no_update_started_task() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.no_update_started_task() RETURNS TRIGGER AS $$
 BEGIN
 	IF OLD.started_at IS NOT NULL 
 		THEN RAISE 'no_update_started';
@@ -302,7 +302,7 @@ CREATE TRIGGER no_update_started_task BEFORE UPDATE OF
 
 
 -- first task started marks project as started (see reverse below)
-CREATE OR REPLACE FUNCTION task_starts_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_starts_project() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.projects SET started_at=NOW()
 		WHERE id=OLD.project_id AND started_at IS NULL;
@@ -315,7 +315,7 @@ CREATE TRIGGER task_starts_project AFTER UPDATE OF started_at ON muckwork.tasks
 	EXECUTE PROCEDURE muckwork.task_starts_project();
 
 -- only started task un-started marks project as un-started
-CREATE OR REPLACE FUNCTION task_unstarts_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_unstarts_project() RETURNS TRIGGER AS $$
 DECLARE
 	pi integer;
 BEGIN
@@ -335,7 +335,7 @@ CREATE TRIGGER task_unstarts_project AFTER UPDATE OF started_at ON muckwork.task
 
 
 -- last task finished marks project as finished (see reverse below)
-CREATE OR REPLACE FUNCTION task_finishes_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_finishes_project() RETURNS TRIGGER AS $$
 DECLARE
 	pi integer;
 BEGIN
@@ -358,7 +358,7 @@ CREATE TRIGGER task_finishes_project AFTER UPDATE OF finished_at ON muckwork.tas
 	EXECUTE PROCEDURE muckwork.task_finishes_project();
 
 -- last finished task un-finished marks project as un-finished again
-CREATE OR REPLACE FUNCTION task_unfinishes_project() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_unfinishes_project() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.projects SET finished_at=NULL
 		WHERE id=OLD.project_id AND finished_at IS NOT NULL;
@@ -372,7 +372,7 @@ CREATE TRIGGER task_unfinishes_project AFTER UPDATE OF finished_at ON muckwork.t
 
 
 -- task finished creates worker_charge  (see reverse below)
-CREATE OR REPLACE FUNCTION task_creates_charge() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_creates_charge() RETURNS TRIGGER AS $$
 BEGIN
 	WITH x AS (
 		SELECT NEW.id AS task_id, currency, cents
@@ -387,7 +387,7 @@ CREATE TRIGGER task_creates_charge AFTER UPDATE OF finished_at ON muckwork.tasks
 	EXECUTE PROCEDURE muckwork.task_creates_charge();
 
 -- task UN-finished deletes associated charge
-CREATE OR REPLACE FUNCTION task_uncreates_charge() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_uncreates_charge() RETURNS TRIGGER AS $$
 BEGIN
 	DELETE FROM muckwork.worker_charges WHERE task_id = NEW.id;
 	RETURN NEW;
@@ -399,7 +399,7 @@ CREATE TRIGGER task_uncreates_charge AFTER UPDATE OF finished_at ON muckwork.tas
 	EXECUTE PROCEDURE muckwork.task_uncreates_charge();
 
 -- approving project makes tasks approved
-CREATE OR REPLACE FUNCTION approve_project_tasks() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.approve_project_tasks() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.tasks SET status='approved'
 		WHERE project_id=OLD.id;
@@ -412,7 +412,7 @@ CREATE TRIGGER approve_project_tasks AFTER UPDATE OF approved_at ON muckwork.pro
 	EXECUTE PROCEDURE muckwork.approve_project_tasks();
 
 -- UN-approving project makes tasks UN-approved 
-CREATE OR REPLACE FUNCTION unapprove_project_tasks() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.unapprove_project_tasks() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.tasks SET status='quoted'
 		WHERE project_id=OLD.id;
@@ -427,7 +427,7 @@ CREATE TRIGGER unapprove_project_tasks AFTER UPDATE OF approved_at ON muckwork.p
 
 -- project finished creates charge
 -- SOME DAY: fixed vs hourly (& hey maybe I should profit?)
-CREATE OR REPLACE FUNCTION project_creates_charge() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.project_creates_charge() RETURNS TRIGGER AS $$
 DECLARE
 	nu_currency char(3);
 	nu_cents integer;
@@ -449,7 +449,7 @@ CREATE TRIGGER project_creates_charge AFTER UPDATE OF finished_at ON muckwork.pr
 
 
 -- project UN-finished UN-creates charge
-CREATE OR REPLACE FUNCTION project_uncreates_charge() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.project_uncreates_charge() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE muckwork.projects
 		SET final_currency = NULL, final_cents = NULL
@@ -465,7 +465,7 @@ CREATE TRIGGER project_uncreates_charge AFTER UPDATE OF finished_at ON muckwork.
 
 
 -- template
-CREATE OR REPLACE FUNCTION auto_sortid() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.auto_sortid() RETURNS TRIGGER AS $$
 DECLARE
 	i integer;
 BEGIN
@@ -482,7 +482,7 @@ CREATE TRIGGER auto_sortid BEFORE INSERT ON muckwork.tasks
 
 
 -- template
--- CREATE OR REPLACE FUNCTION xx() RETURNS TRIGGER AS $$
+-- CREATE OR REPLACE FUNCTION muckwork.xx() RETURNS TRIGGER AS $$
 -- BEGIN
 -- 	RETURN NEW;
 -- END;

@@ -4,7 +4,7 @@
 
 -- PARAMS: tasks.id
 -- USAGE: SELECT SUM(seconds_per_task(id)) FROM muckwork.tasks WHERE project_id=1;
-CREATE OR REPLACE FUNCTION seconds_per_task(integer, OUT seconds integer) AS $$
+CREATE OR REPLACE FUNCTION muckwork.seconds_per_task(integer, OUT seconds integer) AS $$
 BEGIN
 	seconds := (EXTRACT(EPOCH FROM finished_at) - EXTRACT(EPOCH FROM started_at))
 		FROM muckwork.tasks
@@ -15,7 +15,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: tasks.id
 -- NOTE: to convert millicents into cents, rounds UP to the next highest cent
-CREATE OR REPLACE FUNCTION worker_charge_for_task(integer, OUT currency char(3), OUT cents integer) AS $$
+CREATE OR REPLACE FUNCTION muckwork.worker_charge_for_task(integer, OUT currency char(3), OUT cents integer) AS $$
 BEGIN
 	SELECT w.currency,
 		CEIL((w.millicents_per_second * muckwork.seconds_per_task(t.id)) / 100)
@@ -29,7 +29,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- Sum of all worker_charges for tasks in this project, *converted* to project currency
-CREATE OR REPLACE FUNCTION final_project_charges(integer, OUT currency char(3), OUT cents integer) AS $$
+CREATE OR REPLACE FUNCTION muckwork.final_project_charges(integer, OUT currency char(3), OUT cents integer) AS $$
 DECLARE
 	project_currency char(3);
 	wc muckwork.worker_charges;
@@ -60,7 +60,7 @@ $$ LANGUAGE plpgsql;
 -- Current rule: not if they have another task claimed and unfinished
 -- Rule might change, so that's why making it a separate function.
 -- INPUT: worker_id
-CREATE OR REPLACE FUNCTION is_worker_available(integer) RETURNS boolean AS $$
+CREATE OR REPLACE FUNCTION muckwork.is_worker_available(integer) RETURNS boolean AS $$
 BEGIN
 	RETURN NOT EXISTS (SELECT 1 FROM muckwork.tasks
 		WHERE worker_id=$1 AND finished_at IS NULL);
