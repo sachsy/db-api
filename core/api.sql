@@ -7,7 +7,7 @@
 -- PARAMS: -none-
 -- RETURNS array of objects:
 -- [{"code":"AUD","name":"Australian Dollar"},{"code":"BGN","name":"Bulgarian Lev"}... ]
-CREATE OR REPLACE FUNCTION all_currencies(
+CREATE OR REPLACE FUNCTION core.all_currencies(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -20,7 +20,7 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: -none-
 -- RETURNS single code:name object:
 -- {"AUD":"Australian Dollar", "BGN":"Bulgarian Lev", ...}
-CREATE OR REPLACE FUNCTION currency_names(
+CREATE OR REPLACE FUNCTION core.currency_names(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';

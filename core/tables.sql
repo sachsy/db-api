@@ -6,26 +6,26 @@ BEGIN;
 CREATE SCHEMA core;
 SET search_path = core;
 
-CREATE TABLE currencies (
+CREATE TABLE core.currencies (
 	code character(3) NOT NULL primary key,
 	name text
 );
 
-CREATE TABLE currency_rates (
+CREATE TABLE core.currency_rates (
 	code character(3) NOT NULL REFERENCES currencies(code),
 	day date not null default CURRENT_DATE,
 	rate numeric,
 	PRIMARY KEY (code, day)
 );
 
-CREATE TABLE translation_files (
+CREATE TABLE core.translation_files (
 	id serial primary key,
 	filename varchar(64) not null unique,
 	raw text,
 	template text
 );
 
-CREATE TABLE translations (
+CREATE TABLE core.translations (
 	code char(8) primary key,
 	file_id integer REFERENCES translation_files(id),
 	sortid integer,
