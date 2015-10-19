@@ -5,8 +5,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS peeps.clean_email ON peeps.people CASCADE;
-CREATE TRIGGER peeps.clean_email
+DROP TRIGGER IF EXISTS clean_email ON peeps.people CASCADE;
+CREATE TRIGGER clean_email
 	BEFORE INSERT OR UPDATE OF email ON peeps.people
 	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_email();
 
@@ -18,8 +18,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS peeps.clean_their_email ON peeps.emails CASCADE;
-CREATE TRIGGER peeps.clean_their_email
+DROP TRIGGER IF EXISTS clean_their_email ON peeps.emails CASCADE;
+CREATE TRIGGER clean_their_email
 	BEFORE INSERT OR UPDATE OF their_name, their_email ON peeps.emails
 	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_their_email();
 
@@ -31,8 +31,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS peeps.clean_name ON peeps.people CASCADE;
-CREATE TRIGGER peeps.clean_name
+DROP TRIGGER IF EXISTS clean_name ON peeps.people CASCADE;
+CREATE TRIGGER clean_name
 	BEFORE INSERT OR UPDATE OF name ON peeps.people
 	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_name();
 
@@ -51,8 +51,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS peeps.clean_userstats ON peeps.userstats CASCADE;
-CREATE TRIGGER peeps.clean_userstats
+DROP TRIGGER IF EXISTS clean_userstats ON peeps.userstats CASCADE;
+CREATE TRIGGER clean_userstats
 	BEFORE INSERT OR UPDATE OF statkey, statvalue ON peeps.userstats
 	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_userstats();
 
@@ -70,8 +70,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS peeps.clean_url ON peeps.urls CASCADE;
-CREATE TRIGGER peeps.clean_url
+DROP TRIGGER IF EXISTS clean_url ON peeps.urls CASCADE;
+CREATE TRIGGER clean_url
 	BEFORE INSERT OR UPDATE OF url ON peeps.urls
 	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_url();
 
@@ -85,8 +85,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS peeps.generate_person_fields ON peeps.people CASCADE;
-CREATE TRIGGER peeps.generate_person_fields
+DROP TRIGGER IF EXISTS generate_person_fields ON peeps.people CASCADE;
+CREATE TRIGGER generate_person_fields
 	BEFORE INSERT ON peeps.people
 	FOR EACH ROW EXECUTE PROCEDURE peeps.generated_person_fields();
 
@@ -103,8 +103,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS peeps.null_person_fields ON peeps.people CASCADE;
-CREATE TRIGGER peeps.null_person_fields
+DROP TRIGGER IF EXISTS null_person_fields ON peeps.people CASCADE;
+CREATE TRIGGER null_person_fields
 	BEFORE INSERT OR UPDATE OF country, email ON peeps.people
 	FOR EACH ROW EXECUTE PROCEDURE peeps.null_person_fields();
 
@@ -121,8 +121,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS peeps.clean_emails_fields ON peeps.emails CASCADE;
-CREATE TRIGGER peeps.clean_emails_fields
+DROP TRIGGER IF EXISTS clean_emails_fields ON peeps.emails CASCADE;
+CREATE TRIGGER clean_emails_fields
 	BEFORE INSERT OR UPDATE OF profile, category ON peeps.emails
 	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_emails_fields();
 
@@ -147,8 +147,8 @@ BEGIN
 	RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS peeps.update_email_count ON peeps.emails CASCADE;
-CREATE TRIGGER peeps.update_email_count
+DROP TRIGGER IF EXISTS update_email_count ON peeps.emails CASCADE;
+CREATE TRIGGER update_email_count
 	AFTER INSERT OR DELETE OR UPDATE OF person_id ON peeps.emails
 	FOR EACH ROW EXECUTE PROCEDURE peeps.update_email_count();
 
@@ -162,8 +162,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS peeps.one_main_url ON peeps.urls CASCADE;
-CREATE TRIGGER peeps.one_main_url
+DROP TRIGGER IF EXISTS one_main_url ON peeps.urls CASCADE;
+CREATE TRIGGER one_main_url
 	AFTER INSERT OR UPDATE OF main ON peeps.urls
 	FOR EACH ROW EXECUTE PROCEDURE peeps.one_main_url();
 
@@ -176,8 +176,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS peeps.generated_api_keys ON peeps.api_keys CASCADE;
-CREATE TRIGGER peeps.generated_api_keys
+DROP TRIGGER IF EXISTS generated_api_keys ON peeps.api_keys CASCADE;
+CREATE TRIGGER generated_api_keys
 	BEFORE INSERT ON peeps.api_keys
 	FOR EACH ROW EXECUTE PROCEDURE peeps.generated_api_keys();
 
@@ -193,8 +193,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS peeps.make_message_id ON peeps.emails CASCADE;
-CREATE TRIGGER peeps.make_message_id
+DROP TRIGGER IF EXISTS make_message_id ON peeps.emails CASCADE;
+CREATE TRIGGER make_message_id
 	BEFORE INSERT ON peeps.emails
 	FOR EACH ROW EXECUTE PROCEDURE peeps.make_message_id();
 
@@ -209,8 +209,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS peeps.null_categorize_as ON peeps.people CASCADE;
-CREATE TRIGGER peeps.null_categorize_as
+DROP TRIGGER IF EXISTS null_categorize_as ON peeps.people CASCADE;
+CREATE TRIGGER null_categorize_as
 	BEFORE INSERT OR UPDATE ON peeps.people
 	FOR EACH ROW EXECUTE PROCEDURE peeps.null_categorize_as();
 

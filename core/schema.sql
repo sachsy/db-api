@@ -6,26 +6,26 @@ BEGIN;
 CREATE SCHEMA core;
 SET search_path = core;
 
-CREATE TABLE currencies (
+CREATE TABLE core.currencies (
 	code character(3) NOT NULL primary key,
 	name text
 );
 
-CREATE TABLE currency_rates (
+CREATE TABLE core.currency_rates (
 	code character(3) NOT NULL REFERENCES currencies(code),
 	day date not null default CURRENT_DATE,
 	rate numeric,
 	PRIMARY KEY (code, day)
 );
 
-CREATE TABLE translation_files (
+CREATE TABLE core.translation_files (
 	id serial primary key,
 	filename varchar(64) not null unique,
 	raw text,
 	template text
 );
 
-CREATE TABLE translations (
+CREATE TABLE core.translations (
 	code char(8) primary key,
 	file_id integer REFERENCES translation_files(id),
 	sortid integer,
@@ -47,11 +47,11 @@ COMMIT;
 ---------------------- FUNCTIONS:
 ---------------------------------
 
-CREATE OR REPLACE FUNCTION gen_random_bytes(integer) RETURNS bytea AS '$libdir/pgcrypto', 'pg_random_bytes' LANGUAGE c STRICT;
+CREATE OR REPLACE FUNCTION core.gen_random_bytes(integer) RETURNS bytea AS '$libdir/pgcrypto', 'pg_random_bytes' LANGUAGE c STRICT;
 
 
 -- used by other functions, below, for any random strings needed
-CREATE OR REPLACE FUNCTION random_string(length integer) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION core.random_string(length integer) RETURNS text AS $$
 DECLARE
 	chars text[] := '{0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}';
 	result text := '';
@@ -72,7 +72,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- ensure unique unused value for any table.field.
-CREATE OR REPLACE FUNCTION unique_for_table_field(str_len integer, table_name text, field_name text) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION core.unique_for_table_field(str_len integer, table_name text, field_name text) RETURNS text AS $$
 DECLARE
 	nu text;
 BEGIN
@@ -91,7 +91,7 @@ $$ LANGUAGE plpgsql;
 -- For updating foreign keys, tables referencing this column
 -- tablename in schema.table format like 'woodegg.researchers' colname: 'person_id'
 -- PARAMS: schema, table, column
-CREATE OR REPLACE FUNCTION tables_referencing(text, text, text)
+CREATE OR REPLACE FUNCTION core.tables_referencing(text, text, text)
 	RETURNS TABLE(tablename text, colname name) AS $$
 BEGIN
 	RETURN QUERY SELECT CONCAT(n.nspname, '.', k.relname), a.attname
@@ -110,7 +110,7 @@ $$ LANGUAGE plpgsql;
 
 -- RETURNS: array of column names that ARE allowed to be updated
 -- PARAMS: schema name, table name, array of col names NOT allowed to be updated
-CREATE OR REPLACE FUNCTION cols2update(text, text, text[]) RETURNS text[] AS $$
+CREATE OR REPLACE FUNCTION core.cols2update(text, text, text[]) RETURNS text[] AS $$
 BEGIN
 	RETURN array(SELECT column_name::text FROM information_schema.columns
 		WHERE table_schema=$1 AND table_name=$2 AND column_name != ALL($3));
@@ -119,7 +119,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: table name, id, json, array of cols that ARE allowed to be updated
-CREATE OR REPLACE FUNCTION jsonupdate(text, integer, json, text[]) RETURNS VOID AS $$
+CREATE OR REPLACE FUNCTION core.jsonupdate(text, integer, json, text[]) RETURNS VOID AS $$
 DECLARE
 	col record;
 BEGIN
@@ -134,7 +134,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: any text that needs to be stripped of HTML tags
-CREATE OR REPLACE FUNCTION strip_tags(text) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION core.strip_tags(text) RETURNS text AS $$
 BEGIN
 	RETURN regexp_replace($1 , '</?[^>]+?>', '', 'g');
 END;
@@ -142,7 +142,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: any text that needs HTML escape
-CREATE OR REPLACE FUNCTION escape_html(text) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION core.escape_html(text) RETURNS text AS $$
 DECLARE
 	nu text;
 BEGIN
@@ -157,7 +157,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: JSON of currency rates https://openexchangerates.org/documentation
-CREATE OR REPLACE FUNCTION update_currency_rates(jsonb) RETURNS void AS $$
+CREATE OR REPLACE FUNCTION core.update_currency_rates(jsonb) RETURNS void AS $$
 DECLARE
 	rates jsonb;
 	acurrency currencies;
@@ -176,7 +176,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: amount, from.code to.code
-CREATE OR REPLACE FUNCTION currency_from_to(numeric, text, text, OUT amount numeric) AS $$
+CREATE OR REPLACE FUNCTION core.currency_from_to(numeric, text, text, OUT amount numeric) AS $$
 BEGIN
 	IF $2 = 'USD' THEN
 		SELECT ($1 * rate) INTO amount
@@ -198,7 +198,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- PARAMS:  translation_files.id
-CREATE OR REPLACE FUNCTION parse_translation_file(integer) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION core.parse_translation_file(integer) RETURNS text AS $$
 DECLARE
 	lines text[];
 	line text;
@@ -231,7 +231,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- PARAMS:  translation_files.id
-CREATE OR REPLACE FUNCTION text_for_translator(integer, OUT text text) AS $$
+CREATE OR REPLACE FUNCTION core.text_for_translator(integer, OUT text text) AS $$
 BEGIN
 	text := string_agg(en, E'\r\n') FROM
 		(SELECT en FROM core.translations WHERE file_id = $1 ORDER BY sortid) s;
@@ -239,7 +239,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- PARAMS:  translation_files.id, translation file from translator
-CREATE OR REPLACE FUNCTION txn_compare(integer, text)
+CREATE OR REPLACE FUNCTION core.txn_compare(integer, text)
 RETURNS TABLE(sortid integer, code char(8), en text, theirs text) AS $$
 BEGIN
 	-- TODO: stop and notify if split array has more lines than database?
@@ -255,7 +255,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- PARAMS:  translation_files.id, 2-char lang code, translation file from translator
-CREATE OR REPLACE FUNCTION txn_update(integer, text, text) RETURNS boolean AS $$
+CREATE OR REPLACE FUNCTION core.txn_update(integer, text, text) RETURNS boolean AS $$
 DECLARE
 	atxn RECORD;
 BEGIN
@@ -268,7 +268,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- PARAMS:  translation_files.id, 2-char lang code
-CREATE OR REPLACE FUNCTION merge_translation_file(integer, text) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION core.merge_translation_file(integer, text) RETURNS text AS $$
 DECLARE
 	merged text;
 	a RECORD;
@@ -320,7 +320,7 @@ CREATE TRIGGER translations_code_gen
 -- PARAMS: -none-
 -- RETURNS array of objects:
 -- [{"code":"AUD","name":"Australian Dollar"},{"code":"BGN","name":"Bulgarian Lev"}... ]
-CREATE OR REPLACE FUNCTION all_currencies(
+CREATE OR REPLACE FUNCTION core.all_currencies(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
@@ -333,7 +333,7 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: -none-
 -- RETURNS single code:name object:
 -- {"AUD":"Australian Dollar", "BGN":"Bulgarian Lev", ...}
-CREATE OR REPLACE FUNCTION currency_names(
+CREATE OR REPLACE FUNCTION core.currency_names(
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';

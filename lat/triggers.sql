@@ -3,7 +3,7 @@
 ----------------------------
 
 -- strip all line breaks, tabs, and spaces around title and concept before storing
-CREATE OR REPLACE FUNCTION clean_concept() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION lat.clean_concept() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.title = btrim(regexp_replace(NEW.title, '\s+', ' ', 'g'));
 	NEW.concept = btrim(regexp_replace(NEW.concept, '\s+', ' ', 'g'));
@@ -16,7 +16,7 @@ CREATE TRIGGER clean_concept BEFORE INSERT OR UPDATE ON lat.concepts
 
 
 -- strip all line breaks, tabs, and spaces around url before storing (& validating)
-CREATE OR REPLACE FUNCTION clean_url() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION lat.clean_url() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.url = regexp_replace(NEW.url, '\s', '', 'g');
 	NEW.notes = btrim(regexp_replace(NEW.notes, '\s+', ' ', 'g'));
@@ -29,7 +29,7 @@ CREATE TRIGGER clean_url BEFORE INSERT OR UPDATE ON lat.urls
 
 
 -- lowercase and strip all line breaks, tabs, and spaces around tag before storing
-CREATE OR REPLACE FUNCTION clean_tag() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION lat.clean_tag() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.tag = lower(btrim(regexp_replace(NEW.tag, '\s+', ' ', 'g')));
 	RETURN NEW;
@@ -41,7 +41,7 @@ CREATE TRIGGER clean_tag BEFORE INSERT OR UPDATE OF tag ON lat.tags
 
 
 -- strip all line breaks, tabs, and spaces around thought before storing
-CREATE OR REPLACE FUNCTION clean_pairing() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION lat.clean_pairing() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.thoughts = btrim(regexp_replace(NEW.thoughts, '\s+', ' ', 'g'));
 	RETURN NEW;

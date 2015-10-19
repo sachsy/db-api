@@ -35,7 +35,7 @@ CREATE TABLE peeps.people (
 	categorize_as varchar(16), -- if not null, incoming emails.category set to this
 	created_at date not null default CURRENT_DATE
 );
-CREATE INDEX peeps.person_name ON people(name);
+CREATE INDEX person_name ON people(name);
 
 -- People authorized to answer/create emails
 CREATE TABLE peeps.emailers (
@@ -54,8 +54,8 @@ CREATE TABLE peeps.userstats (
 	statvalue text not null CONSTRAINT statval_not_empty CHECK (length(statvalue) > 0),
 	created_at date not null default CURRENT_DATE
 );
-CREATE INDEX peeps.userstats_person ON userstats(person_id);
-CREATE INDEX peeps.userstats_statkey ON userstats(statkey);
+CREATE INDEX userstats_person ON userstats(person_id);
+CREATE INDEX userstats_statkey ON userstats(statkey);
 
 -- This person's websites
 CREATE TABLE peeps.urls (
@@ -64,7 +64,7 @@ CREATE TABLE peeps.urls (
 	url varchar(255) CONSTRAINT url_format CHECK (url ~ '^https?://[0-9a-zA-Z_-]+\.[a-zA-Z0-9]+'),
 	main boolean  -- means it's their main/home site
 );
-CREATE INDEX peeps.urls_person ON urls(person_id);
+CREATE INDEX urls_person ON urls(person_id);
 
 -- Logged-in users given a cookie with random string, to look up their person_id
 CREATE TABLE peeps.logins (
@@ -77,7 +77,7 @@ CREATE TABLE peeps.logins (
 	ip varchar(15),
 	PRIMARY KEY (cookie_id, cookie_tok)
 );
-CREATE INDEX peeps.logins_person_id ON logins(person_id);
+CREATE INDEX logins_person_id ON logins(person_id);
 
 -- All incoming and outgoing emails
 CREATE TABLE peeps.emails (
@@ -102,12 +102,12 @@ CREATE TABLE peeps.emails (
 	outgoing boolean default 'f',
 	flag integer  -- rarely used, to mark especially important emails 
 );
-CREATE INDEX peeps.emails_person_id ON emails(person_id);
-CREATE INDEX peeps.emails_category ON emails(category);
-CREATE INDEX peeps.emails_profile ON emails(profile);
-CREATE INDEX peeps.emails_created_by ON emails(created_by);
-CREATE INDEX peeps.emails_opened_by ON emails(opened_by);
-CREATE INDEX peeps.emails_outgoing ON emails(outgoing);
+CREATE INDEX emails_person_id ON emails(person_id);
+CREATE INDEX emails_category ON emails(category);
+CREATE INDEX emails_profile ON emails(profile);
+CREATE INDEX emails_created_by ON emails(created_by);
+CREATE INDEX emails_opened_by ON emails(opened_by);
+CREATE INDEX emails_outgoing ON emails(outgoing);
 
 -- Attachments sent with incoming emails
 CREATE TABLE peeps.email_attachments (
@@ -117,7 +117,7 @@ CREATE TABLE peeps.email_attachments (
 	filename text,
 	bytes integer
 );
-CREATE INDEX peeps.email_attachments_email_id ON email_attachments(email_id);
+CREATE INDEX email_attachments_email_id ON email_attachments(email_id);
 
 -- Commonly used emails.body templates
 CREATE TABLE peeps.formletters (

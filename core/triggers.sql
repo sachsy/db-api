@@ -8,8 +8,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS core.clean_raw ON core.translation_files CASCADE;
-CREATE TRIGGER core.clean_raw
+DROP TRIGGER IF EXISTS clean_raw ON core.translation_files CASCADE;
+CREATE TRIGGER clean_raw
 	BEFORE INSERT OR UPDATE OF raw ON core.translation_files
 	FOR EACH ROW EXECUTE PROCEDURE core.clean_raw();
 
@@ -20,8 +20,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS core.translations_code_gen ON core.translations CASCADE;
-CREATE TRIGGER core.translations_code_gen
+DROP TRIGGER IF EXISTS translations_code_gen ON core.translations CASCADE;
+CREATE TRIGGER translations_code_gen
 	BEFORE INSERT ON core.translations
 	FOR EACH ROW WHEN (NEW.code IS NULL)
 	EXECUTE PROCEDURE core.translations_code_gen();

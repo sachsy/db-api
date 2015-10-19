@@ -9,13 +9,13 @@ SET search_path = peeps;
 -- Country codes used mainly for foreign key constraint on people.country
 -- From http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2 - data loaded below
 -- No need for any API to update, insert, or delete from this table.
-CREATE TABLE countries (
+CREATE TABLE peeps.countries (
 	code character(2) NOT NULL primary key,
 	name text
 );
 
 -- Big master table for people
-CREATE TABLE people (
+CREATE TABLE peeps.people (
 	id serial primary key,
 	email varchar(127) UNIQUE CONSTRAINT valid_email CHECK (email ~ '\A\S+@\S+\.\S+\Z'),
 	name varchar(127) NOT NULL CONSTRAINT no_name CHECK (LENGTH(name) > 0),
@@ -38,7 +38,7 @@ CREATE TABLE people (
 CREATE INDEX person_name ON people(name);
 
 -- People authorized to answer/create emails
-CREATE TABLE emailers (
+CREATE TABLE peeps.emailers (
 	id serial primary key,
 	person_id integer NOT NULL UNIQUE REFERENCES people(id) ON DELETE RESTRICT,
 	admin boolean NOT NULL DEFAULT 'f',
@@ -47,7 +47,7 @@ CREATE TABLE emailers (
 );
 
 -- Catch-all for any random facts about this person
-CREATE TABLE userstats (
+CREATE TABLE peeps.userstats (
 	id serial primary key,
 	person_id integer not null REFERENCES people(id) ON DELETE CASCADE,
 	statkey varchar(32) not null CONSTRAINT statkey_format CHECK (statkey ~ '\A[a-z0-9._-]+\Z'),
@@ -58,7 +58,7 @@ CREATE INDEX userstats_person ON userstats(person_id);
 CREATE INDEX userstats_statkey ON userstats(statkey);
 
 -- This person's websites
-CREATE TABLE urls (
+CREATE TABLE peeps.urls (
 	id serial primary key,
 	person_id integer not null REFERENCES people(id) ON DELETE CASCADE,
 	url varchar(255) CONSTRAINT url_format CHECK (url ~ '^https?://[0-9a-zA-Z_-]+\.[a-zA-Z0-9]+'),
@@ -67,7 +67,7 @@ CREATE TABLE urls (
 CREATE INDEX urls_person ON urls(person_id);
 
 -- Logged-in users given a cookie with random string, to look up their person_id
-CREATE TABLE logins (
+CREATE TABLE peeps.logins (
 	person_id integer not null REFERENCES people(id) ON DELETE CASCADE,
 	cookie_id char(32) not null,
 	cookie_tok char(32) not null,
@@ -80,7 +80,7 @@ CREATE TABLE logins (
 CREATE INDEX logins_person_id ON logins(person_id);
 
 -- All incoming and outgoing emails
-CREATE TABLE emails (
+CREATE TABLE peeps.emails (
 	id serial primary key,
 	person_id integer REFERENCES people(id),
 	profile varchar(18) not null CHECK (length(profile) > 0),  -- which email address sent to/from
@@ -110,7 +110,7 @@ CREATE INDEX emails_opened_by ON emails(opened_by);
 CREATE INDEX emails_outgoing ON emails(outgoing);
 
 -- Attachments sent with incoming emails
-CREATE TABLE email_attachments (
+CREATE TABLE peeps.email_attachments (
 	id serial primary key,
 	email_id integer REFERENCES emails(id) ON DELETE CASCADE,
 	mime_type text,
@@ -120,7 +120,7 @@ CREATE TABLE email_attachments (
 CREATE INDEX email_attachments_email_id ON email_attachments(email_id);
 
 -- Commonly used emails.body templates
-CREATE TABLE formletters (
+CREATE TABLE peeps.formletters (
 	id serial primary key,
 	title varchar(64) UNIQUE,
 	explanation varchar(255),
@@ -129,7 +129,7 @@ CREATE TABLE formletters (
 );
 
 -- Users given direct API access
-CREATE TABLE api_keys (
+CREATE TABLE peeps.api_keys (
 	person_id integer NOT NULL UNIQUE REFERENCES people(id) ON DELETE CASCADE,
 	akey char(8) NOT NULL UNIQUE,
 	apass char(8) NOT NULL,
@@ -222,14 +222,14 @@ CREATE VIEW peeps.stats_view AS
 ----------------------------
 
 -- pgcrypto for people.hashpass
-CREATE OR REPLACE FUNCTION crypt(text, text) RETURNS text AS '$libdir/pgcrypto', 'pg_crypt' LANGUAGE c IMMUTABLE STRICT;
-CREATE OR REPLACE FUNCTION gen_salt(text, integer) RETURNS text AS '$libdir/pgcrypto', 'pg_gen_salt_rounds' LANGUAGE c STRICT;
+CREATE OR REPLACE FUNCTION peeps.crypt(text, text) RETURNS text AS '$libdir/pgcrypto', 'pg_crypt' LANGUAGE c IMMUTABLE STRICT;
+CREATE OR REPLACE FUNCTION peeps.gen_salt(text, integer) RETURNS text AS '$libdir/pgcrypto', 'pg_gen_salt_rounds' LANGUAGE c STRICT;
 
 
 -- Use this to add a new person to the database.  Ensures unique email without clash.
 -- USAGE: SELECT * FROM person_create('Dude Abides', 'dude@abid.es');
 -- Will always return peeps.people row, whether new INSERT or existing SELECT
-CREATE OR REPLACE FUNCTION person_create(new_name text, new_email text) RETURNS SETOF peeps.people AS $$
+CREATE OR REPLACE FUNCTION peeps.person_create(new_name text, new_email text) RETURNS SETOF peeps.people AS $$
 DECLARE
 	clean_email text;
 BEGIN
@@ -249,7 +249,7 @@ $$ LANGUAGE plpgsql;
 -- Use this for user choosing their own password.
 -- USAGE: SELECT set_hashpass(123, 'Th€IR nü FunK¥(!) pá$$werđ');
 -- Returns false if that peeps.people.id doesn't exist, otherwise true.
-CREATE OR REPLACE FUNCTION set_hashpass(person_id integer, password text) RETURNS boolean AS $$
+CREATE OR REPLACE FUNCTION peeps.set_hashpass(person_id integer, password text) RETURNS boolean AS $$
 BEGIN
 	IF password IS NULL OR length(btrim(password)) < 4 THEN
 		RAISE 'short_password';
@@ -270,7 +270,7 @@ $$ LANGUAGE plpgsql;
 -- could use it to change someone's password. So check existence first, then create.
 -- If email/person exists already, just return person. Don't change password.
 -- PARAMS: name, email, password
-CREATE OR REPLACE FUNCTION person_create_pass(text, text, text) RETURNS SETOF peeps.people AS $$
+CREATE OR REPLACE FUNCTION peeps.person_create_pass(text, text, text) RETURNS SETOF peeps.people AS $$
 DECLARE
 	clean_email text;
 	pid integer;
@@ -293,7 +293,7 @@ $$ LANGUAGE plpgsql;
 -- USAGE: SELECT * FROM person_email_pass('dude@abid.es', 'Th€IR öld FunK¥ pá$$werđ');
 -- Returns peeps.people.* if both are correct, or nothing if not.
 -- Once authorized here, give logins or api_key cookie for future lookups.
-CREATE OR REPLACE FUNCTION person_email_pass(my_email text, my_pass text) RETURNS SETOF peeps.people AS $$
+CREATE OR REPLACE FUNCTION peeps.person_email_pass(my_email text, my_pass text) RETURNS SETOF peeps.people AS $$
 DECLARE
 	clean_email text;
 BEGIN
@@ -313,7 +313,7 @@ $$ LANGUAGE plpgsql;
 -- USAGE: SELECT person_merge_from_to(5432, 4321);
 -- Returns array of tables actually updated in schema.table format like {'muckwork.clients', 'sivers.comments'}
 -- (Return value is probably unneeded, but here it is anyway, just in case.)
-CREATE OR REPLACE FUNCTION person_merge_from_to(old_id integer, new_id integer) RETURNS text[] AS $$
+CREATE OR REPLACE FUNCTION peeps.person_merge_from_to(old_id integer, new_id integer) RETURNS text[] AS $$
 DECLARE
 	res RECORD;
 	done_tables text[] := ARRAY[]::text[];
@@ -366,7 +366,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- Returns emails.* only if emailers.profiles && emailers.cateories matches
-CREATE OR REPLACE FUNCTION emailer_get_email(emailer_id integer, email_id integer) RETURNS SETOF peeps.emails AS $$
+CREATE OR REPLACE FUNCTION peeps.emailer_get_email(emailer_id integer, email_id integer) RETURNS SETOF peeps.emails AS $$
 DECLARE
 	emailer peeps.emailers;
 	email peeps.emails;
@@ -384,7 +384,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- Returns unopened emails.* that this emailer is authorized to see
-CREATE OR REPLACE FUNCTION emailer_get_unopened(emailer_id integer) RETURNS SETOF peeps.emails AS $$
+CREATE OR REPLACE FUNCTION peeps.emailer_get_unopened(emailer_id integer) RETURNS SETOF peeps.emails AS $$
 DECLARE
 	qry text := 'SELECT * FROM peeps.emails WHERE opened_at IS NULL AND person_id IS NOT NULL';
 	emailer peeps.emailers;
@@ -404,7 +404,7 @@ $$ LANGUAGE plpgsql;
 
 -- Once a person has correctly given their email and password, call this to create cookie info.
 -- Returns a single 65-character string, ready to be set as the cookie value
-CREATE OR REPLACE FUNCTION login_person_domain(my_person_id integer, my_domain char, OUT cookie text) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION peeps.login_person_domain(my_person_id integer, my_domain char, OUT cookie text) RETURNS text AS $$
 DECLARE
 	c_id text;
 	c_tok text;
@@ -420,7 +420,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- Give the cookie value returned from login_person_domain, and I'll return people.* if found and not expired
-CREATE OR REPLACE FUNCTION get_person_from_cookie(cookie char) RETURNS SETOF peeps.people AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_from_cookie(cookie char) RETURNS SETOF peeps.people AS $$
 DECLARE
 	c_id text;
 	c_tok text;
@@ -440,7 +440,7 @@ $$ LANGUAGE plpgsql;
 
 -- ids of unopened emails this emailer is allowed to access
 -- PARAMS: emailer_id
-CREATE OR REPLACE FUNCTION unopened_email_ids(integer) RETURNS SETOF integer AS $$
+CREATE OR REPLACE FUNCTION peeps.unopened_email_ids(integer) RETURNS SETOF integer AS $$
 DECLARE
 	pros text[];
 	cats text[];
@@ -466,7 +466,7 @@ $$ LANGUAGE plpgsql;
 
 -- ids of already-open emails this emailer is allowed to access
 -- PARAMS: emailer_id
-CREATE OR REPLACE FUNCTION opened_email_ids(integer) RETURNS SETOF integer AS $$
+CREATE OR REPLACE FUNCTION peeps.opened_email_ids(integer) RETURNS SETOF integer AS $$
 DECLARE
 	pros text[];
 	cats text[];
@@ -493,7 +493,7 @@ $$ LANGUAGE plpgsql;
 -- ids of unknown-person emails, if this emailer is admin or allowed
 -- (unknown-person emails don't have categories, so not checking for that)
 -- PARAMS: emailer_id
-CREATE OR REPLACE FUNCTION unknown_email_ids(integer) RETURNS SETOF integer AS $$
+CREATE OR REPLACE FUNCTION peeps.unknown_email_ids(integer) RETURNS SETOF integer AS $$
 DECLARE
 	pros text[];
 BEGIN
@@ -511,7 +511,7 @@ $$ LANGUAGE plpgsql;
 -- If this emailer is allowed to see this email,
 -- Returns email.id if found and permission granted, NULL if not
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION ok_email(integer, integer) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION peeps.ok_email(integer, integer) RETURNS integer AS $$
 DECLARE
 	pros text[];
 	cats text[];
@@ -536,7 +536,7 @@ $$ LANGUAGE plpgsql;
 -- Update it to be shown as opened_by this emailer now (if not already open)
 -- Returns email.id if found and permission granted, NULL if not
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION open_email(integer, integer) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION peeps.open_email(integer, integer) RETURNS integer AS $$
 DECLARE
 	ok_id integer;
 BEGIN
@@ -552,7 +552,7 @@ $$ LANGUAGE plpgsql;
 
 -- Create a new outging email
 -- PARAMS: emailer_id, person_id, profile, category, subject, body, reference_id (NULL unless reply)
-CREATE OR REPLACE FUNCTION outgoing_email(integer, integer, text, text, text, text, integer) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION peeps.outgoing_email(integer, integer, text, text, text, text, integer) RETURNS integer AS $$
 DECLARE
 	p peeps.people;
 	rowcount integer;
@@ -609,7 +609,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: people.id, formletters.id
-CREATE OR REPLACE FUNCTION parse_formletter_body(integer, integer) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION peeps.parse_formletter_body(integer, integer) RETURNS text AS $$
 DECLARE
 	new_body text;
 	thisvar text;
@@ -628,7 +628,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: email, password
-CREATE OR REPLACE FUNCTION pid_from_email_pass(text, text, OUT pid integer) AS $$
+CREATE OR REPLACE FUNCTION peeps.pid_from_email_pass(text, text, OUT pid integer) AS $$
 DECLARE
 	clean_email text;
 BEGIN
@@ -643,17 +643,19 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Strip spaces and lowercase email address before validating & storing
-CREATE OR REPLACE FUNCTION clean_email() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_email() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.email = lower(regexp_replace(NEW.email, '\s', '', 'g'));
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS clean_email ON peeps.people CASCADE;
-CREATE TRIGGER clean_email BEFORE INSERT OR UPDATE OF email ON peeps.people FOR EACH ROW EXECUTE PROCEDURE clean_email();
+CREATE TRIGGER clean_email
+	BEFORE INSERT OR UPDATE OF email ON peeps.people
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_email();
 
 
-CREATE OR REPLACE FUNCTION clean_their_email() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_their_email() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.their_name = core.strip_tags(btrim(regexp_replace(NEW.their_name, '\s+', ' ', 'g')));
 	NEW.their_email = lower(regexp_replace(NEW.their_email, '\s', '', 'g'));
@@ -661,22 +663,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS clean_their_email ON peeps.emails CASCADE;
-CREATE TRIGGER clean_their_email BEFORE INSERT OR UPDATE OF their_name, their_email ON peeps.emails FOR EACH ROW EXECUTE PROCEDURE clean_their_email();
+CREATE TRIGGER clean_their_email
+	BEFORE INSERT OR UPDATE OF their_name, their_email ON peeps.emails
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_their_email();
 
 
 -- Strip all line breaks and spaces around name before storing
-CREATE OR REPLACE FUNCTION clean_name() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_name() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.name = core.strip_tags(btrim(regexp_replace(NEW.name, '\s+', ' ', 'g')));
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS clean_name ON peeps.people CASCADE;
-CREATE TRIGGER clean_name BEFORE INSERT OR UPDATE OF name ON peeps.people FOR EACH ROW EXECUTE PROCEDURE clean_name();
+CREATE TRIGGER clean_name
+	BEFORE INSERT OR UPDATE OF name ON peeps.people
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_name();
 
 
 -- Statkey has no whitespace at all. Statvalue trimmed but keeps inner whitespace.
-CREATE OR REPLACE FUNCTION clean_userstats() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_userstats() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.statkey = lower(regexp_replace(NEW.statkey, '[^[:alnum:]._-]', '', 'g'));
 	IF NEW.statkey = '' THEN
@@ -690,11 +696,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS clean_userstats ON peeps.userstats CASCADE;
-CREATE TRIGGER clean_userstats BEFORE INSERT OR UPDATE OF statkey, statvalue ON peeps.userstats FOR EACH ROW EXECUTE PROCEDURE clean_userstats();
+CREATE TRIGGER clean_userstats
+	BEFORE INSERT OR UPDATE OF statkey, statvalue ON peeps.userstats
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_userstats();
 
 
 -- urls.url remove all whitespace, then add http:// if not there
-CREATE OR REPLACE FUNCTION clean_url() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_url() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.url = regexp_replace(NEW.url, '\s', '', 'g');
 	IF NEW.url !~ '^https?://' THEN
@@ -707,11 +715,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS clean_url ON peeps.urls CASCADE;
-CREATE TRIGGER clean_url BEFORE INSERT OR UPDATE OF url ON peeps.urls FOR EACH ROW EXECUTE PROCEDURE clean_url();
+CREATE TRIGGER clean_url
+	BEFORE INSERT OR UPDATE OF url ON peeps.urls
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_url();
 
 
 -- Create "address" (first word of name) and random password upon insert of new person
-CREATE OR REPLACE FUNCTION generated_person_fields() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.generated_person_fields() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.address = split_part(btrim(regexp_replace(NEW.name, '\s+', ' ', 'g')), ' ', 1);
 	NEW.lopass = core.random_string(4);
@@ -720,11 +730,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS generate_person_fields ON peeps.people CASCADE;
-CREATE TRIGGER generate_person_fields BEFORE INSERT ON peeps.people FOR EACH ROW EXECUTE PROCEDURE generated_person_fields();
+CREATE TRIGGER generate_person_fields
+	BEFORE INSERT ON peeps.people
+	FOR EACH ROW EXECUTE PROCEDURE peeps.generated_person_fields();
 
 
 -- If something sets any of these fields to '', change it to NULL before saving
-CREATE OR REPLACE FUNCTION null_person_fields() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.null_person_fields() RETURNS TRIGGER AS $$
 BEGIN
 	IF btrim(NEW.country) = '' THEN
 		NEW.country = NULL;
@@ -736,11 +748,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS null_person_fields ON peeps.people CASCADE;
-CREATE TRIGGER null_person_fields BEFORE INSERT OR UPDATE OF country, email ON peeps.people FOR EACH ROW EXECUTE PROCEDURE null_person_fields();
+CREATE TRIGGER null_person_fields
+	BEFORE INSERT OR UPDATE OF country, email ON peeps.people
+	FOR EACH ROW EXECUTE PROCEDURE peeps.null_person_fields();
 
 
 -- No whitespace, all lowercase, for emails.profile and emails.category
-CREATE OR REPLACE FUNCTION clean_emails_fields() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_emails_fields() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.profile = regexp_replace(lower(NEW.profile), '[^[:alnum:]_@-]', '', 'g');
 	IF TG_OP = 'INSERT' AND (NEW.category IS NULL OR trim(both ' ' from NEW.category) = '') THEN
@@ -752,11 +766,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS clean_emails_fields ON peeps.emails CASCADE;
-CREATE TRIGGER clean_emails_fields BEFORE INSERT OR UPDATE OF profile, category ON peeps.emails FOR EACH ROW EXECUTE PROCEDURE clean_emails_fields();
+CREATE TRIGGER clean_emails_fields
+	BEFORE INSERT OR UPDATE OF profile, category ON peeps.emails
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_emails_fields();
 
 
 -- Update people.email_count when number of emails for this person_id changes
-CREATE OR REPLACE FUNCTION update_email_count() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.update_email_count() RETURNS TRIGGER AS $$
 DECLARE
 	pid integer := NULL;
 BEGIN
@@ -768,17 +784,21 @@ BEGIN
 		pid := OLD.person_id;
 	END IF;
 	IF pid IS NOT NULL THEN
-		UPDATE peeps.people SET email_count=(SELECT COUNT(*) FROM peeps.emails WHERE person_id = pid) WHERE id = pid;
+		UPDATE peeps.people SET email_count=
+			(SELECT COUNT(*) FROM peeps.emails WHERE person_id = pid)
+			WHERE id = pid;
 	END IF;
 	RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS update_email_count ON peeps.emails CASCADE;
-CREATE TRIGGER update_email_count AFTER INSERT OR DELETE OR UPDATE OF person_id ON peeps.emails FOR EACH ROW EXECUTE PROCEDURE update_email_count();
+CREATE TRIGGER update_email_count
+	AFTER INSERT OR DELETE OR UPDATE OF person_id ON peeps.emails
+	FOR EACH ROW EXECUTE PROCEDURE peeps.update_email_count();
 
 
 -- Setting a URL to be the "main" one sets all other URLs for that person to be NOT main
-CREATE OR REPLACE FUNCTION one_main_url() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.one_main_url() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.main = 't' THEN
 		UPDATE peeps.urls SET main=FALSE WHERE person_id=NEW.person_id AND id != NEW.id;
@@ -787,11 +807,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS one_main_url ON peeps.urls CASCADE;
-CREATE TRIGGER one_main_url AFTER INSERT OR UPDATE OF main ON peeps.urls FOR EACH ROW EXECUTE PROCEDURE one_main_url();
+CREATE TRIGGER one_main_url
+	AFTER INSERT OR UPDATE OF main ON peeps.urls
+	FOR EACH ROW EXECUTE PROCEDURE peeps.one_main_url();
 
 
 -- Generate random strings when creating new api_key
-CREATE OR REPLACE FUNCTION generated_api_keys() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.generated_api_keys() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.akey = core.unique_for_table_field(8, 'peeps.api_keys', 'akey');
 	NEW.apass = core.random_string(8);
@@ -799,11 +821,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS generated_api_keys ON peeps.api_keys CASCADE;
-CREATE TRIGGER generated_api_keys BEFORE INSERT ON peeps.api_keys FOR EACH ROW EXECUTE PROCEDURE generated_api_keys();
+CREATE TRIGGER generated_api_keys
+	BEFORE INSERT ON peeps.api_keys
+	FOR EACH ROW EXECUTE PROCEDURE peeps.generated_api_keys();
 
 
 -- generate message_id for outgoing emails
-CREATE OR REPLACE FUNCTION make_message_id() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.make_message_id() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.message_id IS NULL AND (NEW.outgoing IS TRUE OR NEW.outgoing IS NULL) THEN
 		NEW.message_id = CONCAT(
@@ -814,11 +838,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS make_message_id ON peeps.emails CASCADE;
-CREATE TRIGGER make_message_id BEFORE INSERT ON peeps.emails FOR EACH ROW EXECUTE PROCEDURE make_message_id();
+CREATE TRIGGER make_message_id
+	BEFORE INSERT ON peeps.emails
+	FOR EACH ROW EXECUTE PROCEDURE peeps.make_message_id();
 
 
 -- categorize_as can't be empty string. make it NULL if empty
-CREATE OR REPLACE FUNCTION null_categorize_as() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.null_categorize_as() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.categorize_as = lower(regexp_replace(NEW.categorize_as, '\s', '', 'g'));
 	IF NEW.categorize_as = '' THEN
@@ -828,8 +854,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS null_categorize_as ON peeps.people CASCADE;
-CREATE TRIGGER null_categorize_as BEFORE INSERT OR UPDATE ON peeps.people FOR EACH ROW EXECUTE PROCEDURE null_categorize_as();
-
+CREATE TRIGGER null_categorize_as
+	BEFORE INSERT OR UPDATE ON peeps.people
+	FOR EACH ROW EXECUTE PROCEDURE peeps.null_categorize_as();
 
 ----------------------------------------
 ------------------------- API FUNCTIONS:
@@ -839,7 +866,8 @@ CREATE TRIGGER null_categorize_as BEFORE INSERT OR UPDATE ON peeps.people FOR EA
 -- peeps.emailers.id needed as first argument to many functions here
 
 -- PARAMS: email, password, API_name
-CREATE OR REPLACE FUNCTION auth_api(text, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.auth_api(text, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -882,7 +910,8 @@ $$ LANGUAGE plpgsql;
 --{"derek@sivers":{"derek@sivers":43,"derek":2,"programmer":1},
 -- "we@woodegg":{"woodeggRESEARCH":1,"woodegg":1,"we@woodegg":1}}
 -- PARAMS: emailer_id
-CREATE OR REPLACE FUNCTION unopened_email_count(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.unopened_email_count(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_object_agg(profile, cats) FROM (WITH unopened AS
@@ -902,7 +931,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /emails/unopened/:profile/:category
 -- PARAMS: emailer_id, profile, category
-CREATE OR REPLACE FUNCTION unopened_emails(integer, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.unopened_emails(integer, text, text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.emails_view WHERE id IN
@@ -918,7 +948,8 @@ $$ LANGUAGE plpgsql;
 -- POST /emails/next/:profile/:category
 -- Opens email (updates status as opened by this emailer) then returns view
 -- PARAMS: emailer_id, profile, category
-CREATE OR REPLACE FUNCTION open_next_email(integer, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.open_next_email(integer, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
@@ -944,7 +975,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /emails/opened
 -- PARAMS: emailer_id
-CREATE OR REPLACE FUNCTION opened_emails(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.opened_emails(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT e.id, subject, opened_at, p.name
@@ -962,7 +994,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /emails/:id
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION get_email(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_email(integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
@@ -985,7 +1018,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /emails/:id
 -- PARAMS: emailer_id, email_id, JSON of new values
-CREATE OR REPLACE FUNCTION update_email(integer, integer, json, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.update_email(integer, integer, json,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 
@@ -1029,7 +1063,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /emails/:id
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION delete_email(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.delete_email(integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
@@ -1053,7 +1088,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /emails/:id/close
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION close_email(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.close_email(integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
@@ -1077,7 +1113,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /emails/:id/unread
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION unread_email(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.unread_email(integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
@@ -1101,7 +1138,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /emails/:id/notme
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION not_my_email(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.not_my_email(integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
@@ -1128,7 +1166,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /emails/:id/reply?body=blah
 -- PARAMS: emailer_id, email_id, body
-CREATE OR REPLACE FUNCTION reply_to_email(integer, integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.reply_to_email(integer, integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 	e emails;
@@ -1190,7 +1229,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /unknowns/count
 -- PARAMS: emailer_id
-CREATE OR REPLACE FUNCTION count_unknowns(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.count_unknowns(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_build_object('count', (SELECT COUNT(*) FROM peeps.unknown_email_ids($1)));
@@ -1200,7 +1240,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /unknowns
 -- PARAMS: emailer_id
-CREATE OR REPLACE FUNCTION get_unknowns(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_unknowns(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.emails_view WHERE id IN
@@ -1214,7 +1255,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /unknowns/next
 -- PARAMS: emailer_id
-CREATE OR REPLACE FUNCTION get_next_unknown(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_next_unknown(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.unknown_view r
@@ -1234,7 +1276,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /unknowns/:id?person_id=123 or 0 to create new
 -- PARAMS: emailer_id, email_id, person_id
-CREATE OR REPLACE FUNCTION set_unknown_person(integer, integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.set_unknown_person(integer, integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	this_e emails;
 	newperson people;
@@ -1293,7 +1336,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /unknowns/:id
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION delete_unknown(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.delete_unknown(integer, integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.unknown_view r
@@ -1317,7 +1361,8 @@ COMMIT;
 
 -- POST /people
 -- PARAMS: name, email
-CREATE OR REPLACE FUNCTION create_person(text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.create_person(text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 
@@ -1349,7 +1394,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/newpass
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION make_newpass(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.make_newpass(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	UPDATE peeps.people
 		SET newpass=core.unique_for_table_field(8, 'peeps.people', 'newpass')
@@ -1372,7 +1418,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:id
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION get_person(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = $1;
@@ -1391,7 +1438,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:email
 -- PARAMS: email
-CREATE OR REPLACE FUNCTION get_person_email(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_email(text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	clean_email text;
 BEGIN
@@ -1425,7 +1473,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:id/:lopass
 -- PARAMS: person_id, lopass
-CREATE OR REPLACE FUNCTION get_person_lopass(integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_lopass(integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
@@ -1447,7 +1496,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:id/:newpass
 -- PARAMS: person_id, newpass
-CREATE OR REPLACE FUNCTION get_person_newpass(integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_newpass(integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
@@ -1469,7 +1519,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people?email=&password=
 -- PARAMS: email, password
-CREATE OR REPLACE FUNCTION get_person_password(text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_password(text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
@@ -1491,7 +1542,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /person/{cookie}
 -- PARAMS: cookie string
-CREATE OR REPLACE FUNCTION get_person_cookie(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_cookie(text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
@@ -1513,7 +1565,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /login
 -- PARAMS: person.id, domain
-CREATE OR REPLACE FUNCTION cookie_from_id(integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.cookie_from_id(integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1543,7 +1596,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /login
 -- PARAMS: email, password, domain
-CREATE OR REPLACE FUNCTION cookie_from_login(text, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.cookie_from_login(text, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
@@ -1563,7 +1617,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /people/:id/password
 -- PARAMS: person_id, password
-CREATE OR REPLACE FUNCTION set_password(integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.set_password(integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1593,7 +1648,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /people/:id
 -- PARAMS: person_id, JSON of new values
-CREATE OR REPLACE FUNCTION update_person(integer, json, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.update_person(integer, json,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1624,7 +1680,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /people/:id
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION delete_person(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.delete_person(integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1665,7 +1722,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /people/:id/annihilate
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION annihilate_person(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.annihilate_person(integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	res RECORD;
 
@@ -1711,7 +1769,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/urls
 -- PARAMS: person_id, url
-CREATE OR REPLACE FUNCTION add_url(integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.add_url(integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1743,7 +1802,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/stats
 -- PARAMS: person_id, stat.name, stat.value
-CREATE OR REPLACE FUNCTION add_stat(integer, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.add_stat(integer, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1776,7 +1836,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/emails
 -- PARAMS: emailer_id, person_id, profile, subject, body
-CREATE OR REPLACE FUNCTION new_email(integer, integer, text, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.new_email(integer, integer, text, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	new_id integer;
 
@@ -1809,7 +1870,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:id/emails
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION get_person_emails(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_emails(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM
@@ -1823,7 +1885,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/merge?id=old_id
 -- PARAMS: person_id to KEEP, person_id to CHANGE
-CREATE OR REPLACE FUNCTION merge_person(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.merge_person(integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1854,7 +1917,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/unmailed
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION people_unemailed(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.people_unemailed(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view
@@ -1865,7 +1929,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /search?q=term
 -- PARAMS: search term
-CREATE OR REPLACE FUNCTION people_search(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.people_search(text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	q text;
 
@@ -1906,7 +1971,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /stats/:id
 -- PARAMS: stats.id
-CREATE OR REPLACE FUNCTION get_stat(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_stat(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.stats_view r WHERE id=$1;
@@ -1926,7 +1992,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /stat/:id
 -- PARAMS: stats.id, json
-CREATE OR REPLACE FUNCTION update_stat(integer, json, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.update_stat(integer, json,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1967,7 +2034,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /stats/:id
 -- PARAMS: stats.id
-CREATE OR REPLACE FUNCTION delete_stat(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.delete_stat(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.stats_view r WHERE id=$1;
@@ -1988,7 +2056,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /urls/:id
 -- PARAMS: urls.id
-CREATE OR REPLACE FUNCTION get_url(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_url(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.urls r WHERE id=$1;
@@ -2007,7 +2076,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /urls/:id
 -- PARAMS: urls.id
-CREATE OR REPLACE FUNCTION delete_url(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.delete_url(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.urls r WHERE id = $1;
@@ -2028,7 +2098,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /urls/:id
 -- PARAMS: urls.id, JSON with allowed: person_id::int, url::text, main::boolean
-CREATE OR REPLACE FUNCTION update_url(integer, json, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.update_url(integer, json,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -2069,7 +2140,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /formletters
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION get_formletters(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_formletters(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM
@@ -2080,7 +2152,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /formletters
 -- PARAMS: title
-CREATE OR REPLACE FUNCTION create_formletter(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.create_formletter(text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	new_id integer;
 
@@ -2112,7 +2185,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /formletters/:id
 -- PARAMS: formletters.id
-CREATE OR REPLACE FUNCTION get_formletter(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_formletter(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.formletter_view r WHERE id = $1;
@@ -2131,7 +2205,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /formletters/:id
 -- PARAMS: formletters.id, JSON keys: title, explanation, body
-CREATE OR REPLACE FUNCTION update_formletter(integer, json, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.update_formletter(integer, json,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -2172,7 +2247,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /formletters/:id
 -- PARAMS: formletters.id
-CREATE OR REPLACE FUNCTION delete_formletter(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.delete_formletter(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.formletter_view r WHERE id = $1;
@@ -2195,7 +2271,8 @@ $$ LANGUAGE plpgsql;
 -- If wrong IDs given, value is null
 -- GET /people/:id/formletters/:id
 -- PARAMS: people.id, formletters.id
-CREATE OR REPLACE FUNCTION parsed_formletter(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.parsed_formletter(integer, integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_build_object('body', parse_formletter_body($1, $2));
@@ -2207,7 +2284,8 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: -none-
 -- RETURNS array of objects:
 -- [{"code":"AF","name":"Afghanistan"},{"code":"AX","name":"Åland Islands"}..]
-CREATE OR REPLACE FUNCTION all_countries(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.all_countries(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.countries ORDER BY name) r;
@@ -2219,7 +2297,8 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: -none-
 -- RETURNS single code:name object:
 -- {"AD":"Andorra","AE":"United Arab Emirates...  }
-CREATE OR REPLACE FUNCTION country_names(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.country_names(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_object(
@@ -2231,7 +2310,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /countries
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION country_count(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.country_count(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT country, COUNT(*) FROM peeps.people
@@ -2242,7 +2322,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /states/:country_code
 -- PARAMS: 2-letter country code
-CREATE OR REPLACE FUNCTION state_count(char(2), OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.state_count(char(2),
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT state, COUNT(*) FROM peeps.people
@@ -2263,7 +2344,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /cities/:country_code/:state
 -- PARAMS: 2-letter country code, state name
-CREATE OR REPLACE FUNCTION city_count(char(2), text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.city_count(char(2), text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT city, COUNT(*) FROM peeps.people
@@ -2284,7 +2366,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /cities/:country_code
 -- PARAMS: 2-letter country code
-CREATE OR REPLACE FUNCTION city_count(char(2), OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.city_count(char(2),
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT city, COUNT(*) FROM peeps.people
@@ -2305,7 +2388,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /where/:country_code
 -- PARAMS: 2-letter country code
-CREATE OR REPLACE FUNCTION people_from_country(char(2), OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.people_from_country(char(2),
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
@@ -2326,7 +2410,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /where/:country_code?state=XX
 -- PARAMS: 2-letter country code, state
-CREATE OR REPLACE FUNCTION people_from_state(char(2), text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.people_from_state(char(2), text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
@@ -2347,7 +2432,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /where/:country_code?city=XX
 -- PARAMS: 2-letter country code, state
-CREATE OR REPLACE FUNCTION people_from_city(char(2), text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.people_from_city(char(2), text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
@@ -2368,7 +2454,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /where/:country_code?city=XX&state=XX
 -- PARAMS: 2-letter country code, state, city
-CREATE OR REPLACE FUNCTION people_from_state_city(char(2), text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.people_from_state_city(char(2), text, text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
@@ -2390,7 +2477,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /stats/:key/:value
 -- PARAMS: stats.name, stats.value
-CREATE OR REPLACE FUNCTION get_stats(text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_stats(text, text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.stats_view
@@ -2404,7 +2492,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /stats/:key
 -- PARAMS: stats.name
-CREATE OR REPLACE FUNCTION get_stats(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_stats(text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.stats_view WHERE name = $1) r;
@@ -2417,7 +2506,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /statcount/:key
 -- PARAMS: stats.name
-CREATE OR REPLACE FUNCTION get_stat_value_count(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_stat_value_count(text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT statvalue AS value, COUNT(*) AS count
@@ -2431,7 +2521,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /statcount
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION get_stat_name_count(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_stat_name_count(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT statkey AS name, COUNT(*) AS count
@@ -2443,7 +2534,8 @@ $$ LANGUAGE plpgsql;
 -- POST /email
 -- PARAMS: json of values to insert
 -- KEYS: profile category message_id their_email their_name subject headers body
-CREATE OR REPLACE FUNCTION import_email(json, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.import_email(json,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 	pid integer;
@@ -2515,7 +2607,8 @@ $$ LANGUAGE plpgsql;
 -- Update mailing list settings for this person (whether new or existing)
 -- POST /list
 -- PARAMS name, email, listype ($3 should be: 'all', 'some', 'none', or 'dead')
-CREATE OR REPLACE FUNCTION list_update(text, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.list_update(text, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 	clean3 text;
@@ -2550,7 +2643,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION queued_emails(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.queued_emails(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT e.id, e.profile, e.their_email,
@@ -2564,7 +2658,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: emails.id
-CREATE OR REPLACE FUNCTION email_is_sent(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.email_is_sent(integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -2605,7 +2700,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /emails/sent
 -- PARAMS: howmany
-CREATE OR REPLACE FUNCTION sent_emails(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.sent_emails(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.emails_view WHERE id IN
@@ -2616,7 +2712,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION sent_emails_grouped(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.sent_emails_grouped(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT p.id, p.name, (SELECT json_agg(x) AS sent FROM
@@ -2633,7 +2730,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- Array of {person_id: 1234, twitter: 'username'}
-CREATE OR REPLACE FUNCTION twitter_unfollowed(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.twitter_unfollowed(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT person_id,
@@ -2648,7 +2746,8 @@ $$ LANGUAGE plpgsql;
 
 -- Mark this a dead email - by ID
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION dead_email(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.dead_email(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	UPDATE peeps.people SET email=NULL, listype=NULL,
 		notes=CONCAT('DEAD EMAIL: ', email, E'\n', notes)
@@ -2669,7 +2768,8 @@ $$ LANGUAGE plpgsql;
 
 -- ARRAY of schema.tablenames where with this person_id
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION tables_with_person(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.tables_with_person(integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	res RECORD;
 	tablez text[] := ARRAY[]::text[];
@@ -2691,7 +2791,8 @@ $$ LANGUAGE plpgsql;
 
 -- Array of people's [[id, email, address, lopass]] for emailing
 -- PARAMS: key,val to be used in WHERE _key_ = _val_
-CREATE OR REPLACE FUNCTION ieal_where(text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.ieal_where(text, text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	EXECUTE format ('SELECT json_agg(json_build_array(id, email, address, lopass))

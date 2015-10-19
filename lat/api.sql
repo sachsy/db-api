@@ -3,7 +3,8 @@
 ----------------------------------------
 
 -- PARAMS: none
-CREATE OR REPLACE FUNCTION get_concepts(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.get_concepts(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM lat.concepts ORDER BY id) r;
@@ -12,7 +13,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: concept.id
-CREATE OR REPLACE FUNCTION get_concept(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.get_concept(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM lat.concept_view r WHERE id = $1;
@@ -22,7 +24,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS:  array of concept.ids
-CREATE OR REPLACE FUNCTION get_concepts(integer[], OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.get_concepts(integer[],
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM lat.concept_view WHERE id=ANY($1) ORDER BY id) r;
@@ -32,7 +35,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: title, concept
-CREATE OR REPLACE FUNCTION create_concept(text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.create_concept(text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	new_id integer;
 m4_ERRVARS
@@ -45,7 +49,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: concept.id, updated title, updated concept
-CREATE OR REPLACE FUNCTION update_concept(integer, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.update_concept(integer, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -57,7 +62,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: concept.id
-CREATE OR REPLACE FUNCTION delete_concept(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.delete_concept(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	SELECT x.mime, x.js INTO mime, js FROM lat.get_concept($1) x;
 	DELETE FROM lat.concepts WHERE id = $1;
@@ -66,7 +72,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: concept.id, text of tag
-CREATE OR REPLACE FUNCTION tag_concept(integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.tag_concept(integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	cid integer;
 	tid integer;
@@ -90,7 +97,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: concept.id, tag.id
-CREATE OR REPLACE FUNCTION untag_concept(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.untag_concept(integer, integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	DELETE FROM lat.concepts_tags WHERE concept_id=$1 AND tag_id=$2;
 	SELECT x.mime, x.js INTO mime, js FROM lat.get_concept($1) x;
@@ -99,7 +107,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: url.id
-CREATE OR REPLACE FUNCTION get_url(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.get_url(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM lat.urls r WHERE id = $1;
@@ -109,7 +118,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: concept.id, url, url.notes
-CREATE OR REPLACE FUNCTION add_url(integer, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.add_url(integer, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	uid integer;
 m4_ERRVARS
@@ -123,7 +133,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: url.id, url, url.notes
-CREATE OR REPLACE FUNCTION update_url(integer, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.update_url(integer, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -135,7 +146,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: url.id
-CREATE OR REPLACE FUNCTION delete_url(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.delete_url(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	SELECT x.mime, x.js INTO mime, js FROM lat.get_url($1) x;
 	DELETE FROM lat.urls WHERE id=$1;
@@ -144,7 +156,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: none
-CREATE OR REPLACE FUNCTION tags(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.tags(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM lat.tags ORDER BY RANDOM()) r;
@@ -154,7 +167,8 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: text of tag
 -- Returns array of concepts or empty array if none found.
-CREATE OR REPLACE FUNCTION concepts_tagged(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.concepts_tagged(text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	SELECT x.mime, x.js INTO mime, js FROM lat.get_concepts(ARRAY(
 		SELECT concept_id FROM lat.concepts_tags, lat.tags
@@ -165,7 +179,8 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: none
 -- Returns array of concepts or empty array if none found.
-CREATE OR REPLACE FUNCTION untagged_concepts(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.untagged_concepts(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	SELECT x.mime, x.js INTO mime, js FROM lat.get_concepts(ARRAY(
 		SELECT lat.concepts.id FROM lat.concepts
@@ -176,7 +191,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: none. all pairings.
-CREATE OR REPLACE FUNCTION get_pairings(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.get_pairings(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT p.id, p.created_at,
@@ -188,7 +204,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: pairing.id
-CREATE OR REPLACE FUNCTION get_pairing(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.get_pairing(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM lat.pairing_view r WHERE id = $1;
@@ -198,7 +215,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: none. it's random
-CREATE OR REPLACE FUNCTION create_pairing(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.create_pairing(
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 m4_ERRVARS
@@ -211,7 +229,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: pairing.id, updated thoughts
-CREATE OR REPLACE FUNCTION update_pairing(integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.update_pairing(integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -223,7 +242,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: pairing.id
-CREATE OR REPLACE FUNCTION delete_pairing(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.delete_pairing(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	SELECT x.mime, x.js INTO mime, js FROM lat.get_pairing($1) x;
 	DELETE FROM lat.pairings WHERE id = $1;
@@ -233,7 +253,8 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: pairing.id, tag text
 -- Adds that tag to both concepts in the pair
-CREATE OR REPLACE FUNCTION tag_pairing(integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION lat.tag_pairing(integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	id1 integer;
 	id2 integer;
