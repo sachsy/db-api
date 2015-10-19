@@ -7,7 +7,7 @@ CREATE SCHEMA musicthoughts;
 SET search_path = musicthoughts;
 
 -- composing, performing, listening, etc
-CREATE TABLE categories (
+CREATE TABLE musicthoughts.categories (
 	id serial primary key,
 	en text,
 	es text,
@@ -22,7 +22,7 @@ CREATE TABLE categories (
 );
 
 -- users who submit a thought
-CREATE TABLE contributors (
+CREATE TABLE musicthoughts.contributors (
 	id serial primary key,
 	person_id integer NOT NULL UNIQUE REFERENCES peeps.people(id),
 	url varchar(255),  -- TODO: use peeps.people.urls.main
@@ -30,18 +30,18 @@ CREATE TABLE contributors (
 );
 
 -- famous people who said the thought
-CREATE TABLE authors (
+CREATE TABLE musicthoughts.authors (
 	id serial primary key,
 	name varchar(127) UNIQUE,
 	url varchar(255)
 );
 
 -- quotes
-CREATE TABLE thoughts (
+CREATE TABLE musicthoughts.thoughts (
 	id serial primary key,
 	approved boolean default false,
-	author_id integer not null REFERENCES authors(id) ON DELETE RESTRICT,
-	contributor_id integer not null REFERENCES contributors(id) ON DELETE RESTRICT,
+	author_id integer not null REFERENCES musicthoughts.authors(id) ON DELETE RESTRICT,
+	contributor_id integer not null REFERENCES musicthoughts.contributors(id) ON DELETE RESTRICT,
 	created_at date not null default CURRENT_DATE,
 	as_rand boolean not null default false, -- best-of to include in random selection
 	source_url varchar(255),  -- where quote was found
@@ -57,13 +57,13 @@ CREATE TABLE thoughts (
 	ru text
 );
 
-CREATE TABLE categories_thoughts (
-	thought_id integer not null REFERENCES thoughts(id) ON DELETE CASCADE,
-	category_id integer not null REFERENCES categories(id) ON DELETE RESTRICT,
+CREATE TABLE musicthoughts.categories_thoughts (
+	thought_id integer not null REFERENCES musicthoughts.thoughts(id) ON DELETE CASCADE,
+	category_id integer not null REFERENCES musicthoughts.categories(id) ON DELETE RESTRICT,
 	PRIMARY KEY (thought_id, category_id)
 );
-CREATE INDEX ctti ON categories_thoughts(thought_id);
-CREATE INDEX ctci ON categories_thoughts(category_id);
+CREATE INDEX ctti ON musicthoughts.categories_thoughts(thought_id);
+CREATE INDEX ctci ON musicthoughts.categories_thoughts(category_id);
 
 COMMIT;
 

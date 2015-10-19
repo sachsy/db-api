@@ -7,7 +7,7 @@ CREATE SCHEMA musicthoughts;
 SET search_path = musicthoughts;
 
 -- composing, performing, listening, etc
-CREATE TABLE categories (
+CREATE TABLE musicthoughts.categories (
 	id serial primary key,
 	en text,
 	es text,
@@ -22,7 +22,7 @@ CREATE TABLE categories (
 );
 
 -- users who submit a thought
-CREATE TABLE contributors (
+CREATE TABLE musicthoughts.contributors (
 	id serial primary key,
 	person_id integer NOT NULL UNIQUE REFERENCES peeps.people(id),
 	url varchar(255),  -- TODO: use peeps.people.urls.main
@@ -30,18 +30,18 @@ CREATE TABLE contributors (
 );
 
 -- famous people who said the thought
-CREATE TABLE authors (
+CREATE TABLE musicthoughts.authors (
 	id serial primary key,
 	name varchar(127) UNIQUE,
 	url varchar(255)
 );
 
 -- quotes
-CREATE TABLE thoughts (
+CREATE TABLE musicthoughts.thoughts (
 	id serial primary key,
 	approved boolean default false,
-	author_id integer not null REFERENCES authors(id) ON DELETE RESTRICT,
-	contributor_id integer not null REFERENCES contributors(id) ON DELETE RESTRICT,
+	author_id integer not null REFERENCES musicthoughts.authors(id) ON DELETE RESTRICT,
+	contributor_id integer not null REFERENCES musicthoughts.contributors(id) ON DELETE RESTRICT,
 	created_at date not null default CURRENT_DATE,
 	as_rand boolean not null default false, -- best-of to include in random selection
 	source_url varchar(255),  -- where quote was found
@@ -57,13 +57,13 @@ CREATE TABLE thoughts (
 	ru text
 );
 
-CREATE TABLE categories_thoughts (
-	thought_id integer not null REFERENCES thoughts(id) ON DELETE CASCADE,
-	category_id integer not null REFERENCES categories(id) ON DELETE RESTRICT,
+CREATE TABLE musicthoughts.categories_thoughts (
+	thought_id integer not null REFERENCES musicthoughts.thoughts(id) ON DELETE CASCADE,
+	category_id integer not null REFERENCES musicthoughts.categories(id) ON DELETE RESTRICT,
 	PRIMARY KEY (thought_id, category_id)
 );
-CREATE INDEX ctti ON categories_thoughts(thought_id);
-CREATE INDEX ctci ON categories_thoughts(category_id);
+CREATE INDEX ctti ON musicthoughts.categories_thoughts(thought_id);
+CREATE INDEX ctci ON musicthoughts.categories_thoughts(category_id);
 
 COMMIT;
 
@@ -132,7 +132,8 @@ $$ LANGUAGE plpgsql;
 
 -- get '/languages'
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION languages(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION musicthoughts.languages(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := '["en","es","fr","de","it","pt","ja","zh","ar","ru"]';
@@ -142,7 +143,8 @@ $$ LANGUAGE plpgsql;
 
 -- get '/categories'
 -- PARAMS: lang
-CREATE OR REPLACE FUNCTION all_categories(char(2), OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION musicthoughts.all_categories(char(2),
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	EXECUTE FORMAT ('SELECT json_agg(r) FROM (SELECT id, %I AS category, 
@@ -156,7 +158,8 @@ $$ LANGUAGE plpgsql;
 
 -- get %r{^/categories/([0-9]+)$}
 -- PARAMS: lang, category_id
-CREATE OR REPLACE FUNCTION category(char(2), integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION musicthoughts.category(char(2), integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	qry text;
 BEGIN
@@ -185,7 +188,8 @@ $$ LANGUAGE plpgsql;
 -- get '/authors'
 -- get '/authors/top'
 -- PARAMS: top limit  (NULL for all)
-CREATE OR REPLACE FUNCTION top_authors(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION musicthoughts.top_authors(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM authors_view LIMIT $1) r;
@@ -195,7 +199,8 @@ $$ LANGUAGE plpgsql;
 
 -- get %r{^/authors/([0-9]+)$}
 -- PARAMS: lang, author id
-CREATE OR REPLACE FUNCTION get_author(char(2), integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION musicthoughts.get_author(char(2), integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	qry text;
 BEGIN
@@ -226,7 +231,8 @@ $$ LANGUAGE plpgsql;
 -- get '/contributors'
 -- get '/contributors/top'
 -- PARAMS: top limit  (NULL for all)
-CREATE OR REPLACE FUNCTION top_contributors(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION musicthoughts.top_contributors(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM contributors_view LIMIT $1) r;
@@ -236,7 +242,8 @@ $$ LANGUAGE plpgsql;
 
 -- get %r{^/contributors/([0-9]+)$}
 -- PARAMS: lang, contributor id
-CREATE OR REPLACE FUNCTION get_contributor(char(2), integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION musicthoughts.get_contributor(char(2), integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	qry text;
 BEGIN
@@ -265,7 +272,8 @@ $$ LANGUAGE plpgsql;
 
 -- get '/thoughts/random'
 -- PARAMS: lang
-CREATE OR REPLACE FUNCTION random_thought(char(2), OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION musicthoughts.random_thought(char(2),
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	EXECUTE 'SELECT row_to_json(r) FROM ('
@@ -278,7 +286,8 @@ $$ LANGUAGE plpgsql;
 
 -- get %r{^/thoughts/([0-9]+)$}
 -- PARAMS: lang, thought id
-CREATE OR REPLACE FUNCTION get_thought(char(2), integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION musicthoughts.get_thought(char(2), integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	EXECUTE 'SELECT row_to_json(r) FROM (' || thought_view($1, $2, NULL, NULL) || ') r' INTO js;
@@ -298,7 +307,8 @@ $$ LANGUAGE plpgsql;
 -- get '/thoughts'
 -- get '/thoughts/new'
 -- PARAMS: lang, newest limit (NULL for all)
-CREATE OR REPLACE FUNCTION new_thoughts(char(2), integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION musicthoughts.new_thoughts(char(2), integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	EXECUTE 'SELECT json_agg(r) FROM (' || thought_view($1, NULL, NULL, $2) || ') r' INTO js;
@@ -307,7 +317,8 @@ $$ LANGUAGE plpgsql;
 
 -- get '/search/:q'
 -- PARAMS: lang, search term
-CREATE OR REPLACE FUNCTION search(char(2), text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION musicthoughts.search(char(2), text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	q text;
 	auth json;
@@ -370,7 +381,9 @@ $$ LANGUAGE plpgsql;
 -- $9 = array of category ids
 -- Having ordered params is a drag, so is accepting then unnesting JSON with specific key names.
 -- Returns simple hash of ids, since thought is unapproved and untranslated, no view yet.
-CREATE OR REPLACE FUNCTION add_thought(char(2), text, text, text, text, text, text, text, integer[], OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION musicthoughts.add_thought(
+	char(2), text, text, text, text, text, text, text, integer[],
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pers_id integer;
 	cont_id integer;

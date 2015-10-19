@@ -28,7 +28,7 @@ CREATE TYPE muckwork.status AS ENUM('created', 'quoted', 'approved', 'refused', 
 
 CREATE TABLE muckwork.projects (
 	id serial primary key,
-	client_id integer not null REFERENCES clients(id),
+	client_id integer not null REFERENCES muckwork.clients(id),
 	title text,
 	description text,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
@@ -48,8 +48,8 @@ CREATE INDEX pjst ON muckwork.projects(status);
 
 CREATE TABLE muckwork.tasks (
 	id serial primary key,
-	project_id integer REFERENCES projects(id) ON DELETE CASCADE,
-	worker_id integer REFERENCES workers(id),
+	project_id integer REFERENCES muckwork.projects(id) ON DELETE CASCADE,
+	worker_id integer REFERENCES muckwork.workers(id),
 	sortid integer,
 	title text,
 	description text,
@@ -66,11 +66,11 @@ CREATE INDEX tst ON muckwork.tasks(status);
 CREATE TABLE muckwork.notes (
 	id serial primary key,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
-	project_id integer REFERENCES projects(id),
-	task_id integer REFERENCES tasks(id),
-	manager_id integer REFERENCES managers(id),
-	client_id integer REFERENCES clients(id),
-	worker_id integer REFERENCES workers(id),
+	project_id integer REFERENCES muckwork.projects(id),
+	task_id integer REFERENCES muckwork.tasks(id),
+	manager_id integer REFERENCES muckwork.managers(id),
+	client_id integer REFERENCES muckwork.clients(id),
+	worker_id integer REFERENCES muckwork.workers(id),
 	note text not null CONSTRAINT note_not_empty CHECK (length(note) > 0)
 );
 CREATE INDEX notpi ON muckwork.notes(project_id);
@@ -79,7 +79,7 @@ CREATE INDEX notti ON muckwork.notes(task_id);
 CREATE TABLE muckwork.charges (
 	id serial primary key,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
-	project_id integer REFERENCES projects(id),
+	project_id integer REFERENCES muckwork.projects(id),
 	currency char(3) not null REFERENCES core.currencies(code),
 	cents integer not null CHECK (cents >= 0),
 	notes text
@@ -89,7 +89,7 @@ CREATE INDEX chpi ON muckwork.charges(project_id);
 CREATE TABLE muckwork.payments (
 	id serial primary key,
 	created_at timestamp(0) with time zone not null default CURRENT_TIMESTAMP,
-	client_id integer REFERENCES clients(id),
+	client_id integer REFERENCES muckwork.clients(id),
 	currency char(3) not null REFERENCES core.currencies(code),
 	cents integer not null CHECK (cents > 0),
 	notes text
@@ -98,7 +98,7 @@ CREATE INDEX pyci ON muckwork.payments(client_id);
 
 CREATE TABLE muckwork.worker_payments (
 	id serial primary key,
-	worker_id integer not null REFERENCES workers(id),
+	worker_id integer not null REFERENCES muckwork.workers(id),
 	currency char(3) not null REFERENCES core.currencies(code),
 	cents integer CHECK (cents > 0),
 	created_at date not null default CURRENT_DATE,
@@ -108,10 +108,10 @@ CREATE INDEX wpwi ON muckwork.worker_payments(worker_id);
 
 CREATE TABLE muckwork.worker_charges (
 	id serial primary key,
-	task_id integer not null REFERENCES tasks(id),
+	task_id integer not null REFERENCES muckwork.tasks(id),
 	currency char(3) not null REFERENCES core.currencies(code),
 	cents integer not null CHECK (cents >= 0),
-	payment_id integer REFERENCES worker_payments(id) -- NULL until paid
+	payment_id integer REFERENCES muckwork.worker_payments(id) -- NULL until paid
 );
 CREATE INDEX wcpi ON muckwork.worker_charges(payment_id);
 CREATE INDEX wcti ON muckwork.worker_charges(task_id);
