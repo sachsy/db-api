@@ -9,13 +9,13 @@ SET search_path = peeps;
 -- Country codes used mainly for foreign key constraint on people.country
 -- From http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2 - data loaded below
 -- No need for any API to update, insert, or delete from this table.
-CREATE TABLE countries (
+CREATE TABLE peeps.countries (
 	code character(2) NOT NULL primary key,
 	name text
 );
 
 -- Big master table for people
-CREATE TABLE people (
+CREATE TABLE peeps.people (
 	id serial primary key,
 	email varchar(127) UNIQUE CONSTRAINT valid_email CHECK (email ~ '\A\S+@\S+\.\S+\Z'),
 	name varchar(127) NOT NULL CONSTRAINT no_name CHECK (LENGTH(name) > 0),
@@ -35,10 +35,10 @@ CREATE TABLE people (
 	categorize_as varchar(16), -- if not null, incoming emails.category set to this
 	created_at date not null default CURRENT_DATE
 );
-CREATE INDEX person_name ON people(name);
+CREATE INDEX peeps.person_name ON people(name);
 
 -- People authorized to answer/create emails
-CREATE TABLE emailers (
+CREATE TABLE peeps.emailers (
 	id serial primary key,
 	person_id integer NOT NULL UNIQUE REFERENCES people(id) ON DELETE RESTRICT,
 	admin boolean NOT NULL DEFAULT 'f',
@@ -47,27 +47,27 @@ CREATE TABLE emailers (
 );
 
 -- Catch-all for any random facts about this person
-CREATE TABLE userstats (
+CREATE TABLE peeps.userstats (
 	id serial primary key,
 	person_id integer not null REFERENCES people(id) ON DELETE CASCADE,
 	statkey varchar(32) not null CONSTRAINT statkey_format CHECK (statkey ~ '\A[a-z0-9._-]+\Z'),
 	statvalue text not null CONSTRAINT statval_not_empty CHECK (length(statvalue) > 0),
 	created_at date not null default CURRENT_DATE
 );
-CREATE INDEX userstats_person ON userstats(person_id);
-CREATE INDEX userstats_statkey ON userstats(statkey);
+CREATE INDEX peeps.userstats_person ON userstats(person_id);
+CREATE INDEX peeps.userstats_statkey ON userstats(statkey);
 
 -- This person's websites
-CREATE TABLE urls (
+CREATE TABLE peeps.urls (
 	id serial primary key,
 	person_id integer not null REFERENCES people(id) ON DELETE CASCADE,
 	url varchar(255) CONSTRAINT url_format CHECK (url ~ '^https?://[0-9a-zA-Z_-]+\.[a-zA-Z0-9]+'),
 	main boolean  -- means it's their main/home site
 );
-CREATE INDEX urls_person ON urls(person_id);
+CREATE INDEX peeps.urls_person ON urls(person_id);
 
 -- Logged-in users given a cookie with random string, to look up their person_id
-CREATE TABLE logins (
+CREATE TABLE peeps.logins (
 	person_id integer not null REFERENCES people(id) ON DELETE CASCADE,
 	cookie_id char(32) not null,
 	cookie_tok char(32) not null,
@@ -77,10 +77,10 @@ CREATE TABLE logins (
 	ip varchar(15),
 	PRIMARY KEY (cookie_id, cookie_tok)
 );
-CREATE INDEX logins_person_id ON logins(person_id);
+CREATE INDEX peeps.logins_person_id ON logins(person_id);
 
 -- All incoming and outgoing emails
-CREATE TABLE emails (
+CREATE TABLE peeps.emails (
 	id serial primary key,
 	person_id integer REFERENCES people(id),
 	profile varchar(18) not null CHECK (length(profile) > 0),  -- which email address sent to/from
@@ -102,25 +102,25 @@ CREATE TABLE emails (
 	outgoing boolean default 'f',
 	flag integer  -- rarely used, to mark especially important emails 
 );
-CREATE INDEX emails_person_id ON emails(person_id);
-CREATE INDEX emails_category ON emails(category);
-CREATE INDEX emails_profile ON emails(profile);
-CREATE INDEX emails_created_by ON emails(created_by);
-CREATE INDEX emails_opened_by ON emails(opened_by);
-CREATE INDEX emails_outgoing ON emails(outgoing);
+CREATE INDEX peeps.emails_person_id ON emails(person_id);
+CREATE INDEX peeps.emails_category ON emails(category);
+CREATE INDEX peeps.emails_profile ON emails(profile);
+CREATE INDEX peeps.emails_created_by ON emails(created_by);
+CREATE INDEX peeps.emails_opened_by ON emails(opened_by);
+CREATE INDEX peeps.emails_outgoing ON emails(outgoing);
 
 -- Attachments sent with incoming emails
-CREATE TABLE email_attachments (
+CREATE TABLE peeps.email_attachments (
 	id serial primary key,
 	email_id integer REFERENCES emails(id) ON DELETE CASCADE,
 	mime_type text,
 	filename text,
 	bytes integer
 );
-CREATE INDEX email_attachments_email_id ON email_attachments(email_id);
+CREATE INDEX peeps.email_attachments_email_id ON email_attachments(email_id);
 
 -- Commonly used emails.body templates
-CREATE TABLE formletters (
+CREATE TABLE peeps.formletters (
 	id serial primary key,
 	title varchar(64) UNIQUE,
 	explanation varchar(255),
@@ -129,7 +129,7 @@ CREATE TABLE formletters (
 );
 
 -- Users given direct API access
-CREATE TABLE api_keys (
+CREATE TABLE peeps.api_keys (
 	person_id integer NOT NULL UNIQUE REFERENCES people(id) ON DELETE CASCADE,
 	akey char(8) NOT NULL UNIQUE,
 	apass char(8) NOT NULL,

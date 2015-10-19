@@ -1,38 +1,44 @@
 -- Strip spaces and lowercase email address before validating & storing
-CREATE OR REPLACE FUNCTION clean_email() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_email() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.email = lower(regexp_replace(NEW.email, '\s', '', 'g'));
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS clean_email ON peeps.people CASCADE;
-CREATE TRIGGER clean_email BEFORE INSERT OR UPDATE OF email ON peeps.people FOR EACH ROW EXECUTE PROCEDURE clean_email();
+DROP TRIGGER IF EXISTS peeps.clean_email ON peeps.people CASCADE;
+CREATE TRIGGER peeps.clean_email
+	BEFORE INSERT OR UPDATE OF email ON peeps.people
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_email();
 
 
-CREATE OR REPLACE FUNCTION clean_their_email() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_their_email() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.their_name = core.strip_tags(btrim(regexp_replace(NEW.their_name, '\s+', ' ', 'g')));
 	NEW.their_email = lower(regexp_replace(NEW.their_email, '\s', '', 'g'));
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS clean_their_email ON peeps.emails CASCADE;
-CREATE TRIGGER clean_their_email BEFORE INSERT OR UPDATE OF their_name, their_email ON peeps.emails FOR EACH ROW EXECUTE PROCEDURE clean_their_email();
+DROP TRIGGER IF EXISTS peeps.clean_their_email ON peeps.emails CASCADE;
+CREATE TRIGGER peeps.clean_their_email
+	BEFORE INSERT OR UPDATE OF their_name, their_email ON peeps.emails
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_their_email();
 
 
 -- Strip all line breaks and spaces around name before storing
-CREATE OR REPLACE FUNCTION clean_name() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_name() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.name = core.strip_tags(btrim(regexp_replace(NEW.name, '\s+', ' ', 'g')));
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS clean_name ON peeps.people CASCADE;
-CREATE TRIGGER clean_name BEFORE INSERT OR UPDATE OF name ON peeps.people FOR EACH ROW EXECUTE PROCEDURE clean_name();
+DROP TRIGGER IF EXISTS peeps.clean_name ON peeps.people CASCADE;
+CREATE TRIGGER peeps.clean_name
+	BEFORE INSERT OR UPDATE OF name ON peeps.people
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_name();
 
 
 -- Statkey has no whitespace at all. Statvalue trimmed but keeps inner whitespace.
-CREATE OR REPLACE FUNCTION clean_userstats() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_userstats() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.statkey = lower(regexp_replace(NEW.statkey, '[^[:alnum:]._-]', '', 'g'));
 	IF NEW.statkey = '' THEN
@@ -45,12 +51,14 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS clean_userstats ON peeps.userstats CASCADE;
-CREATE TRIGGER clean_userstats BEFORE INSERT OR UPDATE OF statkey, statvalue ON peeps.userstats FOR EACH ROW EXECUTE PROCEDURE clean_userstats();
+DROP TRIGGER IF EXISTS peeps.clean_userstats ON peeps.userstats CASCADE;
+CREATE TRIGGER peeps.clean_userstats
+	BEFORE INSERT OR UPDATE OF statkey, statvalue ON peeps.userstats
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_userstats();
 
 
 -- urls.url remove all whitespace, then add http:// if not there
-CREATE OR REPLACE FUNCTION clean_url() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_url() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.url = regexp_replace(NEW.url, '\s', '', 'g');
 	IF NEW.url !~ '^https?://' THEN
@@ -62,12 +70,14 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS clean_url ON peeps.urls CASCADE;
-CREATE TRIGGER clean_url BEFORE INSERT OR UPDATE OF url ON peeps.urls FOR EACH ROW EXECUTE PROCEDURE clean_url();
+DROP TRIGGER IF EXISTS peeps.clean_url ON peeps.urls CASCADE;
+CREATE TRIGGER peeps.clean_url
+	BEFORE INSERT OR UPDATE OF url ON peeps.urls
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_url();
 
 
 -- Create "address" (first word of name) and random password upon insert of new person
-CREATE OR REPLACE FUNCTION generated_person_fields() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.generated_person_fields() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.address = split_part(btrim(regexp_replace(NEW.name, '\s+', ' ', 'g')), ' ', 1);
 	NEW.lopass = core.random_string(4);
@@ -75,12 +85,14 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS generate_person_fields ON peeps.people CASCADE;
-CREATE TRIGGER generate_person_fields BEFORE INSERT ON peeps.people FOR EACH ROW EXECUTE PROCEDURE generated_person_fields();
+DROP TRIGGER IF EXISTS peeps.generate_person_fields ON peeps.people CASCADE;
+CREATE TRIGGER peeps.generate_person_fields
+	BEFORE INSERT ON peeps.people
+	FOR EACH ROW EXECUTE PROCEDURE peeps.generated_person_fields();
 
 
 -- If something sets any of these fields to '', change it to NULL before saving
-CREATE OR REPLACE FUNCTION null_person_fields() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.null_person_fields() RETURNS TRIGGER AS $$
 BEGIN
 	IF btrim(NEW.country) = '' THEN
 		NEW.country = NULL;
@@ -91,12 +103,14 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS null_person_fields ON peeps.people CASCADE;
-CREATE TRIGGER null_person_fields BEFORE INSERT OR UPDATE OF country, email ON peeps.people FOR EACH ROW EXECUTE PROCEDURE null_person_fields();
+DROP TRIGGER IF EXISTS peeps.null_person_fields ON peeps.people CASCADE;
+CREATE TRIGGER peeps.null_person_fields
+	BEFORE INSERT OR UPDATE OF country, email ON peeps.people
+	FOR EACH ROW EXECUTE PROCEDURE peeps.null_person_fields();
 
 
 -- No whitespace, all lowercase, for emails.profile and emails.category
-CREATE OR REPLACE FUNCTION clean_emails_fields() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_emails_fields() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.profile = regexp_replace(lower(NEW.profile), '[^[:alnum:]_@-]', '', 'g');
 	IF TG_OP = 'INSERT' AND (NEW.category IS NULL OR trim(both ' ' from NEW.category) = '') THEN
@@ -107,12 +121,14 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS clean_emails_fields ON peeps.emails CASCADE;
-CREATE TRIGGER clean_emails_fields BEFORE INSERT OR UPDATE OF profile, category ON peeps.emails FOR EACH ROW EXECUTE PROCEDURE clean_emails_fields();
+DROP TRIGGER IF EXISTS peeps.clean_emails_fields ON peeps.emails CASCADE;
+CREATE TRIGGER peeps.clean_emails_fields
+	BEFORE INSERT OR UPDATE OF profile, category ON peeps.emails
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_emails_fields();
 
 
 -- Update people.email_count when number of emails for this person_id changes
-CREATE OR REPLACE FUNCTION update_email_count() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.update_email_count() RETURNS TRIGGER AS $$
 DECLARE
 	pid integer := NULL;
 BEGIN
@@ -124,17 +140,21 @@ BEGIN
 		pid := OLD.person_id;
 	END IF;
 	IF pid IS NOT NULL THEN
-		UPDATE peeps.people SET email_count=(SELECT COUNT(*) FROM peeps.emails WHERE person_id = pid) WHERE id = pid;
+		UPDATE peeps.people SET email_count=
+			(SELECT COUNT(*) FROM peeps.emails WHERE person_id = pid)
+			WHERE id = pid;
 	END IF;
 	RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS update_email_count ON peeps.emails CASCADE;
-CREATE TRIGGER update_email_count AFTER INSERT OR DELETE OR UPDATE OF person_id ON peeps.emails FOR EACH ROW EXECUTE PROCEDURE update_email_count();
+DROP TRIGGER IF EXISTS peeps.update_email_count ON peeps.emails CASCADE;
+CREATE TRIGGER peeps.update_email_count
+	AFTER INSERT OR DELETE OR UPDATE OF person_id ON peeps.emails
+	FOR EACH ROW EXECUTE PROCEDURE peeps.update_email_count();
 
 
 -- Setting a URL to be the "main" one sets all other URLs for that person to be NOT main
-CREATE OR REPLACE FUNCTION one_main_url() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.one_main_url() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.main = 't' THEN
 		UPDATE peeps.urls SET main=FALSE WHERE person_id=NEW.person_id AND id != NEW.id;
@@ -142,24 +162,28 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS one_main_url ON peeps.urls CASCADE;
-CREATE TRIGGER one_main_url AFTER INSERT OR UPDATE OF main ON peeps.urls FOR EACH ROW EXECUTE PROCEDURE one_main_url();
+DROP TRIGGER IF EXISTS peeps.one_main_url ON peeps.urls CASCADE;
+CREATE TRIGGER peeps.one_main_url
+	AFTER INSERT OR UPDATE OF main ON peeps.urls
+	FOR EACH ROW EXECUTE PROCEDURE peeps.one_main_url();
 
 
 -- Generate random strings when creating new api_key
-CREATE OR REPLACE FUNCTION generated_api_keys() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.generated_api_keys() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.akey = core.unique_for_table_field(8, 'peeps.api_keys', 'akey');
 	NEW.apass = core.random_string(8);
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS generated_api_keys ON peeps.api_keys CASCADE;
-CREATE TRIGGER generated_api_keys BEFORE INSERT ON peeps.api_keys FOR EACH ROW EXECUTE PROCEDURE generated_api_keys();
+DROP TRIGGER IF EXISTS peeps.generated_api_keys ON peeps.api_keys CASCADE;
+CREATE TRIGGER peeps.generated_api_keys
+	BEFORE INSERT ON peeps.api_keys
+	FOR EACH ROW EXECUTE PROCEDURE peeps.generated_api_keys();
 
 
 -- generate message_id for outgoing emails
-CREATE OR REPLACE FUNCTION make_message_id() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.make_message_id() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.message_id IS NULL AND (NEW.outgoing IS TRUE OR NEW.outgoing IS NULL) THEN
 		NEW.message_id = CONCAT(
@@ -169,12 +193,14 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS make_message_id ON peeps.emails CASCADE;
-CREATE TRIGGER make_message_id BEFORE INSERT ON peeps.emails FOR EACH ROW EXECUTE PROCEDURE make_message_id();
+DROP TRIGGER IF EXISTS peeps.make_message_id ON peeps.emails CASCADE;
+CREATE TRIGGER peeps.make_message_id
+	BEFORE INSERT ON peeps.emails
+	FOR EACH ROW EXECUTE PROCEDURE peeps.make_message_id();
 
 
 -- categorize_as can't be empty string. make it NULL if empty
-CREATE OR REPLACE FUNCTION null_categorize_as() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.null_categorize_as() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.categorize_as = lower(regexp_replace(NEW.categorize_as, '\s', '', 'g'));
 	IF NEW.categorize_as = '' THEN
@@ -183,7 +209,8 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS null_categorize_as ON peeps.people CASCADE;
-CREATE TRIGGER null_categorize_as BEFORE INSERT OR UPDATE ON peeps.people FOR EACH ROW EXECUTE PROCEDURE null_categorize_as();
-
+DROP TRIGGER IF EXISTS peeps.null_categorize_as ON peeps.people CASCADE;
+CREATE TRIGGER peeps.null_categorize_as
+	BEFORE INSERT OR UPDATE ON peeps.people
+	FOR EACH ROW EXECUTE PROCEDURE peeps.null_categorize_as();
 

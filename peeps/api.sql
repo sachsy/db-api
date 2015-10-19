@@ -6,7 +6,8 @@
 -- peeps.emailers.id needed as first argument to many functions here
 
 -- PARAMS: email, password, API_name
-CREATE OR REPLACE FUNCTION auth_api(text, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.auth_api(text, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -26,7 +27,8 @@ $$ LANGUAGE plpgsql;
 --{"derek@sivers":{"derek@sivers":43,"derek":2,"programmer":1},
 -- "we@woodegg":{"woodeggRESEARCH":1,"woodegg":1,"we@woodegg":1}}
 -- PARAMS: emailer_id
-CREATE OR REPLACE FUNCTION unopened_email_count(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.unopened_email_count(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_object_agg(profile, cats) FROM (WITH unopened AS
@@ -46,7 +48,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /emails/unopened/:profile/:category
 -- PARAMS: emailer_id, profile, category
-CREATE OR REPLACE FUNCTION unopened_emails(integer, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.unopened_emails(integer, text, text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.emails_view WHERE id IN
@@ -62,7 +65,8 @@ $$ LANGUAGE plpgsql;
 -- POST /emails/next/:profile/:category
 -- Opens email (updates status as opened by this emailer) then returns view
 -- PARAMS: emailer_id, profile, category
-CREATE OR REPLACE FUNCTION open_next_email(integer, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.open_next_email(integer, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
@@ -82,7 +86,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /emails/opened
 -- PARAMS: emailer_id
-CREATE OR REPLACE FUNCTION opened_emails(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.opened_emails(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT e.id, subject, opened_at, p.name
@@ -100,7 +105,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /emails/:id
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION get_email(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_email(integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
@@ -117,7 +123,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /emails/:id
 -- PARAMS: emailer_id, email_id, JSON of new values
-CREATE OR REPLACE FUNCTION update_email(integer, integer, json, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.update_email(integer, integer, json,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 m4_ERRVARS
@@ -138,7 +145,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /emails/:id
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION delete_email(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.delete_email(integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
@@ -156,7 +164,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /emails/:id/close
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION close_email(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.close_email(integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
@@ -174,7 +183,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /emails/:id/unread
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION unread_email(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.unread_email(integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
@@ -192,7 +202,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /emails/:id/notme
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION not_my_email(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.not_my_email(integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
@@ -213,7 +224,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /emails/:id/reply?body=blah
 -- PARAMS: emailer_id, email_id, body
-CREATE OR REPLACE FUNCTION reply_to_email(integer, integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.reply_to_email(integer, integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 	e emails;
@@ -246,7 +258,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /unknowns/count
 -- PARAMS: emailer_id
-CREATE OR REPLACE FUNCTION count_unknowns(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.count_unknowns(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_build_object('count', (SELECT COUNT(*) FROM peeps.unknown_email_ids($1)));
@@ -256,7 +269,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /unknowns
 -- PARAMS: emailer_id
-CREATE OR REPLACE FUNCTION get_unknowns(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_unknowns(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.emails_view WHERE id IN
@@ -270,7 +284,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /unknowns/next
 -- PARAMS: emailer_id
-CREATE OR REPLACE FUNCTION get_next_unknown(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_next_unknown(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.unknown_view r
@@ -284,7 +299,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /unknowns/:id?person_id=123 or 0 to create new
 -- PARAMS: emailer_id, email_id, person_id
-CREATE OR REPLACE FUNCTION set_unknown_person(integer, integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.set_unknown_person(integer, integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	this_e emails;
 	newperson people;
@@ -314,7 +330,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /unknowns/:id
 -- PARAMS: emailer_id, email_id
-CREATE OR REPLACE FUNCTION delete_unknown(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.delete_unknown(integer, integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.unknown_view r
@@ -332,7 +349,8 @@ COMMIT;
 
 -- POST /people
 -- PARAMS: name, email
-CREATE OR REPLACE FUNCTION create_person(text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.create_person(text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 m4_ERRVARS
@@ -347,7 +365,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/newpass
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION make_newpass(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.make_newpass(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	UPDATE peeps.people
 		SET newpass=core.unique_for_table_field(8, 'peeps.people', 'newpass')
@@ -364,7 +383,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:id
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION get_person(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = $1;
@@ -377,7 +397,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:email
 -- PARAMS: email
-CREATE OR REPLACE FUNCTION get_person_email(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_email(text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	clean_email text;
 BEGIN
@@ -393,7 +414,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:id/:lopass
 -- PARAMS: person_id, lopass
-CREATE OR REPLACE FUNCTION get_person_lopass(integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_lopass(integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
@@ -409,7 +431,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:id/:newpass
 -- PARAMS: person_id, newpass
-CREATE OR REPLACE FUNCTION get_person_newpass(integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_newpass(integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
@@ -425,7 +448,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people?email=&password=
 -- PARAMS: email, password
-CREATE OR REPLACE FUNCTION get_person_password(text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_password(text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
@@ -441,7 +465,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /person/{cookie}
 -- PARAMS: cookie string
-CREATE OR REPLACE FUNCTION get_person_cookie(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_cookie(text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
@@ -457,7 +482,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /login
 -- PARAMS: person.id, domain
-CREATE OR REPLACE FUNCTION cookie_from_id(integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.cookie_from_id(integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -470,7 +496,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /login
 -- PARAMS: email, password, domain
-CREATE OR REPLACE FUNCTION cookie_from_login(text, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.cookie_from_login(text, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
@@ -484,7 +511,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /people/:id/password
 -- PARAMS: person_id, password
-CREATE OR REPLACE FUNCTION set_password(integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.set_password(integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -497,7 +525,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /people/:id
 -- PARAMS: person_id, JSON of new values
-CREATE OR REPLACE FUNCTION update_person(integer, json, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.update_person(integer, json,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -511,7 +540,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /people/:id
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION delete_person(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.delete_person(integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -529,7 +559,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /people/:id/annihilate
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION annihilate_person(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.annihilate_person(integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	res RECORD;
 m4_ERRVARS
@@ -552,7 +583,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/urls
 -- PARAMS: person_id, url
-CREATE OR REPLACE FUNCTION add_url(integer, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.add_url(integer, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -567,7 +599,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/stats
 -- PARAMS: person_id, stat.name, stat.value
-CREATE OR REPLACE FUNCTION add_stat(integer, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.add_stat(integer, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -583,7 +616,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/emails
 -- PARAMS: emailer_id, person_id, profile, subject, body
-CREATE OR REPLACE FUNCTION new_email(integer, integer, text, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.new_email(integer, integer, text, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	new_id integer;
 m4_ERRVARS
@@ -599,7 +633,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:id/emails
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION get_person_emails(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_emails(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM
@@ -613,7 +648,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/merge?id=old_id
 -- PARAMS: person_id to KEEP, person_id to CHANGE
-CREATE OR REPLACE FUNCTION merge_person(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.merge_person(integer, integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -627,7 +663,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/unmailed
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION people_unemailed(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.people_unemailed(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view
@@ -638,7 +675,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /search?q=term
 -- PARAMS: search term
-CREATE OR REPLACE FUNCTION people_search(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.people_search(text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	q text;
 m4_ERRVARS
@@ -662,7 +700,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /stats/:id
 -- PARAMS: stats.id
-CREATE OR REPLACE FUNCTION get_stat(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_stat(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.stats_view r WHERE id=$1;
@@ -676,7 +715,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /stat/:id
 -- PARAMS: stats.id, json
-CREATE OR REPLACE FUNCTION update_stat(integer, json, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.update_stat(integer, json,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -694,7 +734,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /stats/:id
 -- PARAMS: stats.id
-CREATE OR REPLACE FUNCTION delete_stat(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.delete_stat(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.stats_view r WHERE id=$1;
@@ -709,7 +750,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /urls/:id
 -- PARAMS: urls.id
-CREATE OR REPLACE FUNCTION get_url(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_url(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.urls r WHERE id=$1;
@@ -722,7 +764,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /urls/:id
 -- PARAMS: urls.id
-CREATE OR REPLACE FUNCTION delete_url(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.delete_url(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.urls r WHERE id = $1;
@@ -737,7 +780,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /urls/:id
 -- PARAMS: urls.id, JSON with allowed: person_id::int, url::text, main::boolean
-CREATE OR REPLACE FUNCTION update_url(integer, json, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.update_url(integer, json,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -755,7 +799,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /formletters
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION get_formletters(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_formletters(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM
@@ -766,7 +811,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /formletters
 -- PARAMS: title
-CREATE OR REPLACE FUNCTION create_formletter(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.create_formletter(text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	new_id integer;
 m4_ERRVARS
@@ -781,7 +827,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /formletters/:id
 -- PARAMS: formletters.id
-CREATE OR REPLACE FUNCTION get_formletter(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_formletter(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.formletter_view r WHERE id = $1;
@@ -794,7 +841,8 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /formletters/:id
 -- PARAMS: formletters.id, JSON keys: title, explanation, body
-CREATE OR REPLACE FUNCTION update_formletter(integer, json, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.update_formletter(integer, json,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -812,7 +860,8 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /formletters/:id
 -- PARAMS: formletters.id
-CREATE OR REPLACE FUNCTION delete_formletter(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.delete_formletter(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.formletter_view r WHERE id = $1;
@@ -829,7 +878,8 @@ $$ LANGUAGE plpgsql;
 -- If wrong IDs given, value is null
 -- GET /people/:id/formletters/:id
 -- PARAMS: people.id, formletters.id
-CREATE OR REPLACE FUNCTION parsed_formletter(integer, integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.parsed_formletter(integer, integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_build_object('body', parse_formletter_body($1, $2));
@@ -841,7 +891,8 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: -none-
 -- RETURNS array of objects:
 -- [{"code":"AF","name":"Afghanistan"},{"code":"AX","name":"Åland Islands"}..]
-CREATE OR REPLACE FUNCTION all_countries(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.all_countries(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.countries ORDER BY name) r;
@@ -853,7 +904,8 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: -none-
 -- RETURNS single code:name object:
 -- {"AD":"Andorra","AE":"United Arab Emirates...  }
-CREATE OR REPLACE FUNCTION country_names(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.country_names(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_object(
@@ -865,7 +917,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /countries
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION country_count(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.country_count(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT country, COUNT(*) FROM peeps.people
@@ -876,7 +929,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /states/:country_code
 -- PARAMS: 2-letter country code
-CREATE OR REPLACE FUNCTION state_count(char(2), OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.state_count(char(2),
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT state, COUNT(*) FROM peeps.people
@@ -891,7 +945,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /cities/:country_code/:state
 -- PARAMS: 2-letter country code, state name
-CREATE OR REPLACE FUNCTION city_count(char(2), text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.city_count(char(2), text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT city, COUNT(*) FROM peeps.people
@@ -906,7 +961,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /cities/:country_code
 -- PARAMS: 2-letter country code
-CREATE OR REPLACE FUNCTION city_count(char(2), OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.city_count(char(2),
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT city, COUNT(*) FROM peeps.people
@@ -921,7 +977,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /where/:country_code
 -- PARAMS: 2-letter country code
-CREATE OR REPLACE FUNCTION people_from_country(char(2), OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.people_from_country(char(2),
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
@@ -936,7 +993,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /where/:country_code?state=XX
 -- PARAMS: 2-letter country code, state
-CREATE OR REPLACE FUNCTION people_from_state(char(2), text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.people_from_state(char(2), text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
@@ -951,7 +1009,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /where/:country_code?city=XX
 -- PARAMS: 2-letter country code, state
-CREATE OR REPLACE FUNCTION people_from_city(char(2), text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.people_from_city(char(2), text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
@@ -966,7 +1025,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /where/:country_code?city=XX&state=XX
 -- PARAMS: 2-letter country code, state, city
-CREATE OR REPLACE FUNCTION people_from_state_city(char(2), text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.people_from_state_city(char(2), text, text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
@@ -982,7 +1042,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /stats/:key/:value
 -- PARAMS: stats.name, stats.value
-CREATE OR REPLACE FUNCTION get_stats(text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_stats(text, text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.stats_view
@@ -996,7 +1057,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /stats/:key
 -- PARAMS: stats.name
-CREATE OR REPLACE FUNCTION get_stats(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_stats(text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.stats_view WHERE name = $1) r;
@@ -1009,7 +1071,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /statcount/:key
 -- PARAMS: stats.name
-CREATE OR REPLACE FUNCTION get_stat_value_count(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_stat_value_count(text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT statvalue AS value, COUNT(*) AS count
@@ -1023,7 +1086,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /statcount
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION get_stat_name_count(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.get_stat_name_count(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT statkey AS name, COUNT(*) AS count
@@ -1035,7 +1099,8 @@ $$ LANGUAGE plpgsql;
 -- POST /email
 -- PARAMS: json of values to insert
 -- KEYS: profile category message_id their_email their_name subject headers body
-CREATE OR REPLACE FUNCTION import_email(json, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.import_email(json,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	eid integer;
 	pid integer;
@@ -1090,7 +1155,8 @@ $$ LANGUAGE plpgsql;
 -- Update mailing list settings for this person (whether new or existing)
 -- POST /list
 -- PARAMS name, email, listype ($3 should be: 'all', 'some', 'none', or 'dead')
-CREATE OR REPLACE FUNCTION list_update(text, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.list_update(text, text, text,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 	clean3 text;
@@ -1108,7 +1174,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION queued_emails(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.queued_emails(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT e.id, e.profile, e.their_email,
@@ -1122,7 +1189,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: emails.id
-CREATE OR REPLACE FUNCTION email_is_sent(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.email_is_sent(integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 m4_ERRVARS
 BEGIN
@@ -1140,7 +1208,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /emails/sent
 -- PARAMS: howmany
-CREATE OR REPLACE FUNCTION sent_emails(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.sent_emails(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM peeps.emails_view WHERE id IN
@@ -1151,7 +1220,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION sent_emails_grouped(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.sent_emails_grouped(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT p.id, p.name, (SELECT json_agg(x) AS sent FROM
@@ -1168,7 +1238,8 @@ $$ LANGUAGE plpgsql;
 
 
 -- Array of {person_id: 1234, twitter: 'username'}
-CREATE OR REPLACE FUNCTION twitter_unfollowed(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.twitter_unfollowed(
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT person_id,
@@ -1183,7 +1254,8 @@ $$ LANGUAGE plpgsql;
 
 -- Mark this a dead email - by ID
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION dead_email(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.dead_email(integer,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	UPDATE peeps.people SET email=NULL, listype=NULL,
 		notes=CONCAT('DEAD EMAIL: ', email, E'\n', notes)
@@ -1198,7 +1270,8 @@ $$ LANGUAGE plpgsql;
 
 -- ARRAY of schema.tablenames where with this person_id
 -- PARAMS: person_id
-CREATE OR REPLACE FUNCTION tables_with_person(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.tables_with_person(integer,
+	OUT mime text, OUT js json) AS $$
 DECLARE
 	res RECORD;
 	tablez text[] := ARRAY[]::text[];
@@ -1220,7 +1293,8 @@ $$ LANGUAGE plpgsql;
 
 -- Array of people's [[id, email, address, lopass]] for emailing
 -- PARAMS: key,val to be used in WHERE _key_ = _val_
-CREATE OR REPLACE FUNCTION ieal_where(text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION peeps.ieal_where(text, text,
+	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
 	EXECUTE format ('SELECT json_agg(json_build_array(id, email, address, lopass))
