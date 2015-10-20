@@ -47,15 +47,15 @@ CREATE TABLE peeps.emailers (
 );
 
 -- Catch-all for any random facts about this person
-CREATE TABLE peeps.userstats (
+CREATE TABLE peeps.stats (
 	id serial primary key,
 	person_id integer not null REFERENCES peeps.people(id) ON DELETE CASCADE,
 	statkey varchar(32) not null CONSTRAINT statkey_format CHECK (statkey ~ '\A[a-z0-9._-]+\Z'),
 	statvalue text not null CONSTRAINT statval_not_empty CHECK (length(statvalue) > 0),
 	created_at date not null default CURRENT_DATE
 );
-CREATE INDEX userstats_person ON peeps.userstats(person_id);
-CREATE INDEX userstats_statkey ON peeps.userstats(statkey);
+CREATE INDEX stats_person ON peeps.stats(person_id);
+CREATE INDEX stats_statkey ON peeps.stats(statkey);
 
 -- This person's websites
 CREATE TABLE peeps.urls (

@@ -12,7 +12,7 @@ CREATE VIEW peeps.person_view AS
 		listype, categorize_as, created_at,
 		(SELECT json_agg(s) AS stats FROM
 			(SELECT id, created_at, statkey AS name, statvalue AS value
-				FROM peeps.userstats WHERE person_id=peeps.people.id ORDER BY id) s),
+				FROM peeps.stats WHERE person_id=peeps.people.id ORDER BY id) s),
 		(SELECT json_agg(u) AS urls FROM
 			(SELECT id, url, main FROM peeps.urls WHERE person_id=peeps.people.id
 				ORDER BY main DESC NULLS LAST, id) u),
@@ -68,9 +68,9 @@ CREATE VIEW peeps.formletter_view AS
 
 DROP VIEW IF EXISTS peeps.stats_view CASCADE;
 CREATE VIEW peeps.stats_view AS
-	SELECT userstats.id, userstats.created_at, statkey AS name, statvalue AS value,
+	SELECT stats.id, stats.created_at, statkey AS name, statvalue AS value,
 		(SELECT row_to_json(p) FROM
 			(SELECT people.id, people.name, people.email) p) AS person
-		FROM peeps.userstats INNER JOIN people ON userstats.person_id=people.id
-		ORDER BY userstats.id DESC;
+		FROM peeps.stats INNER JOIN people ON stats.person_id=people.id
+		ORDER BY stats.id DESC;
 

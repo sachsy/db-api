@@ -510,28 +510,28 @@ SELECT pg_catalog.setval('urls_id_seq', 8, true);
 
 
 --
--- Data for Name: userstats; Type: TABLE DATA; Schema: peeps; Owner: d50b
+-- Data for Name: stats; Type: TABLE DATA; Schema: peeps; Owner: d50b
 --
 
-ALTER TABLE userstats DISABLE TRIGGER ALL;
+ALTER TABLE stats DISABLE TRIGGER ALL;
 
-INSERT INTO userstats (id, person_id, statkey, statvalue, created_at) VALUES (1, 1, 'listype', 'all', '2008-01-01');
-INSERT INTO userstats (id, person_id, statkey, statvalue, created_at) VALUES (2, 1, 'twitter', '987654321 = sivers', '2010-01-01');
-INSERT INTO userstats (id, person_id, statkey, statvalue, created_at) VALUES (3, 2, 'listype', 'some', '2011-03-15');
-INSERT INTO userstats (id, person_id, statkey, statvalue, created_at) VALUES (4, 2, 'musicthoughts', 'clicked', '2011-03-16');
-INSERT INTO userstats (id, person_id, statkey, statvalue, created_at) VALUES (5, 1, 'ayw', 'a', '2013-07-25');
-INSERT INTO userstats (id, person_id, statkey, statvalue, created_at) VALUES (6, 6, 'woodegg-mn', 'interview', '2013-09-09');
-INSERT INTO userstats (id, person_id, statkey, statvalue, created_at) VALUES (7, 6, 'woodegg-bio', 'Augustus has done a lot of business in Mongolia, importing chocolate.', '2013-09-09');
-INSERT INTO userstats (id, person_id, statkey, statvalue, created_at) VALUES (8, 5, 'media', 'interview', '2014-12-23');
+INSERT INTO stats (id, person_id, statkey, statvalue, created_at) VALUES (1, 1, 'listype', 'all', '2008-01-01');
+INSERT INTO stats (id, person_id, statkey, statvalue, created_at) VALUES (2, 1, 'twitter', '987654321 = sivers', '2010-01-01');
+INSERT INTO stats (id, person_id, statkey, statvalue, created_at) VALUES (3, 2, 'listype', 'some', '2011-03-15');
+INSERT INTO stats (id, person_id, statkey, statvalue, created_at) VALUES (4, 2, 'musicthoughts', 'clicked', '2011-03-16');
+INSERT INTO stats (id, person_id, statkey, statvalue, created_at) VALUES (5, 1, 'ayw', 'a', '2013-07-25');
+INSERT INTO stats (id, person_id, statkey, statvalue, created_at) VALUES (6, 6, 'woodegg-mn', 'interview', '2013-09-09');
+INSERT INTO stats (id, person_id, statkey, statvalue, created_at) VALUES (7, 6, 'woodegg-bio', 'Augustus has done a lot of business in Mongolia, importing chocolate.', '2013-09-09');
+INSERT INTO stats (id, person_id, statkey, statvalue, created_at) VALUES (8, 5, 'media', 'interview', '2014-12-23');
 
 
-ALTER TABLE userstats ENABLE TRIGGER ALL;
+ALTER TABLE stats ENABLE TRIGGER ALL;
 
 --
--- Name: userstats_id_seq; Type: SEQUENCE SET; Schema: peeps; Owner: d50b
+-- Name: stats_id_seq; Type: SEQUENCE SET; Schema: peeps; Owner: d50b
 --
 
-SELECT pg_catalog.setval('userstats_id_seq', 8, true);
+SELECT pg_catalog.setval('stats_id_seq', 8, true);
 
 
 --

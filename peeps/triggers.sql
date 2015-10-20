@@ -38,7 +38,7 @@ CREATE TRIGGER clean_name
 
 
 -- Statkey has no whitespace at all. Statvalue trimmed but keeps inner whitespace.
-CREATE OR REPLACE FUNCTION peeps.clean_userstats() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_stats() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.statkey = lower(regexp_replace(NEW.statkey, '[^[:alnum:]._-]', '', 'g'));
 	IF NEW.statkey = '' THEN
@@ -51,10 +51,10 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS clean_userstats ON peeps.userstats CASCADE;
-CREATE TRIGGER clean_userstats
-	BEFORE INSERT OR UPDATE OF statkey, statvalue ON peeps.userstats
-	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_userstats();
+DROP TRIGGER IF EXISTS clean_stats ON peeps.stats CASCADE;
+CREATE TRIGGER clean_stats
+	BEFORE INSERT OR UPDATE OF statkey, statvalue ON peeps.stats
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_stats();
 
 
 -- urls.url remove all whitespace, then add http:// if not there

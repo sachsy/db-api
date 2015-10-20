@@ -89,7 +89,7 @@ DECLARE
 m4_ERRVARS
 BEGIN
 	SELECT id INTO pid FROM peeps.person_create_pass($1, $2, $3);
-	INSERT INTO peeps.userstats(person_id, statkey, statvalue)
+	INSERT INTO peeps.stats(person_id, statkey, statvalue)
 		VALUES (pid, 'proof-we14asia', $4);
 	mime := 'application/json';
 	js := row_to_json(r) FROM (SELECT id, name, email, address
@@ -266,7 +266,7 @@ BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT u.id, u.person_id, u.statvalue AS value,
 		u.created_at, p.email, p.name
-		FROM peeps.userstats u
+		FROM peeps.stats u
 		INNER JOIN peeps.people p ON u.person_id=p.id
 		WHERE statkey LIKE 'proof%' ORDER BY u.id) r;
 	IF js IS NULL THEN
@@ -277,13 +277,13 @@ $$ LANGUAGE plpgsql;
 
 
 -- ADMIN ONLY:
--- PARAMS: userstats.id
+-- PARAMS: stats.id
 CREATE OR REPLACE FUNCTION woodegg.proof_to_customer(integer, OUT mime text, OUT js json) AS $$
 DECLARE
 	pid integer;
 	cid integer;
 BEGIN
-	UPDATE peeps.userstats SET statkey=REPLACE(statkey, 'proof', 'bought')
+	UPDATE peeps.stats SET statkey=REPLACE(statkey, 'proof', 'bought')
 		WHERE id=$1 RETURNING person_id INTO pid;
 	SELECT id INTO cid FROM woodegg.customers WHERE person_id=pid;
 	IF cid IS NULL THEN

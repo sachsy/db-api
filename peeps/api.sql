@@ -605,7 +605,7 @@ DECLARE
 m4_ERRVARS
 BEGIN
 	mime := 'application/json';
-	WITH nu AS (INSERT INTO userstats(person_id, statkey, statvalue)
+	WITH nu AS (INSERT INTO stats(person_id, statkey, statvalue)
 		VALUES ($1, $2, $3) RETURNING *)
 		SELECT row_to_json(r) INTO js FROM
 			(SELECT id, created_at, statkey AS name, statvalue AS value FROM nu) r;
@@ -720,8 +720,8 @@ CREATE OR REPLACE FUNCTION peeps.update_stat(integer, json,
 DECLARE
 m4_ERRVARS
 BEGIN
-	PERFORM core.jsonupdate('peeps.userstats', $1, $2,
-		core.cols2update('peeps', 'userstats', ARRAY['id', 'created_at']));
+	PERFORM core.jsonupdate('peeps.stats', $1, $2,
+		core.cols2update('peeps', 'stats', ARRAY['id', 'created_at']));
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.stats_view r WHERE id=$1;
 	IF js IS NULL THEN
@@ -742,7 +742,7 @@ BEGIN
 	IF js IS NULL THEN
 m4_NOTFOUND
 	ELSE
-		DELETE FROM peeps.userstats WHERE id = $1;
+		DELETE FROM peeps.stats WHERE id = $1;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1076,7 +1076,7 @@ CREATE OR REPLACE FUNCTION peeps.get_stat_value_count(text,
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT statvalue AS value, COUNT(*) AS count
-		FROM peeps.userstats WHERE statkey=$1 GROUP BY statvalue ORDER BY statvalue) r;
+		FROM peeps.stats WHERE statkey=$1 GROUP BY statvalue ORDER BY statvalue) r;
 	IF js IS NULL THEN
 		js := '[]';
 	END IF;
@@ -1091,7 +1091,7 @@ CREATE OR REPLACE FUNCTION peeps.get_stat_name_count(
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT statkey AS name, COUNT(*) AS count
-		FROM peeps.userstats GROUP BY statkey ORDER BY statkey) r;
+		FROM peeps.stats GROUP BY statkey ORDER BY statkey) r;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1164,7 +1164,7 @@ m4_ERRVARS
 BEGIN
 	clean3 := regexp_replace($3, '[^a-z]', '', 'g');
 	SELECT id INTO pid FROM peeps.person_create($1, $2);
-	INSERT INTO peeps.userstats(person_id, statkey, statvalue)
+	INSERT INTO peeps.stats(person_id, statkey, statvalue)
 		VALUES (pid, 'listype', clean3);
 	UPDATE peeps.people SET listype=clean3 WHERE id=pid;
 	mime := 'application/json';
@@ -1246,7 +1246,7 @@ BEGIN
 		regexp_replace(regexp_replace(url, 'https?://twitter.com/', ''), '/$', '')
 		AS twitter FROM peeps.urls WHERE url LIKE '%twitter.com%'
 		AND person_id NOT IN
-			(SELECT person_id FROM peeps.userstats WHERE statkey='twitter')) r;
+			(SELECT person_id FROM peeps.stats WHERE statkey='twitter')) r;
 	IF js IS NULL THEN js := '[]'; END IF;
 END;
 $$ LANGUAGE plpgsql;

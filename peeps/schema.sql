@@ -47,15 +47,15 @@ CREATE TABLE peeps.emailers (
 );
 
 -- Catch-all for any random facts about this person
-CREATE TABLE peeps.userstats (
+CREATE TABLE peeps.stats (
 	id serial primary key,
 	person_id integer not null REFERENCES peeps.people(id) ON DELETE CASCADE,
 	statkey varchar(32) not null CONSTRAINT statkey_format CHECK (statkey ~ '\A[a-z0-9._-]+\Z'),
 	statvalue text not null CONSTRAINT statval_not_empty CHECK (length(statvalue) > 0),
 	created_at date not null default CURRENT_DATE
 );
-CREATE INDEX userstats_person ON peeps.userstats(person_id);
-CREATE INDEX userstats_statkey ON peeps.userstats(statkey);
+CREATE INDEX stats_person ON peeps.stats(person_id);
+CREATE INDEX stats_statkey ON peeps.stats(statkey);
 
 -- This person's websites
 CREATE TABLE peeps.urls (
@@ -154,7 +154,7 @@ CREATE VIEW peeps.person_view AS
 		listype, categorize_as, created_at,
 		(SELECT json_agg(s) AS stats FROM
 			(SELECT id, created_at, statkey AS name, statvalue AS value
-				FROM peeps.userstats WHERE person_id=peeps.people.id ORDER BY id) s),
+				FROM peeps.stats WHERE person_id=peeps.people.id ORDER BY id) s),
 		(SELECT json_agg(u) AS urls FROM
 			(SELECT id, url, main FROM peeps.urls WHERE person_id=peeps.people.id
 				ORDER BY main DESC NULLS LAST, id) u),
@@ -210,11 +210,11 @@ CREATE VIEW peeps.formletter_view AS
 
 DROP VIEW IF EXISTS peeps.stats_view CASCADE;
 CREATE VIEW peeps.stats_view AS
-	SELECT userstats.id, userstats.created_at, statkey AS name, statvalue AS value,
+	SELECT stats.id, stats.created_at, statkey AS name, statvalue AS value,
 		(SELECT row_to_json(p) FROM
 			(SELECT people.id, people.name, people.email) p) AS person
-		FROM peeps.userstats INNER JOIN people ON userstats.person_id=people.id
-		ORDER BY userstats.id DESC;
+		FROM peeps.stats INNER JOIN people ON stats.person_id=people.id
+		ORDER BY stats.id DESC;
 
 ----------------------------
 ----------- peeps FUNCTIONS:
@@ -682,7 +682,7 @@ CREATE TRIGGER clean_name
 
 
 -- Statkey has no whitespace at all. Statvalue trimmed but keeps inner whitespace.
-CREATE OR REPLACE FUNCTION peeps.clean_userstats() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION peeps.clean_stats() RETURNS TRIGGER AS $$
 BEGIN
 	NEW.statkey = lower(regexp_replace(NEW.statkey, '[^[:alnum:]._-]', '', 'g'));
 	IF NEW.statkey = '' THEN
@@ -695,10 +695,10 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS clean_userstats ON peeps.userstats CASCADE;
-CREATE TRIGGER clean_userstats
-	BEFORE INSERT OR UPDATE OF statkey, statvalue ON peeps.userstats
-	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_userstats();
+DROP TRIGGER IF EXISTS clean_stats ON peeps.stats CASCADE;
+CREATE TRIGGER clean_stats
+	BEFORE INSERT OR UPDATE OF statkey, statvalue ON peeps.stats
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_stats();
 
 
 -- urls.url remove all whitespace, then add http:// if not there
@@ -1813,7 +1813,7 @@ DECLARE
 
 BEGIN
 	mime := 'application/json';
-	WITH nu AS (INSERT INTO userstats(person_id, statkey, statvalue)
+	WITH nu AS (INSERT INTO stats(person_id, statkey, statvalue)
 		VALUES ($1, $2, $3) RETURNING *)
 		SELECT row_to_json(r) INTO js FROM
 			(SELECT id, created_at, statkey AS name, statvalue AS value FROM nu) r;
@@ -2002,8 +2002,8 @@ DECLARE
 	err_context text;
 
 BEGIN
-	PERFORM core.jsonupdate('peeps.userstats', $1, $2,
-		core.cols2update('peeps', 'userstats', ARRAY['id', 'created_at']));
+	PERFORM core.jsonupdate('peeps.stats', $1, $2,
+		core.cols2update('peeps', 'stats', ARRAY['id', 'created_at']));
 	mime := 'application/json';
 	js := row_to_json(r.*) FROM peeps.stats_view r WHERE id=$1;
 	IF js IS NULL THEN
@@ -2048,7 +2048,7 @@ BEGIN
 		'status', 404);
 
 	ELSE
-		DELETE FROM peeps.userstats WHERE id = $1;
+		DELETE FROM peeps.stats WHERE id = $1;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -2511,7 +2511,7 @@ CREATE OR REPLACE FUNCTION peeps.get_stat_value_count(text,
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT statvalue AS value, COUNT(*) AS count
-		FROM peeps.userstats WHERE statkey=$1 GROUP BY statvalue ORDER BY statvalue) r;
+		FROM peeps.stats WHERE statkey=$1 GROUP BY statvalue ORDER BY statvalue) r;
 	IF js IS NULL THEN
 		js := '[]';
 	END IF;
@@ -2526,7 +2526,7 @@ CREATE OR REPLACE FUNCTION peeps.get_stat_name_count(
 BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT statkey AS name, COUNT(*) AS count
-		FROM peeps.userstats GROUP BY statkey ORDER BY statkey) r;
+		FROM peeps.stats GROUP BY statkey ORDER BY statkey) r;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -2621,7 +2621,7 @@ DECLARE
 BEGIN
 	clean3 := regexp_replace($3, '[^a-z]', '', 'g');
 	SELECT id INTO pid FROM peeps.person_create($1, $2);
-	INSERT INTO peeps.userstats(person_id, statkey, statvalue)
+	INSERT INTO peeps.stats(person_id, statkey, statvalue)
 		VALUES (pid, 'listype', clean3);
 	UPDATE peeps.people SET listype=clean3 WHERE id=pid;
 	mime := 'application/json';
@@ -2738,7 +2738,7 @@ BEGIN
 		regexp_replace(regexp_replace(url, 'https?://twitter.com/', ''), '/$', '')
 		AS twitter FROM peeps.urls WHERE url LIKE '%twitter.com%'
 		AND person_id NOT IN
-			(SELECT person_id FROM peeps.userstats WHERE statkey='twitter')) r;
+			(SELECT person_id FROM peeps.stats WHERE statkey='twitter')) r;
 	IF js IS NULL THEN js := '[]'; END IF;
 END;
 $$ LANGUAGE plpgsql;

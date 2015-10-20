@@ -88,21 +88,21 @@ class TestPeeps < Minitest::Test
 
 	# statkey stripped of all whitespace, even internal, upon INSERT or UPDATE
 	# statvalue trimmed but keeps inner whitespace
-	def test_userstats_clean
-		res = DB.exec("INSERT INTO userstats (person_id, statkey, statvalue) VALUES (5, ' \nd O G\r ', ' ro\n vER ') RETURNING userstats.*")
+	def test_stats_clean
+		res = DB.exec("INSERT INTO stats (person_id, statkey, statvalue) VALUES (5, ' \nd O G\r ', ' ro\n vER ') RETURNING stats.*")
 		assert_equal 'dog', res[0]['statkey']
 		assert_equal "ro\n vER", res[0]['statvalue']
-		res = DB.exec("UPDATE userstats SET statkey=' \nH i\r\r', statvalue='\n o H \r' WHERE id=1 RETURNING userstats.*")
+		res = DB.exec("UPDATE stats SET statkey=' \nH i\r\r', statvalue='\n o H \r' WHERE id=1 RETURNING stats.*")
 		assert_equal 'hi', res[0]['statkey']
 		assert_equal 'o H', res[0]['statvalue']
 	end
 
-	# deleting a person deletes their userstats
-	def test_userstats_cascade_delete
-		res = DB.exec("SELECT person_id FROM userstats WHERE id=8")
+	# deleting a person deletes their stats
+	def test_stats_cascade_delete
+		res = DB.exec("SELECT person_id FROM stats WHERE id=8")
 		assert_equal '5', res[0]['person_id']
 		DB.exec("DELETE FROM people WHERE id=5")
-		res = DB.exec("SELECT person_id FROM userstats WHERE id=8")
+		res = DB.exec("SELECT person_id FROM stats WHERE id=8")
 		assert_equal 0, res.ntuples
 	end
 
@@ -376,7 +376,7 @@ class TestPeeps < Minitest::Test
 		res = DB.exec("INSERT INTO people(name, email, state, notes) VALUES ('New Derek', 'derek@new.com', 'confusion', 'Soon to be.') RETURNING id")
 		new_id = res[0]['id'].to_i
 		res = DB.exec_params("SELECT * FROM person_merge_from_to($1, $2)", [1, new_id])
-		assert_equal '{peeps.emailers,peeps.userstats,peeps.urls,peeps.logins,peeps.api_keys}', res[0]['person_merge_from_to']
+		assert_equal '{peeps.emailers,peeps.stats,peeps.urls,peeps.logins,peeps.api_keys}', res[0]['person_merge_from_to']
 		res = DB.exec("SELECT * FROM people WHERE id = #{new_id}")
 		assert_equal '50POP LLC', res[0]['company']
 		assert_equal 'Singapore', res[0]['city']

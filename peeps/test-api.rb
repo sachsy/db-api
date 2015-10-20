@@ -705,7 +705,7 @@ class TestPeepsAPI < Minitest::Test
 
 	def test_tables_with_person
 		qry("tables_with_person(1)")
-		assert_equal ['peeps.emailers','peeps.userstats','peeps.urls','peeps.logins','peeps.api_keys'].sort, @j.sort
+		assert_equal ['peeps.emailers','peeps.stats','peeps.urls','peeps.logins','peeps.api_keys'].sort, @j.sort
 	end
 
 	def test_ieal_where
