@@ -904,6 +904,26 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- PARAMS: akey, apass
+CREATE OR REPLACE FUNCTION peeps.auth_emailer(text, text,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := row_to_json(r) FROM (SELECT e.id 
+		FROM peeps.api_keys a, peeps.emailers e
+		WHERE a.akey=$1 AND a.apass=$2 AND 'Peep'=ANY(a.apis)
+		AND a.person_id = e.person_id) r;
+	IF js IS NULL THEN 
+	mime := 'application/problem+json';
+	js := json_build_object(
+		'type', 'about:blank',
+		'title', 'Not Found',
+		'status', 404);
+ END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- GET /emails/unopened/count
 -- Grouped summary of howmany unopened emails in each profile/category
 -- JSON format: {profiles:{categories:howmany}}

@@ -3,6 +3,33 @@ require '../test_tools.rb'
 class TestPeepsAPI < Minitest::Test
 	include JDB
 
+	def test_auth_api
+		qry("auth_api('derek@sivers.org', 'derek', 'Peep')")
+		assert_equal 1, @j[:person_id]
+		assert_equal 'aaaaaaaa', @j[:akey]
+		assert_equal 'bbbbbbbb', @j[:apass]
+		assert_equal %w(Peep SiversComments MuckworkManager), @j[:apis]
+		qry("auth_api('derek@sivers.org', 'derek', 'POP')")
+		assert_equal 'application/problem+json', @res[0]['mime']
+		qry("auth_api('derek@sivers.org', 'doggy', 'Peep')")
+		assert_equal 'application/problem+json', @res[0]['mime']
+		qry("auth_api('derek@sivers.org', 'x', 'Peep')")
+		assert_equal 'application/problem+json', @res[0]['mime']
+		qry("auth_api('derek@sivers', 'derek', 'Peep')")
+		assert_equal 'application/problem+json', @res[0]['mime']
+	end
+
+	def test_auth_emailer
+		qry("auth_emailer('aaaaaaaa', 'bbbbbbbb')")
+		assert_equal({id: 1}, @j)
+		qry("auth_emailer('aaaxaaaa', 'bbbbbbbb')")
+		assert_equal 'Not Found', @j[:title]
+		qry("auth_emailer('cccccccc', 'dddddddd')")
+		assert_equal 'Not Found', @j[:title]
+		qry("auth_emailer('gggggggg', 'hhhhhhhh')")
+		assert_equal({id: 2}, @j)
+	end
+
 	def test_unopened_email_count
 		qry("unopened_email_count(1)")
 		assert_equal %i(derek@sivers we@woodegg), @j.keys
@@ -572,22 +599,6 @@ class TestPeepsAPI < Minitest::Test
 		assert_equal %w(all some), @j.map {|x| x[:value]}
 		qry("get_stat_name_count()")
 		assert_equal({name: 'listype', count: 2}, @j[1])
-	end
-
-	def test_auth_api
-		qry("auth_api('derek@sivers.org', 'derek', 'Peep')")
-		assert_equal 1, @j[:person_id]
-		assert_equal 'aaaaaaaa', @j[:akey]
-		assert_equal 'bbbbbbbb', @j[:apass]
-		assert_equal %w(Peep SiversComments MuckworkManager), @j[:apis]
-		qry("auth_api('derek@sivers.org', 'derek', 'POP')")
-		assert_equal 'application/problem+json', @res[0]['mime']
-		qry("auth_api('derek@sivers.org', 'doggy', 'Peep')")
-		assert_equal 'application/problem+json', @res[0]['mime']
-		qry("auth_api('derek@sivers.org', 'x', 'Peep')")
-		assert_equal 'application/problem+json', @res[0]['mime']
-		qry("auth_api('derek@sivers', 'derek', 'Peep')")
-		assert_equal 'application/problem+json', @res[0]['mime']
 	end
 
 	def test_import_email
