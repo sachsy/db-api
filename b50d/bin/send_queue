@@ -1,13 +1,18 @@
 #!/usr/bin/env ruby
 exit unless 'sivers.org' == %x{hostname}.strip
+require 'pg'
+require 'json'
 require 'b50d/my_mail'
 require 'b50d-config.rb'
 
-p = B50D::Peeps.new(API_KEY, API_PASS)
+db = PG::Connection.new(dbname: 'd50b', user: 'd50b')
 
-p.queued_emails.each do |e|
+res = db.exec('SELECT js FROM peeps.queued_emails()')
+emails = JSON.parse(res[0]['js'], symbolize_names: true)
+
+emails.each do |e|
 	if MyMail::send(e, PROFILES[e[:profile]][:smtp])
-		p.email_is_sent(e[:id])
+		db.exec_params('SELECT * FROM peeps.email_is_sent($1)', e[:id])
 	end
 end
 

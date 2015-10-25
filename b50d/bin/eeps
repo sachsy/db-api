@@ -95,7 +95,7 @@ v = STDIN.gets.strip
 
 DB = PG::Connection.new(dbname: 'd50b', user: 'd50b')
 res = DB.exec_params('SELECT js FROM peeps.ieal_where($1, $2)', [k, v])
-list = JSON.parse(res, symbolize_names: true)
+list = JSON.parse(res[0]['js'], symbolize_names: true)
 
 print "#{list.size} people. Test email: "
 test_email = STDIN.gets.strip
