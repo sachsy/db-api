@@ -6,9 +6,9 @@ require 'json'
 require 'net/http'
 require 'b50d-config.rb'
 
-DB = PG::Connection.new(dbname: 'd50b', user: 'd50b')
+db = PG::Connection.new(dbname: 'd50b', user: 'd50b')
 
 uri = URI('http://openexchangerates.org/api/latest.json?app_id=' + OPENEXCHANGERATES)
 js = Net::HTTP.get(uri)
 
-DB.exec_params("SELECT * FROM core.update_currency_rates($1)", [js])
+db.exec_params("SELECT * FROM core.update_currency_rates($1)", [js])

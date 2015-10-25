@@ -1,12 +1,14 @@
 #!/usr/bin/env ruby
 exit unless 'sivers.org' == %x{hostname}.strip
+require 'pg'
+require 'json'
 require 'b50d/my_mail'
 require 'b50d-config.rb'
 
-db_api = B50D::Peeps.new(API_KEY, API_PASS)
+db = PG::Connection.new(dbname: 'd50b', user: 'd50b')
 
 %w(derek@sivers we@woodegg).each do |profile|
 	puts "\n\n##### #{profile}"
-	MyMail::import(profile, PROFILES[profile][:pop3], db_api)
+	MyMail::import(profile, PROFILES[profile][:pop3], db)
 end
 

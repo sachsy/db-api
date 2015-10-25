@@ -1,6 +1,6 @@
 # Transform stuff from Mikel's Mail class into my PostgreSQL-ready clean data
-require_relative 'peeps.rb'
-require 'mail'  # TODO: phase out
+#require_relative 'peeps.rb'
+require 'mail'
 require 'date'
 require 'net/smtp'
 
@@ -32,16 +32,16 @@ module MyMail
 		# IN:
 		# profile string : 'derek@sivers' or 'we@woodegg'
 		# hash with address, port, user_name, password, enable_ssl
-		# db_api = B50D::Peeps.new(api_key, api_pass)
-		def import(profile, pop3_hash, db_api)
+		# db = PG::Connection
+		def import(profile, pop3_hash, db)
 			Mail::Configuration.instance.retriever_method(:pop3, pop3_hash)
 			what2find = {what: :first, count: 1, order: :asc, delete_after_find: true}
 			mail = Mail.find(what2find)
 			while mail != [] do
 				puts mail.message_id + "\t" + mail.from[0]
-				if false == db_api.import_email(parse(mail, profile))
-					puts db_api.error
-					puts db_api.message
+				res = db.exec_params('SELECT * FROM peeps.import_email($1)', [parse(mail, profile).to_json])
+				if res['mime'].include? 'problem'
+					puts res['js']
 				end
 				mail = Mail.find(what2find)
 			end
