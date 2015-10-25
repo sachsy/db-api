@@ -1,18 +1,23 @@
 #!/usr/bin/env ruby
 exit unless 'sivers.org' == %x{hostname}.strip
-require 'b50d/woodegg'
+require 'pg'
+require 'json'
 
-we = B50D::WoodEgg.new
+db = PG::Connection.new(dbname: 'd50b', user: 'd50b')
 
-proofs = we.proofs
+res = db.exec('SELECT js FROM woodegg.proofs()')
+proofs = JSON.parse(res[0]['js'], symbolize_names: true)
+
 while proofs.size > 0 do
 	puts proofs[0]
 	id = proofs[0][:id]
 	print "Type ok to approve: "
 	if 'ok' == gets.strip
-		puts we.proof_to_customer(id)
+		res = db.exec_params('SELECT js FROM woodegg.proofs_to_customer($1)', [id])
+		puts res[0]['js']
 	end
-	proofs = we.proofs
+	res = db.exec('SELECT js FROM woodegg.proofs()')
+	proofs = JSON.parse(res[0]['js'], symbolize_names: true)
 end
 puts 'done!'
 
