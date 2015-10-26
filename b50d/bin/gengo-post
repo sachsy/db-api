@@ -21,84 +21,59 @@ raise 'error' unless /\A[0-9]+\Z/ === res[0]['id']
 id = Integer(res[0]['id'])
 puts "ID is #{id}"
 
-# parse into sentences
+# PARSE INTO SENTENCES
 res = DB.exec_params("SELECT * FROM core.parse_translation_file($1)", [id])
-puts "TEMPLATE:"
-puts res[0]
 
-# get text to send to Gengo
-res = DB.exec_params("SELECT text FROM core.text_for_translator($1)", [id])
-text = res[0]['text']
-puts "TEXT:"
-puts text
+# CONFIRM
+res = DB.exec_params("SELECT sortid, en FROM core.translations WHERE file_id = $1 ORDER BY sortid", [id])
+testfile = "/tmp/#{id}.txt"
+File.open(testfile, 'w') do |f|
+	res.each do |r|
+		f.puts "%d\t%s" % [r['sortid'], r['en']]
+	end
+end
+print "Go look at #{testfile} in another terminal. Type 'ok' if it's OK: (otherwise I'll delete) "
 
-# TODO: review before sending. showing 30 lines at a time, getting OK.
-# http://developers.gengo.com/v2/api_methods/jobs/
-# http://developers.gengo.com/v2/api_methods/payloads/index.html
-job = {
-	type: 'text',
-	lc_src: 'en',
-	lc_tgt: 'es-la',  # TODO: multiple! + es = es-la & pt = pt-br
-	slug: filename,
-	custom_data: filename,
-	body_src: text,
-	tier: 'standard',
-	auto_approve: 1,
-	force: 1,
-	pupose: 'Online content',
-	tone: 'Informal',
-	comment: ('Keep strange format of one sentence per line. Should be %d lines. Thank you!' % text.lines.size)
-}
-
-gengo = Gengo::API.new(public_key: GENGO_PUBLIC, private_key: GENGO_PRIVATE, sandbox: false)
-puts gengo.postTranslationJobs(jobs: {filename: job})
-
-#!/usr/bin/env ruby
-require 'pg'
-require 'b50d-config.rb'
-require 'gengo'
-DB = PG::Connection.new(dbname: 'd50b', user: 'd50b')
-
-# ask language
-print "What language code? "
-lang = STDIN.gets.strip
-
-# show recent file IDs:
-res = DB.exec("SELECT id, filename FROM core.translation_files ORDER BY id DESC LIMIT 10")
-res.each do |r|
-	puts "%d\t%s" % [r['id'], r['filename']]
+# DELETE AND STOP unless 'ok'
+unless 'ok' == STDIN.gets.strip
+	DB.exec_params('DELETE FROM core.translations WHERE file_id = $1', [id])
+	DB.exec_params('DELETE FROM core.translation_files WHERE id = $1', [id])
+	puts "DELETED"
+	exit
 end
 
-# ask file ID
-print "What filename ID # in the database? "
-file_id = STDIN.gets.strip
-
-# get sentences
-res = DB.exec_params("SELECT code, sortid, en FROM core.translations WHERE file_id = $1 ORDER BY sortid", [file_id])
+# GET SENTENCES
+res = DB.exec_params("SELECT code, sortid, en FROM core.translations WHERE file_id = $1 ORDER BY sortid", [id])
 howmany = res.to_a.size
 
-# http://developers.gengo.com/v2/api_methods/jobs/
-# http://developers.gengo.com/v2/api_methods/payloads/index.html
-jobs = {}
-res.each do |r|
-	jobs[r['code']] = {
-		body_src: r['en'],
-		lc_src: 'en',
-		lc_tgt: lang,
-		tier: 'standard',
-		type: 'text',
-		slug: 'sivers.org/ml sentence %d' % r['sortid'],
-		as_group: 1,
-		position: r['sortid'],
-		force: 1,
-		pupose: 'Online content',
-		tone: 'Informal',
-		auto_approve: 0,
-		custom_data: r['code'],
-		comment: 'http://sivers.org/ml for context. This is sentence #%d of %d.' % [r['sortid'], howmany]
-	}
+gengo = Gengo::API.new(public_key: GENGO_PUBLIC, private_key: GENGO_PRIVATE, sandbox: false)
+languages = %w(es-la fr pt zh)
+
+languages.each do |lang|
+	# http://developers.gengo.com/v2/api_methods/jobs/
+	# http://developers.gengo.com/v2/api_methods/payloads/index.html
+	jobs = {}
+	res.each do |r|
+		jobs[r['code']] = {
+			body_src: r['en'],
+			lc_src: 'en',
+			lc_tgt: lang,
+			tier: 'standard',
+			type: 'text',
+			slug: 'sivers.org/%s # %d' % [filename, r['sortid']],
+			as_group: 1,
+			position: r['sortid'],
+			force: 1,
+			pupose: 'Online content',
+			tone: 'Informal',
+			auto_approve: 0,
+			custom_data: r['code'],
+			comment: 'http://sivers.org/%s for context. This is sentence #%d of %d.' % [filename, r['sortid'], howmany]
+		}
+	end
+
+	File.open('gengo.log', 'a') {|f| f.puts gengo.postTranslationJobs(jobs: jobs) }
 end
 
-gengo = Gengo::API.new(public_key: GENGO_PUBLIC, private_key: GENGO_PRIVATE, sandbox: false)
-File.open('gengo.log', 'w') {|f| f.puts gengo.postTranslationJobs(jobs: jobs) }
 puts "see gengo.log"
+
