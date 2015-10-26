@@ -14,39 +14,6 @@ In short:  **The database schema functions do all the work.  The other bits just
 2. A little library simplifies database calls by handling the schema, arguments, and JSON conversion.
 3. 50web has the actual end-user UI websites, calling PostreSQL functions by name, and using hash responses.
 
-## As of 2015-03-17:
-
-1. All smarts, all business rules, are in the database schema functions.
-2. B50D is a PostgreSQL API client, with one Ruby class per API, methods mapping to the pg functions, converting the JSON to hashes.
-3. 50web has the actual end-user UI websites, letting the B50D Ruby class do all the work.
-
-Important to note that the HTTP way of doing things is still the architecture/structure, and can be turned on with little effort if/when the APIs need to be made public.  (For example: JavaScript-created pages.)
-
-## Before 2015-03-17:
-
-1. All smarts, all business rules, are in the database schema functions.
-2. HTTP/ has REST API Sinatra files that map HTTP URLs to the api.sql functions. Most require HTTP authentication. All return just mime and JSON. They're mostly private, but could be public some day.
-3. a50c is a REST API client, with one Ruby class per API, methods mapping to the calls, converting the JSON to hashes.
-4. 50web has the actual end-user UI websites, letting the a50c Ruby class do all the work.
-
-### What's gone from -2014:
-
-**d50b** was just Ruby+Sequel models around the database.  No more.  All gone.
-
-**50apis** is now routes in db-api/HTTP since they use schema.sql files for resetting fixtures.  Views are now SQL views in db-api/~/views.sql
-
-### What's new 2015+:
-
-**db-api** has subdirectories with the rules that were once in d50b models, and views that were once in 50apis/views
-
-**db-api/HTTP** has Sinatra API routes
-
-### What's mostly the same:
-
-**a50c** (now **b50d**) is still a “client library” Ruby gem to access the HTTP API with Ruby.  Only now instead of Struct with method calls, it's Hash with symbol keys.  I'll probably have to make other “client libraries” some day: JavaScript for JS-heavy front-end sites, Java for Android, ObjC for iOS?
-
-**50web** is still all the end-user websites, using Sinatra + a50c/b50d gem.  Only now instead of Struct with method calls, it's Hash with symbol keys.
-
 ### Authentication:
 
 **db-api/HTTP** REST API uses HTTP Basic Authentication, and most **a50c** client library classes need the API key and pass to initialize.  When testing API, just give it the key and pass strings from the fixtures.
@@ -74,8 +41,8 @@ ALTER USER d50b SET SEARCH_PATH TO core, peeps, muckwork, lat, musicthoughts, si
 # TODO:
 
 * email parsing: set personID using email address first before in-reply-to
-* Question why b50d gem is needed. Shouldn't SQL functions be simple enough for routes to call directly?
 * Where to translate ugly errors (probably using regexp matching) into simple i18n keys for the UI to show in user's language?
+* clean up this README
 
 ## API:
 
