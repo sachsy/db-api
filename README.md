@@ -43,6 +43,7 @@ ALTER USER d50b SET SEARCH_PATH TO core, peeps, muckwork, lat, musicthoughts, si
 * email parsing: set personID using email address first before in-reply-to
 * Where to translate ugly errors (probably using regexp matching) into simple i18n keys for the UI to show in user's language?
 * clean up this README
+* combine Gengo features into one CLI script
 
 ## API:
 
