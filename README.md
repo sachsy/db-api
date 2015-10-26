@@ -4,6 +4,8 @@ My PostgreSQL database.  © 2015 50pop LLC | Contact: [Derek Sivers](http://sive
 
 One central database, called d50b, with each of my different projects in its own schema.
 
+For some explanation, see <http://sivers.org/pg>
+
 ## The schemas:
 
 * **core** : tables and functions shared by other schemas: currencies and translations
@@ -36,17 +38,21 @@ One central database, called d50b, with each of my different projects in its own
 * **test_tools.rb** testing tools used by each schema directory
 
 
-# Changes? Migrations?
+## Changes?
 
 For small changes, just use psql to add a function, drop a table, etc.
 
 The easiest way to make major changes is to copy the schema.sql files to /tmp/, then edit it to remove the "DROP SCHEMA" and "CREATE TABLE" lines.  All functions, triggers, and views can be replaced.
 
-When adding a new schema, update the d50b user search_path:
+When adding a new schema, run this:
 
-```sql
 ALTER USER d50b SET SEARCH_PATH TO core, peeps, muckwork, lat, musicthoughts, sivers, woodegg;
-```
+
+# See also:
+
+For some experiments, see <https://github.com/sivers/pg>
+
+For the websites that use these, see <https://github.com/50pop/50web>
 
 # TODO:
 
