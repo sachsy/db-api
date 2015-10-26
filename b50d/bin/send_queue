@@ -12,7 +12,7 @@ emails = JSON.parse(res[0]['js'], symbolize_names: true)
 
 emails.each do |e|
 	if MyMail::send(e, PROFILES[e[:profile]][:smtp])
-		db.exec_params('SELECT * FROM peeps.email_is_sent($1)', e[:id])
+		db.exec_params('SELECT * FROM peeps.email_is_sent($1)', [e[:id]])
 	end
 end
 
