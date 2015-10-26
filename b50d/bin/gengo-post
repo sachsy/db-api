@@ -53,3 +53,52 @@ job = {
 gengo = Gengo::API.new(public_key: GENGO_PUBLIC, private_key: GENGO_PRIVATE, sandbox: false)
 puts gengo.postTranslationJobs(jobs: {filename: job})
 
+#!/usr/bin/env ruby
+require 'pg'
+require 'b50d-config.rb'
+require 'gengo'
+DB = PG::Connection.new(dbname: 'd50b', user: 'd50b')
+
+# ask language
+print "What language code? "
+lang = STDIN.gets.strip
+
+# show recent file IDs:
+res = DB.exec("SELECT id, filename FROM core.translation_files ORDER BY id DESC LIMIT 10")
+res.each do |r|
+	puts "%d\t%s" % [r['id'], r['filename']]
+end
+
+# ask file ID
+print "What filename ID # in the database? "
+file_id = STDIN.gets.strip
+
+# get sentences
+res = DB.exec_params("SELECT code, sortid, en FROM core.translations WHERE file_id = $1 ORDER BY sortid", [file_id])
+howmany = res.to_a.size
+
+# http://developers.gengo.com/v2/api_methods/jobs/
+# http://developers.gengo.com/v2/api_methods/payloads/index.html
+jobs = {}
+res.each do |r|
+	jobs[r['code']] = {
+		body_src: r['en'],
+		lc_src: 'en',
+		lc_tgt: lang,
+		tier: 'standard',
+		type: 'text',
+		slug: 'sivers.org/ml sentence %d' % r['sortid'],
+		as_group: 1,
+		position: r['sortid'],
+		force: 1,
+		pupose: 'Online content',
+		tone: 'Informal',
+		auto_approve: 0,
+		custom_data: r['code'],
+		comment: 'http://sivers.org/ml for context. This is sentence #%d of %d.' % [r['sortid'], howmany]
+	}
+end
+
+gengo = Gengo::API.new(public_key: GENGO_PUBLIC, private_key: GENGO_PRIVATE, sandbox: false)
+File.open('gengo.log', 'w') {|f| f.puts gengo.postTranslationJobs(jobs: jobs) }
+puts "see gengo.log"
