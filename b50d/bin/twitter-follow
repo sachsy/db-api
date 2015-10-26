@@ -23,8 +23,8 @@ twits.each do |t|
 	begin
 		u = client.follow(t[:twitter])
 		if u.instance_of?(Array) && u[0].instance_of?(Twitter::User)
-			res = db.exec_params('SELECT * FROM peeps.add_stat($1, $2, $3)', [t[:person_id],
-				'twitter', '%d = %s' % [u[0].id, t[:twitter]])
+			res = db.exec_params('SELECT * FROM peeps.add_stat($1, $2, $3)',
+				[t[:person_id], 'twitter', '%d = %s' % [u[0].id, t[:twitter]]])
 			unless res[0]['mime'].include? 'problem'
 				puts " DONE"
 			else
