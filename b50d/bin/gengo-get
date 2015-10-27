@@ -3,20 +3,46 @@ require 'pg'
 require 'b50d-config.rb'
 require 'gengo'
 require 'json'
+
 DB = PG::Connection.new(dbname: 'd50b', user: 'd50b')
+GG = Gengo::API.new(public_key: GENGO_PUBLIC, private_key: GENGO_PRIVATE, sandbox: false)
 
-gengo = Gengo::API.new(public_key: GENGO_PUBLIC, private_key: GENGO_PRIVATE, sandbox: false)
+# get un-imported translation_orders
+res = DB.exec("SELECT * FROM core.translation_orders WHERE finished_at IS NULL ORDER BY id")
+res.each do |translation_order|
 
-# get reviewable jobs
-#res = gengo.getTranslationJobs(status: 'reviewable', count: 9999)
-#job_ids = res['response'].map {|j| j['job_id'].to_i}
-res = gengo.jobs_in_order(12345)  # TODO: change to order_id  (NOT job_id)
-job_ids = res['response']['order']['jobs_reviewable']
-job_ids.each do |id|
-	j = gengo.getTranslationJob(id: id)['response']['job']
-	DB.exec_params("UPDATE core.translations SET xx=$1 WHERE code=$2", [j['body_tgt'], j['custom_data']])  # TODO: xx to lang code
+	# check on that order
+	order = GG.jobs_in_order(translation_order['id'])['response']['order']
+
+	# next translation_order unless all the jobs in this order are reviewable
+	job_ids = order['jobs_reviewable'].map(&:to_i)
+	continue unless job_ids.size == order['total_jobs'].to_i
+
+	# new empty array of text to review afterwards
+	reviews = []
+
+	# get each job
+	job_ids.each do |job_id|
+		puts "getting job #{job_id}"
+		job = GG.getTranslationJob(id: job_id)['response']['job']
+		
+		# update database with translated text
+		# (dynamic query: column to update is lang of the translation order)
+		sql = 'UPDATE core.translations SET %s=$1 WHERE code=$2' % translation_order['lang']
+		DB.exec_params(sql, [job['body_tgt'], job['custom_data']])
+
+		# add to array of things to review afterwards:
+		reviews << {id: job_id, en: job['body_src'], tx: job['body_tgt']}
+	end
+
+	# database updated, now review:
+	reviews.each {|r| puts "%d\n%s\n%s" % [r[:id], r[:en], r[:tx]] }
+	print "\nLOOK OK? Type 'ok' if so: "
+	raise 'problem' unless 'ok' == STDIN.gets.strip
+
+	# approve translations
+	job_ids.each do |job_id|
+		puts "approving job #{job_id}"
+		GG.updateTranslationJob(id: job_id, action: 'approve')
+	end
 end
-
-# Then if it looks OK:
-job_ids.each {|id| gengo.updateTranslationJob(id: id, action: 'approve')}
-
