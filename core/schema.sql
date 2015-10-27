@@ -32,13 +32,8 @@ CREATE TABLE core.translations (
 	en text,
 	es text,
 	fr text,
-	de text,
-	it text,
 	pt text,
-	ja text,
-	zh text,
-	ar text,
-	ru text
+	zh text
 );
 
 COMMIT;
