@@ -47,7 +47,7 @@ res = DB.exec_params("SELECT code, sortid, en FROM core.translations WHERE file_
 howmany = res.to_a.size
 
 gengo = Gengo::API.new(public_key: GENGO_PUBLIC, private_key: GENGO_PRIVATE, sandbox: false)
-languages = %w(es-la fr pt zh)
+languages = %w(es-la fr pt-br zh)
 
 languages.each do |lang|
 	# http://developers.gengo.com/v2/api_methods/jobs/
