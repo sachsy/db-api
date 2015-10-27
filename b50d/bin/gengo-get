@@ -45,4 +45,9 @@ res.each do |translation_order|
 		puts "approving job #{job_id}"
 		GG.updateTranslationJob(id: job_id, action: 'approve')
 	end
+
+	# mark translation_order as finished
+	DB.exec_params("UPDATE core.translation_orders SET finished_at=NOW() WHERE id=$1",
+		[translation_order['id']])
 end
+
