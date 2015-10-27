@@ -72,8 +72,9 @@ languages.each do |lang|
 		}
 	end
 
-	File.open('gengo.log', 'a') {|f| f.puts gengo.postTranslationJobs(jobs: jobs) }
+	g = gengo.postTranslationJobs(jobs: jobs)
+	DB.exec_params("INSERT INTO core.translation_orders(id, file_id, lang) VALUES($1, $2, $3)", [
+		g['response']['order_id'], id, lang[0,2]
+	])
 end
-
-puts "see gengo.log"
 

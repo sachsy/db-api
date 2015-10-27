@@ -25,6 +25,14 @@ CREATE TABLE core.translation_files (
 	template text
 );
 
+CREATE TABLE core.translation_orders (
+	id integer not null primary key,
+	file_id integer REFERENCES core.translation_files(id),
+	lang char(2),
+	created_at date NOT NULL DEFAULT CURRENT_DATE,
+	finished_at date
+);
+
 CREATE TABLE core.translations (
 	code char(8) primary key,
 	file_id integer REFERENCES core.translation_files(id),
