@@ -5,7 +5,7 @@ BEGIN;
 CREATE SCHEMA sivers;
 SET search_path = sivers;
 
-CREATE TABLE comments (
+CREATE TABLE sivers.comments (
 	id serial primary key,
 	uri varchar(32) not null CONSTRAINT valid_uri CHECK (uri ~ '\A[a-z0-9-]+\Z'),
 	person_id integer not null REFERENCES peeps.people(id) ON DELETE CASCADE,
@@ -14,8 +14,8 @@ CREATE TABLE comments (
 	email text CONSTRAINT valid_email CHECK (email ~ '\A\S+@\S+\.\S+\Z'),
 	html text not null CHECK (length(html) > 0)
 );
-CREATE INDEX comuri ON comments(uri);
-CREATE INDEX compers ON comments(person_id);
+CREATE INDEX comuri ON sivers.comments(uri);
+CREATE INDEX compers ON sivers.comments(person_id);
 
 COMMIT;
 
