@@ -1317,3 +1317,50 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- now.urls missing person_id
+CREATE OR REPLACE FUNCTION peeps.now_unknowns(
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := json_agg(r) FROM
+		(SELECT id, short, long FROM now.urls WHERE person_id IS NULL) r;
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: now.urls.id
+CREATE OR REPLACE FUNCTION peeps.now_url(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := row_to_json(r.*) FROM now.urls r WHERE id = $1;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: now.urls.id
+CREATE OR REPLACE FUNCTION peeps.now_unknown_find(integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
+		(SELECT * FROM now.find_person($1))) r;
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: now.urls.id, person_id
+CREATE OR REPLACE FUNCTION peeps.now_unknown_assign(integer, integer,
+	OUT mime text, OUT js json) AS $$
+BEGIN
+	mime := 'application/json';
+	UPDATE now.urls SET person_id = $2 WHERE id = $1;
+	js := row_to_json(r.*) FROM now.urls r WHERE id = $1;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
