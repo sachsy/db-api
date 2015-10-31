@@ -146,7 +146,6 @@ INSERT INTO urls (id, person_id, created_at, updated_at, short, long) VALUES (10
 INSERT INTO urls (id, person_id, created_at, updated_at, short, long) VALUES (109, NULL, '2015-10-30', '2015-10-30', 'mikeechlin.com/now', 'http://www.mikeechlin.com/now');
 INSERT INTO urls (id, person_id, created_at, updated_at, short, long) VALUES (112, NULL, '2015-10-30', '2015-10-30', 'montyharper.com/now', 'http://montyharper.com/now');
 INSERT INTO urls (id, person_id, created_at, updated_at, short, long) VALUES (116, NULL, '2015-10-30', '2015-10-30', 'nathanlustig.com/now', 'http://www.nathanlustig.com/now/');
-INSERT INTO urls (id, person_id, created_at, updated_at, short, long) VALUES (119, NULL, '2015-10-30', '2015-10-30', 'nickswan.net/now', 'http://nickswan.net/now/');
 INSERT INTO urls (id, person_id, created_at, updated_at, short, long) VALUES (122, NULL, '2015-10-30', '2015-10-30', 'nupita.de/now.html', 'http://nupita.de/now.html');
 INSERT INTO urls (id, person_id, created_at, updated_at, short, long) VALUES (124, NULL, '2015-10-30', '2015-10-30', 'offmyeasel.com/now.html', 'http://www.offmyeasel.com/now.html');
 INSERT INTO urls (id, person_id, created_at, updated_at, short, long) VALUES (127, NULL, '2015-10-30', '2015-10-30', 'parabolasales.com/now', 'http://parabolasales.com/now/');
