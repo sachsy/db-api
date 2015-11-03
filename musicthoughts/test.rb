@@ -27,7 +27,7 @@ class TestMusicthoughtsClient < Minitest::Test
 		assert_equal [3, 1], @j[:thoughts].map {|x| x[:id]}
 		assert_equal '如果音乐可以被翻译成人类的言语，那音乐就再也没有存在的必要了。', @j[:thoughts][0][:thought]
 		qry("category('es', 55)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_top_authors
@@ -49,7 +49,7 @@ class TestMusicthoughtsClient < Minitest::Test
 		assert_equal 'Suona quello che non conosci.', @j[:thoughts][1][:thought]
 		assert_equal({id: 1, name: 'Miles Davis'} , @j[:thoughts][1][:author])
 		qry("get_author('en', 55)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_top_contributors
@@ -70,7 +70,7 @@ class TestMusicthoughtsClient < Minitest::Test
 		qry("get_contributor('en', 2)")
 		assert_nil @j[:thoughts]
 		qry("get_contributor('en', 55)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_random_thought
@@ -90,7 +90,7 @@ class TestMusicthoughtsClient < Minitest::Test
 		assert_equal 'Derek Sivers', @j[:contributor][:name]
 		assert_equal ['パフォーマンス', '実験', '練習'], @j[:categories].map {|x| x[:category]}.sort
 		qry("get_thought('en', 99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_new_thoughts

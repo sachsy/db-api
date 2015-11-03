@@ -1,6 +1,5 @@
 ----------------------------------------
 ------------------------- API FUNCTIONS:
--- TODO: add language parameter to functions
 ----------------------------------------
 
 -- NOTE: all queries only show where thoughts.approved IS TRUE
@@ -9,9 +8,9 @@
 -- get '/languages'
 -- PARAMS: -none-
 CREATE OR REPLACE FUNCTION musicthoughts.languages(
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := '["en","es","fr","de","it","pt","ja","zh","ar","ru"]';
 END;
 $$ LANGUAGE plpgsql;
@@ -20,9 +19,9 @@ $$ LANGUAGE plpgsql;
 -- get '/categories'
 -- PARAMS: lang
 CREATE OR REPLACE FUNCTION musicthoughts.all_categories(char(2),
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	EXECUTE FORMAT ('SELECT json_agg(r) FROM (SELECT id, %I AS category, 
 		(SELECT COUNT(thoughts.id) FROM categories_thoughts, thoughts
 			WHERE category_id=categories.id
@@ -35,7 +34,7 @@ $$ LANGUAGE plpgsql;
 -- get %r{^/categories/([0-9]+)$}
 -- PARAMS: lang, category_id
 CREATE OR REPLACE FUNCTION musicthoughts.category(char(2), integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	qry text;
 BEGIN
@@ -46,7 +45,7 @@ BEGIN
 		WHERE category_id=categories.id AND thought_id=thoughts.id AND approved IS TRUE
 		ORDER BY id DESC) t) AS thoughts
 		FROM categories WHERE id = %s', $1, $1, $2);
-	mime := 'application/json';
+	status := 200;
 	EXECUTE 'SELECT row_to_json(r) FROM (' || qry || ') r' INTO js;
 	IF js IS NULL THEN
 m4_NOTFOUND
@@ -59,9 +58,9 @@ $$ LANGUAGE plpgsql;
 -- get '/authors/top'
 -- PARAMS: top limit  (NULL for all)
 CREATE OR REPLACE FUNCTION musicthoughts.top_authors(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM authors_view LIMIT $1) r;
 END;
 $$ LANGUAGE plpgsql;
@@ -70,7 +69,7 @@ $$ LANGUAGE plpgsql;
 -- get %r{^/authors/([0-9]+)$}
 -- PARAMS: lang, author id
 CREATE OR REPLACE FUNCTION musicthoughts.get_author(char(2), integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	qry text;
 BEGIN
@@ -83,7 +82,7 @@ BEGIN
 			WHERE author_id=authors.id AND approved IS TRUE
 			ORDER BY id DESC) t) AS thoughts
 		FROM authors WHERE id = %s', $1, $2);
-	mime := 'application/json';
+	status := 200;
 	EXECUTE 'SELECT row_to_json(r) FROM (' || qry || ') r' INTO js;
 	IF js IS NULL THEN
 m4_NOTFOUND
@@ -96,9 +95,9 @@ $$ LANGUAGE plpgsql;
 -- get '/contributors/top'
 -- PARAMS: top limit  (NULL for all)
 CREATE OR REPLACE FUNCTION musicthoughts.top_contributors(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM contributors_view LIMIT $1) r;
 END;
 $$ LANGUAGE plpgsql;
@@ -107,7 +106,7 @@ $$ LANGUAGE plpgsql;
 -- get %r{^/contributors/([0-9]+)$}
 -- PARAMS: lang, contributor id
 CREATE OR REPLACE FUNCTION musicthoughts.get_contributor(char(2), integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	qry text;
 BEGIN
@@ -119,7 +118,7 @@ BEGIN
 			ORDER BY id DESC) t) AS thoughts
 		FROM contributors, peeps.people
 		WHERE contributors.person_id=peeps.people.id AND contributors.id = %s', $1, $2);
-	mime := 'application/json';
+	status := 200;
 	EXECUTE 'SELECT row_to_json(r) FROM (' || qry || ') r' INTO js;
 	IF js IS NULL THEN
 m4_NOTFOUND
@@ -131,9 +130,9 @@ $$ LANGUAGE plpgsql;
 -- get '/thoughts/random'
 -- PARAMS: lang
 CREATE OR REPLACE FUNCTION musicthoughts.random_thought(char(2),
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	EXECUTE 'SELECT row_to_json(r) FROM ('
 		|| thought_view($1, (SELECT id FROM thoughts WHERE as_rand IS TRUE
 			ORDER BY RANDOM() LIMIT 1), NULL, NULL)
@@ -145,9 +144,9 @@ $$ LANGUAGE plpgsql;
 -- get %r{^/thoughts/([0-9]+)$}
 -- PARAMS: lang, thought id
 CREATE OR REPLACE FUNCTION musicthoughts.get_thought(char(2), integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	EXECUTE 'SELECT row_to_json(r) FROM (' || thought_view($1, $2, NULL, NULL) || ') r' INTO js;
 	IF js IS NULL THEN
 m4_NOTFOUND
@@ -160,9 +159,9 @@ $$ LANGUAGE plpgsql;
 -- get '/thoughts/new'
 -- PARAMS: lang, newest limit (NULL for all)
 CREATE OR REPLACE FUNCTION musicthoughts.new_thoughts(char(2), integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	EXECUTE 'SELECT json_agg(r) FROM (' || thought_view($1, NULL, NULL, $2) || ') r' INTO js;
 END;
 $$ LANGUAGE plpgsql;
@@ -170,7 +169,7 @@ $$ LANGUAGE plpgsql;
 -- get '/search/:q'
 -- PARAMS: lang, search term
 CREATE OR REPLACE FUNCTION musicthoughts.search(char(2), text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	q text;
 	auth json;
@@ -192,7 +191,7 @@ BEGIN
 		$1, $1, q) INTO cats;
 	EXECUTE 'SELECT json_agg(r) FROM ('
 		|| thought_view($1, NULL, q, NULL) || ') r' INTO thts;
-	mime := 'application/json';
+	status := 200;
 	js := json_build_object(
 		'authors', auth,
 		'contributors', cont,
@@ -218,7 +217,7 @@ $$ LANGUAGE plpgsql;
 -- Returns simple hash of ids, since thought is unapproved and untranslated, no view yet.
 CREATE OR REPLACE FUNCTION musicthoughts.add_thought(
 	char(2), text, text, text, text, text, text, text, integer[],
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pers_id integer;
 	cont_id integer;
@@ -245,7 +244,7 @@ BEGIN
 			INSERT INTO categories_thoughts VALUES (newt_id, cat_id);
 		END LOOP;
 	END IF;
-	mime := 'application/json';
+	status := 200;
 	js := json_build_object(
 		'thought', newt_id,
 		'contributor', cont_id,
