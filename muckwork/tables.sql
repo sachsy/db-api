@@ -24,7 +24,7 @@ CREATE TABLE muckwork.workers (
 	millicents_per_second integer CHECK (millicents_per_second >= 0)
 );
 
-CREATE TYPE muckwork.status AS ENUM('created', 'quoted', 'approved', 'refused', 'started', 'finished');
+CREATE TYPE muckwork.progress AS ENUM('created', 'quoted', 'approved', 'refused', 'started', 'finished');
 
 CREATE TABLE muckwork.projects (
 	id serial primary key,
@@ -36,7 +36,7 @@ CREATE TABLE muckwork.projects (
 	approved_at timestamp(0) with time zone CHECK (approved_at >= quoted_at),
 	started_at timestamp(0) with time zone CHECK (started_at >= approved_at),
 	finished_at timestamp(0) with time zone CHECK (finished_at >= started_at),
-	status status not null default 'created',
+	progress progress not null default 'created',
 	quoted_currency char(3) REFERENCES core.currencies(code),
 	quoted_cents integer CHECK (quoted_cents >= 0),
 	quoted_ratetype varchar(4) CHECK (quoted_ratetype = 'fix' OR quoted_ratetype = 'time'),
@@ -44,7 +44,7 @@ CREATE TABLE muckwork.projects (
 	final_cents integer CHECK (final_cents >= 0)
 );
 CREATE INDEX pjci ON muckwork.projects(client_id);
-CREATE INDEX pjst ON muckwork.projects(status);
+CREATE INDEX pjst ON muckwork.projects(progress);
 
 CREATE TABLE muckwork.tasks (
 	id serial primary key,
@@ -57,11 +57,11 @@ CREATE TABLE muckwork.tasks (
 	claimed_at timestamp(0) with time zone CHECK (claimed_at >= created_at),
 	started_at timestamp(0) with time zone CHECK (started_at >= claimed_at),
 	finished_at timestamp(0) with time zone CHECK (finished_at >= started_at),
-	status muckwork.status not null default 'created'
+	progress muckwork.progress not null default 'created'
 );
 CREATE INDEX tpi ON muckwork.tasks(project_id);
 CREATE INDEX twi ON muckwork.tasks(worker_id);
-CREATE INDEX tst ON muckwork.tasks(status);
+CREATE INDEX tst ON muckwork.tasks(progress);
 
 CREATE TABLE muckwork.notes (
 	id serial primary key,

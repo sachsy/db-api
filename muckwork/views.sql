@@ -4,7 +4,7 @@
 
 DROP VIEW IF EXISTS muckwork.project_view CASCADE;
 CREATE VIEW muckwork.project_view AS SELECT id, title, description, created_at,
-	quoted_at, approved_at, started_at, finished_at, status,
+	quoted_at, approved_at, started_at, finished_at, progress,
 	(SELECT row_to_json(cx) AS client FROM
 		(SELECT c.*, p.name, p.email
 			FROM muckwork.clients c, peeps.people p
@@ -35,7 +35,7 @@ CREATE VIEW muckwork.task_view AS SELECT t.*,
 
 DROP VIEW IF EXISTS muckwork.project_detail_view CASCADE;
 CREATE VIEW muckwork.project_detail_view AS SELECT id, title, description, created_at,
-	quoted_at, approved_at, started_at, finished_at, status,
+	quoted_at, approved_at, started_at, finished_at, progress,
 	(SELECT row_to_json(cx) AS client FROM
 		(SELECT c.*, p.name, p.email
 			FROM muckwork.clients c, peeps.people p

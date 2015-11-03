@@ -24,7 +24,7 @@ CREATE TABLE muckwork.workers (
 	millicents_per_second integer CHECK (millicents_per_second >= 0)
 );
 
-CREATE TYPE muckwork.status AS ENUM('created', 'quoted', 'approved', 'refused', 'started', 'finished');
+CREATE TYPE muckwork.progress AS ENUM('created', 'quoted', 'approved', 'refused', 'started', 'finished');
 
 CREATE TABLE muckwork.projects (
 	id serial primary key,
@@ -36,7 +36,7 @@ CREATE TABLE muckwork.projects (
 	approved_at timestamp(0) with time zone CHECK (approved_at >= quoted_at),
 	started_at timestamp(0) with time zone CHECK (started_at >= approved_at),
 	finished_at timestamp(0) with time zone CHECK (finished_at >= started_at),
-	status status not null default 'created',
+	progress progress not null default 'created',
 	quoted_currency char(3) REFERENCES core.currencies(code),
 	quoted_cents integer CHECK (quoted_cents >= 0),
 	quoted_ratetype varchar(4) CHECK (quoted_ratetype = 'fix' OR quoted_ratetype = 'time'),
@@ -44,7 +44,7 @@ CREATE TABLE muckwork.projects (
 	final_cents integer CHECK (final_cents >= 0)
 );
 CREATE INDEX pjci ON muckwork.projects(client_id);
-CREATE INDEX pjst ON muckwork.projects(status);
+CREATE INDEX pjst ON muckwork.projects(progress);
 
 CREATE TABLE muckwork.tasks (
 	id serial primary key,
@@ -57,11 +57,11 @@ CREATE TABLE muckwork.tasks (
 	claimed_at timestamp(0) with time zone CHECK (claimed_at >= created_at),
 	started_at timestamp(0) with time zone CHECK (started_at >= claimed_at),
 	finished_at timestamp(0) with time zone CHECK (finished_at >= started_at),
-	status muckwork.status not null default 'created'
+	progress muckwork.progress not null default 'created'
 );
 CREATE INDEX tpi ON muckwork.tasks(project_id);
 CREATE INDEX twi ON muckwork.tasks(worker_id);
-CREATE INDEX tst ON muckwork.tasks(status);
+CREATE INDEX tst ON muckwork.tasks(progress);
 
 CREATE TABLE muckwork.notes (
 	id serial primary key,
@@ -121,26 +121,26 @@ COMMIT;
 ------------------ TRIGGERS:
 ----------------------------
 
-CREATE OR REPLACE FUNCTION muckwork.project_status() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.project_progress() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.quoted_at IS NULL THEN
-		NEW.status := 'created';
+		NEW.progress := 'created';
 	ELSIF NEW.approved_at IS NULL THEN
-		NEW.status := 'quoted';
+		NEW.progress := 'quoted';
 	ELSIF NEW.started_at IS NULL THEN
-		NEW.status := 'approved';
+		NEW.progress := 'approved';
 	ELSIF NEW.finished_at IS NULL THEN
-		NEW.status := 'started';
+		NEW.progress := 'started';
 	ELSE
-		NEW.status := 'finished';
+		NEW.progress := 'finished';
 	END IF;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS project_status ON muckwork.projects CASCADE;
-CREATE TRIGGER project_status BEFORE UPDATE OF
+DROP TRIGGER IF EXISTS project_progress ON muckwork.projects CASCADE;
+CREATE TRIGGER project_progress BEFORE UPDATE OF
 	quoted_at, approved_at, started_at, finished_at ON muckwork.projects
-	FOR EACH ROW EXECUTE PROCEDURE muckwork.project_status();
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.project_progress();
 
 
 -- Dates must always exist in this order:
@@ -273,22 +273,22 @@ CREATE TRIGGER dates_cant_change_tf BEFORE UPDATE OF finished_at ON muckwork.tas
 
 
 
-CREATE OR REPLACE FUNCTION muckwork.task_status() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_progress() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.started_at IS NULL THEN
-		NEW.status := 'created';
+		NEW.progress := 'created';
 	ELSIF NEW.finished_at IS NULL THEN
-		NEW.status := 'started';
+		NEW.progress := 'started';
 	ELSE
-		NEW.status := 'finished';
+		NEW.progress := 'finished';
 	END IF;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS task_status ON muckwork.tasks CASCADE;
-CREATE TRIGGER task_status BEFORE UPDATE OF
+DROP TRIGGER IF EXISTS task_progress ON muckwork.tasks CASCADE;
+CREATE TRIGGER task_progress BEFORE UPDATE OF
 	started_at, finished_at ON muckwork.tasks
-	FOR EACH ROW EXECUTE PROCEDURE muckwork.task_status();
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.task_progress();
 
 
 -- Dates must always exist in this order:
@@ -344,7 +344,7 @@ CREATE TRIGGER tasks_claimed_pair BEFORE UPDATE OF
 -- can't claim a task unless it's approved
 CREATE OR REPLACE FUNCTION muckwork.only_claim_approved_task() RETURNS TRIGGER AS $$
 BEGIN
-	IF (OLD.status != 'approved') THEN
+	IF (OLD.progress != 'approved') THEN
 		RAISE 'only_claim_approved_task';
 	END IF;
 	RETURN NEW;
@@ -520,7 +520,7 @@ CREATE TRIGGER task_uncreates_charge AFTER UPDATE OF finished_at ON muckwork.tas
 -- approving project makes tasks approved
 CREATE OR REPLACE FUNCTION muckwork.approve_project_tasks() RETURNS TRIGGER AS $$
 BEGIN
-	UPDATE muckwork.tasks SET status='approved'
+	UPDATE muckwork.tasks SET progress='approved'
 		WHERE project_id=OLD.id;
 	RETURN NEW;
 END;
@@ -533,7 +533,7 @@ CREATE TRIGGER approve_project_tasks AFTER UPDATE OF approved_at ON muckwork.pro
 -- UN-approving project makes tasks UN-approved 
 CREATE OR REPLACE FUNCTION muckwork.unapprove_project_tasks() RETURNS TRIGGER AS $$
 BEGIN
-	UPDATE muckwork.tasks SET status='quoted'
+	UPDATE muckwork.tasks SET progress='quoted'
 		WHERE project_id=OLD.id;
 	RETURN NEW;
 END;
@@ -689,7 +689,7 @@ $$ LANGUAGE plpgsql;
 
 DROP VIEW IF EXISTS muckwork.project_view CASCADE;
 CREATE VIEW muckwork.project_view AS SELECT id, title, description, created_at,
-	quoted_at, approved_at, started_at, finished_at, status,
+	quoted_at, approved_at, started_at, finished_at, progress,
 	(SELECT row_to_json(cx) AS client FROM
 		(SELECT c.*, p.name, p.email
 			FROM muckwork.clients c, peeps.people p
@@ -720,7 +720,7 @@ CREATE VIEW muckwork.task_view AS SELECT t.*,
 
 DROP VIEW IF EXISTS muckwork.project_detail_view CASCADE;
 CREATE VIEW muckwork.project_detail_view AS SELECT id, title, description, created_at,
-	quoted_at, approved_at, started_at, finished_at, status,
+	quoted_at, approved_at, started_at, finished_at, progress,
 	(SELECT row_to_json(cx) AS client FROM
 		(SELECT c.*, p.name, p.email
 			FROM muckwork.clients c, peeps.people p
@@ -765,7 +765,7 @@ BEGIN
 	js := json_build_object(
 		'type', 'about:blank',
 		'title', 'Not Found',
-		'status', 404);
+		'progress', 404);
 
 	ELSE
 		mime := 'application/json';
@@ -792,7 +792,7 @@ BEGIN
 	js := json_build_object(
 		'type', 'about:blank',
 		'title', 'Not Found',
-		'status', 404);
+		'progress', 404);
 
 	ELSE
 		mime := 'application/json';
@@ -819,7 +819,7 @@ BEGIN
 	js := json_build_object(
 		'type', 'about:blank',
 		'title', 'Not Found',
-		'status', 404);
+		'progress', 404);
 
 	ELSE
 		mime := 'application/json';
@@ -861,37 +861,37 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- PARAMS: project_id, status
+-- PARAMS: project_id, progress
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
-CREATE OR REPLACE FUNCTION muckwork.project_has_status(integer, text,
+CREATE OR REPLACE FUNCTION muckwork.project_has_progress(integer, text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	PERFORM 1 FROM muckwork.projects WHERE id = $1 AND status = $2::status;
+	PERFORM 1 FROM muckwork.projects WHERE id = $1 AND progress = $2::progress;
 	IF FOUND IS TRUE THEN
 		js := '{"ok": true}';
 	ELSE
 		js := '{"ok": false}';
 	END IF;
-EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
+EXCEPTION WHEN OTHERS THEN  -- if illegal progress text passed into params
 	js := '{"ok": false}';
 END;
 $$ LANGUAGE plpgsql;
 
 
--- PARAMS: task_id, status
+-- PARAMS: task_id, progress
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
-CREATE OR REPLACE FUNCTION muckwork.task_has_status(integer, text,
+CREATE OR REPLACE FUNCTION muckwork.task_has_progress(integer, text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	PERFORM 1 FROM muckwork.tasks WHERE id = $1 AND status = $2::status;
+	PERFORM 1 FROM muckwork.tasks WHERE id = $1 AND progress = $2::progress;
 	IF FOUND IS TRUE THEN
 		js := '{"ok": true}';
 	ELSE
 		js := '{"ok": false}';
 	END IF;
-EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
+EXCEPTION WHEN OTHERS THEN  -- if illegal progress text passed into params
 	js := '{"ok": false}';
 END;
 $$ LANGUAGE plpgsql;
@@ -924,7 +924,7 @@ BEGIN
 	js := json_build_object(
 		'type', 'about:blank',
 		'title', 'Not Found',
-		'status', 404);
+		'progress', 404);
  END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1027,7 +1027,7 @@ BEGIN
 	js := json_build_object(
 		'type', 'about:blank',
 		'title', 'Not Found',
-		'status', 404);
+		'progress', 404);
  END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1127,14 +1127,14 @@ $$ LANGUAGE plpgsql;
 
 
 
--- PARAMS: status ('created','quoted','approved','refused','started','finished')
-CREATE OR REPLACE FUNCTION muckwork.get_projects_with_status(text,
+-- PARAMS: progress ('created','quoted','approved','refused','started','finished')
+CREATE OR REPLACE FUNCTION muckwork.get_projects_with_progress(text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := json_agg(r) FROM (SELECT * FROM muckwork.project_view WHERE status = $1::status) r;
+	js := json_agg(r) FROM (SELECT * FROM muckwork.project_view WHERE progress = $1::progress) r;
 	IF js IS NULL THEN js := '[]'; END IF;
-EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
+EXCEPTION WHEN OTHERS THEN  -- if illegal progress text passed into params
 	js := '[]';
 END;
 $$ LANGUAGE plpgsql;
@@ -1151,7 +1151,7 @@ BEGIN
 	js := json_build_object(
 		'type', 'about:blank',
 		'title', 'Not Found',
-		'status', 404);
+		'progress', 404);
  END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1204,7 +1204,7 @@ BEGIN
 	js := json_build_object(
 		'type', 'about:blank',
 		'title', 'Not Found',
-		'status', 404);
+		'progress', 404);
  END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1218,7 +1218,7 @@ BEGIN
 	UPDATE muckwork.projects SET quoted_at = NOW(), quoted_ratetype = $2,
 		quoted_currency = $3, final_currency = $3, quoted_cents = $4
 		WHERE id = $1;
-	UPDATE muckwork.tasks SET status = 'quoted' WHERE project_id = $1;
+	UPDATE muckwork.tasks SET progress = 'quoted' WHERE project_id = $1;
 	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_project($1) x;
 END;
 $$ LANGUAGE plpgsql;
@@ -1230,7 +1230,7 @@ CREATE OR REPLACE FUNCTION muckwork.approve_quote(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	UPDATE muckwork.projects SET approved_at = NOW() WHERE id = $1;
-	UPDATE muckwork.tasks SET status = 'approved' WHERE project_id = $1;
+	UPDATE muckwork.tasks SET progress = 'approved' WHERE project_id = $1;
 	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_project($1) x;
 END;
 $$ LANGUAGE plpgsql;
@@ -1243,14 +1243,14 @@ CREATE OR REPLACE FUNCTION muckwork.refuse_quote(integer, text,
 DECLARE
 	note_id integer;
 BEGIN
-	UPDATE muckwork.projects SET status = 'refused' WHERE id = $1 AND status = 'quoted';
+	UPDATE muckwork.projects SET progress = 'refused' WHERE id = $1 AND progress = 'quoted';
 	IF FOUND IS FALSE THEN
 
 	mime := 'application/problem+json';
 	js := json_build_object(
 		'type', 'about:blank',
 		'title', 'Not Found',
-		'status', 404);
+		'progress', 404);
 
 	ELSE
 		INSERT INTO muckwork.notes (project_id, client_id, note)
@@ -1275,7 +1275,7 @@ BEGIN
 	js := json_build_object(
 		'type', 'about:blank',
 		'title', 'Not Found',
-		'status', 404);
+		'progress', 404);
  END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1295,7 +1295,7 @@ BEGIN
 	js := json_build_object(
 		'type', 'about:blank',
 		'title', 'Not Found',
-		'status', 404);
+		'progress', 404);
  END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1514,7 +1514,7 @@ BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view
 		WHERE (project_id, sortid) IN (SELECT project_id, MIN(sortid)
-			FROM muckwork.tasks WHERE status='approved'
+			FROM muckwork.tasks WHERE progress='approved'
 			AND worker_id IS NULL AND claimed_at IS NULL
 			GROUP BY project_id) 
 		ORDER BY project_id) r;
@@ -1524,14 +1524,14 @@ $$ LANGUAGE plpgsql;
 
 
 
--- PARAMS: status ('created','quoted','approved','refused','started','finished')
-CREATE OR REPLACE FUNCTION muckwork.get_tasks_with_status(text,
+-- PARAMS: progress ('created','quoted','approved','refused','started','finished')
+CREATE OR REPLACE FUNCTION muckwork.get_tasks_with_progress(text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view WHERE status = $1::status) r;
+	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view WHERE progress = $1::progress) r;
 	IF js IS NULL THEN js := '[]'; END IF;
-EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
+EXCEPTION WHEN OTHERS THEN  -- if illegal progress text passed into params
 	js := '[]';
 END;
 $$ LANGUAGE plpgsql;

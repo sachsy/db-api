@@ -97,37 +97,37 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- PARAMS: project_id, status
+-- PARAMS: project_id, progress
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
-CREATE OR REPLACE FUNCTION muckwork.project_has_status(integer, text,
+CREATE OR REPLACE FUNCTION muckwork.project_has_progress(integer, text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	PERFORM 1 FROM muckwork.projects WHERE id = $1 AND status = $2::status;
+	PERFORM 1 FROM muckwork.projects WHERE id = $1 AND progress = $2::progress;
 	IF FOUND IS TRUE THEN
 		js := '{"ok": true}';
 	ELSE
 		js := '{"ok": false}';
 	END IF;
-EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
+EXCEPTION WHEN OTHERS THEN  -- if illegal progress text passed into params
 	js := '{"ok": false}';
 END;
 $$ LANGUAGE plpgsql;
 
 
--- PARAMS: task_id, status
+-- PARAMS: task_id, progress
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
-CREATE OR REPLACE FUNCTION muckwork.task_has_status(integer, text,
+CREATE OR REPLACE FUNCTION muckwork.task_has_progress(integer, text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	PERFORM 1 FROM muckwork.tasks WHERE id = $1 AND status = $2::status;
+	PERFORM 1 FROM muckwork.tasks WHERE id = $1 AND progress = $2::progress;
 	IF FOUND IS TRUE THEN
 		js := '{"ok": true}';
 	ELSE
 		js := '{"ok": false}';
 	END IF;
-EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
+EXCEPTION WHEN OTHERS THEN  -- if illegal progress text passed into params
 	js := '{"ok": false}';
 END;
 $$ LANGUAGE plpgsql;
@@ -283,14 +283,14 @@ $$ LANGUAGE plpgsql;
 
 
 
--- PARAMS: status ('created','quoted','approved','refused','started','finished')
-CREATE OR REPLACE FUNCTION muckwork.get_projects_with_status(text,
+-- PARAMS: progress ('created','quoted','approved','refused','started','finished')
+CREATE OR REPLACE FUNCTION muckwork.get_projects_with_progress(text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := json_agg(r) FROM (SELECT * FROM muckwork.project_view WHERE status = $1::status) r;
+	js := json_agg(r) FROM (SELECT * FROM muckwork.project_view WHERE progress = $1::progress) r;
 	IF js IS NULL THEN js := '[]'; END IF;
-EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
+EXCEPTION WHEN OTHERS THEN  -- if illegal progress text passed into params
 	js := '[]';
 END;
 $$ LANGUAGE plpgsql;
@@ -345,7 +345,7 @@ BEGIN
 	UPDATE muckwork.projects SET quoted_at = NOW(), quoted_ratetype = $2,
 		quoted_currency = $3, final_currency = $3, quoted_cents = $4
 		WHERE id = $1;
-	UPDATE muckwork.tasks SET status = 'quoted' WHERE project_id = $1;
+	UPDATE muckwork.tasks SET progress = 'quoted' WHERE project_id = $1;
 	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_project($1) x;
 END;
 $$ LANGUAGE plpgsql;
@@ -357,7 +357,7 @@ CREATE OR REPLACE FUNCTION muckwork.approve_quote(integer,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	UPDATE muckwork.projects SET approved_at = NOW() WHERE id = $1;
-	UPDATE muckwork.tasks SET status = 'approved' WHERE project_id = $1;
+	UPDATE muckwork.tasks SET progress = 'approved' WHERE project_id = $1;
 	SELECT x.mime, x.js INTO mime, js FROM muckwork.get_project($1) x;
 END;
 $$ LANGUAGE plpgsql;
@@ -370,7 +370,7 @@ CREATE OR REPLACE FUNCTION muckwork.refuse_quote(integer, text,
 DECLARE
 	note_id integer;
 BEGIN
-	UPDATE muckwork.projects SET status = 'refused' WHERE id = $1 AND status = 'quoted';
+	UPDATE muckwork.projects SET progress = 'refused' WHERE id = $1 AND progress = 'quoted';
 	IF FOUND IS FALSE THEN
 m4_NOTFOUND
 	ELSE
@@ -521,7 +521,7 @@ BEGIN
 	mime := 'application/json';
 	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view
 		WHERE (project_id, sortid) IN (SELECT project_id, MIN(sortid)
-			FROM muckwork.tasks WHERE status='approved'
+			FROM muckwork.tasks WHERE progress='approved'
 			AND worker_id IS NULL AND claimed_at IS NULL
 			GROUP BY project_id) 
 		ORDER BY project_id) r;
@@ -531,14 +531,14 @@ $$ LANGUAGE plpgsql;
 
 
 
--- PARAMS: status ('created','quoted','approved','refused','started','finished')
-CREATE OR REPLACE FUNCTION muckwork.get_tasks_with_status(text,
+-- PARAMS: progress ('created','quoted','approved','refused','started','finished')
+CREATE OR REPLACE FUNCTION muckwork.get_tasks_with_progress(text,
 	OUT mime text, OUT js json) AS $$
 BEGIN
 	mime := 'application/json';
-	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view WHERE status = $1::status) r;
+	js := json_agg(r) FROM (SELECT * FROM muckwork.task_view WHERE progress = $1::progress) r;
 	IF js IS NULL THEN js := '[]'; END IF;
-EXCEPTION WHEN OTHERS THEN  -- if illegal status text passed into params
+EXCEPTION WHEN OTHERS THEN  -- if illegal progress text passed into params
 	js := '[]';
 END;
 $$ LANGUAGE plpgsql;

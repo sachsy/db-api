@@ -15,7 +15,7 @@ class MuckworkAPITest < Minitest::Test
 			approved_at: '2015-07-04T00:34:56+12:00',
 			started_at: '2015-07-05T00:34:56+12:00',
 			finished_at: '2015-07-05T03:34:56+12:00',
-			status: 'finished',
+			progress: 'finished',
 			client: {id: 1,
 				person_id: 2,
 				currency: 'USD',
@@ -33,7 +33,7 @@ class MuckworkAPITest < Minitest::Test
 			approved_at: '2015-07-04T00:34:56+12:00',
 			started_at: '2015-07-05T00:34:56+12:00',
 			finished_at: '2015-07-05T03:34:56+12:00',
-			status: 'finished',
+			progress: 'finished',
 			client: {id: 1,
 				person_id: 2,
 				currency: 'USD',
@@ -54,7 +54,7 @@ class MuckworkAPITest < Minitest::Test
 				claimed_at: '2015-07-04T00:34:56+12:00',
 				started_at: '2015-07-05T00:34:56+12:00',
 				finished_at: '2015-07-05T00:35:56+12:00',
-				status: 'finished',
+				progress: 'finished',
 				worker: {id: 1,
 					person_id: 4,
 					currency: 'USD',
@@ -71,7 +71,7 @@ class MuckworkAPITest < Minitest::Test
 				claimed_at: '2015-07-04T00:34:56+12:00',
 				started_at: '2015-07-05T00:35:56+12:00',
 				finished_at: '2015-07-05T00:36:56+12:00',
-				status: 'finished',
+				progress: 'finished',
 				worker: {id: 1,
 					person_id: 4,
 					currency: 'USD',
@@ -88,7 +88,7 @@ class MuckworkAPITest < Minitest::Test
 				claimed_at: '2015-07-04T00:34:56+12:00',
 				started_at: '2015-07-05T00:36:56+12:00',
 				finished_at: '2015-07-05T03:34:56+12:00',
-				status: 'finished',
+				progress: 'finished',
 				worker: {id: 1,
 					person_id: 4,
 					currency: 'USD',
@@ -113,7 +113,7 @@ class MuckworkAPITest < Minitest::Test
 			claimed_at: '2015-07-04T00:34:56+12:00',
 			started_at: '2015-07-05T00:35:56+12:00',
 			finished_at: '2015-07-05T00:36:56+12:00',
-			status: 'finished',
+			progress: 'finished',
 			project: {id: 1,
 				title: 'Finished project',
 				description: 'by Wonka for Charlie'},
@@ -181,25 +181,25 @@ class MuckworkAPITest < Minitest::Test
 		assert_equal({ok: false}, @j)
 	end
 
-	def test_project_has_status
-		qry("muckwork.project_has_status(4, 'quoted')")
+	def test_project_has_progress
+		qry("muckwork.project_has_progress(4, 'quoted')")
 		assert_equal({ok: true}, @j)
-		qry("muckwork.project_has_status(5, 'created')")
+		qry("muckwork.project_has_progress(5, 'created')")
 		assert_equal({ok: true}, @j)
-		qry("muckwork.project_has_status(1, 'poop')")
+		qry("muckwork.project_has_progress(1, 'poop')")
 		assert_equal({ok: false}, @j)
-		qry("muckwork.project_has_status(99, 'started')")
+		qry("muckwork.project_has_progress(99, 'started')")
 		assert_equal({ok: false}, @j)
 	end
 
-	def test_task_has_status
-		qry("muckwork.task_has_status(10, 'quoted')")
+	def test_task_has_progress
+		qry("muckwork.task_has_progress(10, 'quoted')")
 		assert_equal({ok: true}, @j)
-		qry("muckwork.task_has_status(9, 'approved')")
+		qry("muckwork.task_has_progress(9, 'approved')")
 		assert_equal({ok: true}, @j)
-		qry("muckwork.task_has_status(1, 'poop')")
+		qry("muckwork.task_has_progress(1, 'poop')")
 		assert_equal({ok: false}, @j)
-		qry("muckwork.task_has_status(99, 'started')")
+		qry("muckwork.task_has_progress(99, 'started')")
 		assert_equal({ok: false}, @j)
 	end
 
@@ -281,11 +281,11 @@ class MuckworkAPITest < Minitest::Test
 		assert_equal [4,2], @j.map {|p| p[:id]}
 	end
 
-	def test_get_projects_with_status
-		qry("muckwork.get_projects_with_status('finished')")
+	def test_get_projects_with_progress
+		qry("muckwork.get_projects_with_progress('finished')")
 		assert_equal 1, @j.size
 		assert_equal @project_view_1, @j[0]
-		qry("muckwork.get_projects_with_status('poop')")
+		qry("muckwork.get_projects_with_progress('poop')")
 		assert_equal [], @j
 	end
 
@@ -300,7 +300,7 @@ class MuckworkAPITest < Minitest::Test
 		assert_equal 'a title', @j[:title]
 		assert_equal 'a description', @j[:description]
 		assert_equal 'Veruca Salt', @j[:client][:name]
-		assert_equal 'created', @j[:status]
+		assert_equal 'created', @j[:progress]
 	end
 
 	def test_update_project
@@ -311,7 +311,7 @@ class MuckworkAPITest < Minitest::Test
 
 	def test_quote_project
 		qry("muckwork.quote_project(5, 'time', 'USD', 1000)")
-		assert_equal 'quoted', @j[:status]
+		assert_equal 'quoted', @j[:progress]
 		assert_equal 'time', @j[:quoted_ratetype]
 		assert_equal 'USD', @j[:quoted_money][:currency]
 		assert_equal 1000, @j[:quoted_money][:cents]
@@ -319,7 +319,7 @@ class MuckworkAPITest < Minitest::Test
 
 	def test_approve_quote
 		qry("muckwork.approve_quote(4)")
-		assert_equal 'approved', @j[:status]
+		assert_equal 'approved', @j[:progress]
 		assert_match /^20[0-9][0-9]-/, @j[:approved_at]
 	end
 
@@ -335,7 +335,7 @@ class MuckworkAPITest < Minitest::Test
 		assert_equal 4, @j[:project_id]
 		assert_equal 2, @j[:client_id]
 		qry("muckwork.get_project(4)")
-		assert_equal 'refused', @j[:status]
+		assert_equal 'refused', @j[:progress]
 	end
 
 	def test_get_task
@@ -373,7 +373,7 @@ class MuckworkAPITest < Minitest::Test
 	def test_claim_task
 		qry("muckwork.claim_task(7, 1)")
 		assert_equal 'Charlie Buckets', @j[:worker][:name]
-		assert_equal 'approved', @j[:status]  # 'claimed' is not a status
+		assert_equal 'approved', @j[:progress]  # 'claimed' is not a progress
 		assert_match /^20[0-9][0-9]-/, @j[:claimed_at]
 	end
 
@@ -381,19 +381,19 @@ class MuckworkAPITest < Minitest::Test
 		qry("muckwork.unclaim_task(8)")
 		assert_equal nil, @j[:worker]
 		assert_equal nil, @j[:claimed_at]
-		assert_equal 'approved', @j[:status]
+		assert_equal 'approved', @j[:progress]
 	end
 
 	def test_start_task
 		qry("muckwork.start_task(6)")
-		assert_equal 'started', @j[:status]
+		assert_equal 'started', @j[:progress]
 		assert_match /^20[0-9][0-9]-/, @j[:started_at]
 	end
 
 	def test_finish_task
 		qry("muckwork.start_task(6)")
 		qry("muckwork.finish_task(6)")
-		assert_equal 'finished', @j[:status]
+		assert_equal 'finished', @j[:progress]
 		assert_match /^20[0-9][0-9]-/, @j[:finished_at]
 	end
 
@@ -416,13 +416,13 @@ class MuckworkAPITest < Minitest::Test
 		assert_equal [8,12], @j.map {|x| x[:id]}
 	end
 
-	def test_get_tasks_with_status
-		qry("muckwork.get_tasks_with_status('started')")
+	def test_get_tasks_with_progress
+		qry("muckwork.get_tasks_with_progress('started')")
 		assert_equal 1, @j.size
 		assert_equal 5, @j[0][:id]
-		assert_equal 'started', @j[0][:status]
+		assert_equal 'started', @j[0][:progress]
 		assert_equal 'Oompa Loompa', @j[0][:worker][:name]
-		qry("muckwork.get_tasks_with_status('poop')")
+		qry("muckwork.get_tasks_with_progress('poop')")
 		assert_equal [], @j
 	end
 

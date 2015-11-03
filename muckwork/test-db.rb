@@ -4,25 +4,25 @@ require '../test_tools.rb'
 
 class TestMuckworkDB < Minitest::Test
 
-	def test_project_status_update
-		res = DB.exec("SELECT status FROM muckwork.projects WHERE id=5")
-		assert_equal 'created', res[0]['status']
-		res = DB.exec("UPDATE muckwork.projects SET quoted_at=NOW() WHERE id=5 RETURNING status")
-		assert_equal 'quoted', res[0]['status']
-		res = DB.exec("UPDATE muckwork.projects SET approved_at=NOW() WHERE id=5 RETURNING status")
-		assert_equal 'approved', res[0]['status']
-		res = DB.exec("UPDATE muckwork.projects SET started_at=NOW() WHERE id=5 RETURNING status")
-		assert_equal 'started', res[0]['status']
-		res = DB.exec("UPDATE muckwork.projects SET finished_at=NOW() WHERE id=5 RETURNING status")
-		assert_equal 'finished', res[0]['status']
-		res = DB.exec("UPDATE muckwork.projects SET finished_at=NULL WHERE id=5 RETURNING status")
-		assert_equal 'started', res[0]['status']
-		res = DB.exec("UPDATE muckwork.projects SET started_at=NULL WHERE id=5 RETURNING status")
-		assert_equal 'approved', res[0]['status']
-		res = DB.exec("UPDATE muckwork.projects SET approved_at=NULL WHERE id=5 RETURNING status")
-		assert_equal 'quoted', res[0]['status']
-		res = DB.exec("UPDATE muckwork.projects SET quoted_at=NULL WHERE id=5 RETURNING status")
-		assert_equal 'created', res[0]['status']
+	def test_project_progress_update
+		res = DB.exec("SELECT progress FROM muckwork.projects WHERE id=5")
+		assert_equal 'created', res[0]['progress']
+		res = DB.exec("UPDATE muckwork.projects SET quoted_at=NOW() WHERE id=5 RETURNING progress")
+		assert_equal 'quoted', res[0]['progress']
+		res = DB.exec("UPDATE muckwork.projects SET approved_at=NOW() WHERE id=5 RETURNING progress")
+		assert_equal 'approved', res[0]['progress']
+		res = DB.exec("UPDATE muckwork.projects SET started_at=NOW() WHERE id=5 RETURNING progress")
+		assert_equal 'started', res[0]['progress']
+		res = DB.exec("UPDATE muckwork.projects SET finished_at=NOW() WHERE id=5 RETURNING progress")
+		assert_equal 'finished', res[0]['progress']
+		res = DB.exec("UPDATE muckwork.projects SET finished_at=NULL WHERE id=5 RETURNING progress")
+		assert_equal 'started', res[0]['progress']
+		res = DB.exec("UPDATE muckwork.projects SET started_at=NULL WHERE id=5 RETURNING progress")
+		assert_equal 'approved', res[0]['progress']
+		res = DB.exec("UPDATE muckwork.projects SET approved_at=NULL WHERE id=5 RETURNING progress")
+		assert_equal 'quoted', res[0]['progress']
+		res = DB.exec("UPDATE muckwork.projects SET quoted_at=NULL WHERE id=5 RETURNING progress")
+		assert_equal 'created', res[0]['progress']
 	end
 
 	def test_project_dates
@@ -55,17 +55,17 @@ class TestMuckworkDB < Minitest::Test
 		end
 	end
 
-	def test_task_status_update
-		res = DB.exec("SELECT status FROM muckwork.tasks WHERE id=6")
-		assert_equal 'approved', res[0]['status']  # might change
-		res = DB.exec("UPDATE muckwork.tasks SET started_at=NOW() WHERE id=6 RETURNING status")
-		assert_equal 'started', res[0]['status']
-		res = DB.exec("UPDATE muckwork.tasks SET finished_at=NOW() WHERE id=6 RETURNING status")
-		assert_equal 'finished', res[0]['status']
-		res = DB.exec("UPDATE muckwork.tasks SET finished_at=NULL WHERE id=6 RETURNING status")
-		assert_equal 'started', res[0]['status']
-		res = DB.exec("UPDATE muckwork.tasks SET started_at=NULL WHERE id=6 RETURNING status")
-		assert_equal 'created', res[0]['status']
+	def test_task_progress_update
+		res = DB.exec("SELECT progress FROM muckwork.tasks WHERE id=6")
+		assert_equal 'approved', res[0]['progress']  # might change
+		res = DB.exec("UPDATE muckwork.tasks SET started_at=NOW() WHERE id=6 RETURNING progress")
+		assert_equal 'started', res[0]['progress']
+		res = DB.exec("UPDATE muckwork.tasks SET finished_at=NOW() WHERE id=6 RETURNING progress")
+		assert_equal 'finished', res[0]['progress']
+		res = DB.exec("UPDATE muckwork.tasks SET finished_at=NULL WHERE id=6 RETURNING progress")
+		assert_equal 'started', res[0]['progress']
+		res = DB.exec("UPDATE muckwork.tasks SET started_at=NULL WHERE id=6 RETURNING progress")
+		assert_equal 'created', res[0]['progress']
 	end
 
 	def test_task_dates
@@ -212,37 +212,37 @@ class TestMuckworkDB < Minitest::Test
 	end
 
 	def test_task_starts_unstarts_project
-		res = DB.exec("SELECT started_at, status FROM muckwork.projects WHERE id=3")
+		res = DB.exec("SELECT started_at, progress FROM muckwork.projects WHERE id=3")
 		assert_equal nil, res[0]['started_at']
-		assert_equal 'approved', res[0]['status']
+		assert_equal 'approved', res[0]['progress']
 		DB.exec("UPDATE muckwork.tasks SET worker_id=1, claimed_at=NOW() WHERE id=7")
 		DB.exec("UPDATE muckwork.tasks SET started_at=NOW() WHERE id=7")
-		res = DB.exec("SELECT started_at, status FROM muckwork.projects WHERE id=3")
+		res = DB.exec("SELECT started_at, progress FROM muckwork.projects WHERE id=3")
 		assert_equal Time.now.to_s[0,7], res[0]['started_at'][0,7]
-		assert_equal 'started', res[0]['status']
+		assert_equal 'started', res[0]['progress']
 		DB.exec("UPDATE muckwork.tasks SET started_at=NULL WHERE id=7")
-		res = DB.exec("SELECT started_at, status FROM muckwork.projects WHERE id=3")
+		res = DB.exec("SELECT started_at, progress FROM muckwork.projects WHERE id=3")
 		assert_equal nil, res[0]['started_at']
-		assert_equal 'approved', res[0]['status']
+		assert_equal 'approved', res[0]['progress']
 	end
 
 	def test_task_finishes_unfinishes_project
-		res = DB.exec("SELECT finished_at, status FROM muckwork.projects WHERE id=2")
+		res = DB.exec("SELECT finished_at, progress FROM muckwork.projects WHERE id=2")
 		assert_equal nil, res[0]['finished_at']
-		assert_equal 'started', res[0]['status']
+		assert_equal 'started', res[0]['progress']
 		DB.exec("UPDATE muckwork.tasks SET finished_at='2015-07-09 05:00:00+12' WHERE id=5")
-		res = DB.exec("SELECT finished_at, status FROM muckwork.projects WHERE id=2")
+		res = DB.exec("SELECT finished_at, progress FROM muckwork.projects WHERE id=2")
 		assert_equal nil, res[0]['finished_at']
-		assert_equal 'started', res[0]['status']
+		assert_equal 'started', res[0]['progress']
 		DB.exec("UPDATE muckwork.tasks SET started_at='2015-07-09 05:00:00+12' WHERE id=6")
 		DB.exec("UPDATE muckwork.tasks SET finished_at='2015-07-09 06:00:00+12' WHERE id=6")
-		res = DB.exec("SELECT finished_at, status FROM muckwork.projects WHERE id=2")
+		res = DB.exec("SELECT finished_at, progress FROM muckwork.projects WHERE id=2")
 		assert_equal '2015-07-09 06:00:00+12', res[0]['finished_at']
-		assert_equal 'finished', res[0]['status']
+		assert_equal 'finished', res[0]['progress']
 		DB.exec("UPDATE muckwork.tasks SET finished_at=NULL WHERE id=6")
-		res = DB.exec("SELECT finished_at, status FROM muckwork.projects WHERE id=2")
+		res = DB.exec("SELECT finished_at, progress FROM muckwork.projects WHERE id=2")
 		assert_equal nil, res[0]['finished_at']
-		assert_equal 'started', res[0]['status']
+		assert_equal 'started', res[0]['progress']
 	end
 
 	def test_seconds_per_task
@@ -287,19 +287,19 @@ class TestMuckworkDB < Minitest::Test
 
 	def test_approve_project_approves_tasks
 		DB.exec("UPDATE muckwork.projects SET approved_at=NOW() WHERE id=4")
-		res = DB.exec("SELECT 1 FROM muckwork.tasks WHERE project_id=4 AND status='approved'")
+		res = DB.exec("SELECT 1 FROM muckwork.tasks WHERE project_id=4 AND progress='approved'")
 		assert_equal 3, res.ntuples
 	end
 
 	def test_unapprove_project_unapproves_tasks
 		DB.exec("UPDATE muckwork.projects SET approved_at=NULL WHERE id=3")
-		res = DB.exec("SELECT 1 FROM muckwork.tasks WHERE project_id=3 AND status='quoted'")
+		res = DB.exec("SELECT 1 FROM muckwork.tasks WHERE project_id=3 AND progress='quoted'")
 		assert_equal 3, res.ntuples
-		# make sure it doesn't change task status for illegal un-approve
+		# make sure it doesn't change task progress for illegal un-approve
 		assert_raises PG::RaiseException do
 			DB.exec("UPDATE muckwork.projects SET approved_at=NULL WHERE id=1")
 		end
-		res = DB.exec("SELECT 1 FROM muckwork.tasks WHERE project_id=1 AND status='finished'")
+		res = DB.exec("SELECT 1 FROM muckwork.tasks WHERE project_id=1 AND progress='finished'")
 		assert_equal 3, res.ntuples
 	end
 

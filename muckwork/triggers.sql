@@ -2,26 +2,26 @@
 ------------------ TRIGGERS:
 ----------------------------
 
-CREATE OR REPLACE FUNCTION muckwork.project_status() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.project_progress() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.quoted_at IS NULL THEN
-		NEW.status := 'created';
+		NEW.progress := 'created';
 	ELSIF NEW.approved_at IS NULL THEN
-		NEW.status := 'quoted';
+		NEW.progress := 'quoted';
 	ELSIF NEW.started_at IS NULL THEN
-		NEW.status := 'approved';
+		NEW.progress := 'approved';
 	ELSIF NEW.finished_at IS NULL THEN
-		NEW.status := 'started';
+		NEW.progress := 'started';
 	ELSE
-		NEW.status := 'finished';
+		NEW.progress := 'finished';
 	END IF;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS project_status ON muckwork.projects CASCADE;
-CREATE TRIGGER project_status BEFORE UPDATE OF
+DROP TRIGGER IF EXISTS project_progress ON muckwork.projects CASCADE;
+CREATE TRIGGER project_progress BEFORE UPDATE OF
 	quoted_at, approved_at, started_at, finished_at ON muckwork.projects
-	FOR EACH ROW EXECUTE PROCEDURE muckwork.project_status();
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.project_progress();
 
 
 -- Dates must always exist in this order:
@@ -154,22 +154,22 @@ CREATE TRIGGER dates_cant_change_tf BEFORE UPDATE OF finished_at ON muckwork.tas
 
 
 
-CREATE OR REPLACE FUNCTION muckwork.task_status() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION muckwork.task_progress() RETURNS TRIGGER AS $$
 BEGIN
 	IF NEW.started_at IS NULL THEN
-		NEW.status := 'created';
+		NEW.progress := 'created';
 	ELSIF NEW.finished_at IS NULL THEN
-		NEW.status := 'started';
+		NEW.progress := 'started';
 	ELSE
-		NEW.status := 'finished';
+		NEW.progress := 'finished';
 	END IF;
 	RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS task_status ON muckwork.tasks CASCADE;
-CREATE TRIGGER task_status BEFORE UPDATE OF
+DROP TRIGGER IF EXISTS task_progress ON muckwork.tasks CASCADE;
+CREATE TRIGGER task_progress BEFORE UPDATE OF
 	started_at, finished_at ON muckwork.tasks
-	FOR EACH ROW EXECUTE PROCEDURE muckwork.task_status();
+	FOR EACH ROW EXECUTE PROCEDURE muckwork.task_progress();
 
 
 -- Dates must always exist in this order:
@@ -225,7 +225,7 @@ CREATE TRIGGER tasks_claimed_pair BEFORE UPDATE OF
 -- can't claim a task unless it's approved
 CREATE OR REPLACE FUNCTION muckwork.only_claim_approved_task() RETURNS TRIGGER AS $$
 BEGIN
-	IF (OLD.status != 'approved') THEN
+	IF (OLD.progress != 'approved') THEN
 		RAISE 'only_claim_approved_task';
 	END IF;
 	RETURN NEW;
@@ -401,7 +401,7 @@ CREATE TRIGGER task_uncreates_charge AFTER UPDATE OF finished_at ON muckwork.tas
 -- approving project makes tasks approved
 CREATE OR REPLACE FUNCTION muckwork.approve_project_tasks() RETURNS TRIGGER AS $$
 BEGIN
-	UPDATE muckwork.tasks SET status='approved'
+	UPDATE muckwork.tasks SET progress='approved'
 		WHERE project_id=OLD.id;
 	RETURN NEW;
 END;
@@ -414,7 +414,7 @@ CREATE TRIGGER approve_project_tasks AFTER UPDATE OF approved_at ON muckwork.pro
 -- UN-approving project makes tasks UN-approved 
 CREATE OR REPLACE FUNCTION muckwork.unapprove_project_tasks() RETURNS TRIGGER AS $$
 BEGIN
-	UPDATE muckwork.tasks SET status='quoted'
+	UPDATE muckwork.tasks SET progress='quoted'
 		WHERE project_id=OLD.id;
 	RETURN NEW;
 END;
