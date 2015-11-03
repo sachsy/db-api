@@ -22,7 +22,7 @@ class LatTest < Minitest::Test
 				{id:2, tag:'color'}]}
 		assert_equal r, @j
 		qry("lat.get_concept(999)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_get_concepts  # PRIVATE. Not in public API.
@@ -73,7 +73,7 @@ class LatTest < Minitest::Test
 		assert_equal 'sugar is sticky', @j[:concept]
 		assert_equal [{id:3, tag:'flavor'}], @j[:tags]
 		qry("lat.update_concept(999, 'nope', 'should return 404')")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_update_concept_err
@@ -91,9 +91,9 @@ class LatTest < Minitest::Test
 		qry("lat.delete_concept(1)")
 		assert_equal 'roses are red', @j[:concept]
 		qry("lat.delete_concept(1)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("lat.delete_concept(999)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_tag_concept
@@ -106,7 +106,7 @@ class LatTest < Minitest::Test
 		qry("lat.tag_concept(3, '  FLOWER ')")
 		assert_equal [{id:1, tag:'flower'},{id:3, tag:'flavor'},{id:5, tag:'juicy'}], @j[:tags]
 		qry("lat.tag_concept(9999, 'nah')")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_untag_concept
@@ -115,7 +115,7 @@ class LatTest < Minitest::Test
 		qry("lat.get_concept(2)")
 		assert_equal [{id:1, tag:'flower'},{id:2, tag:'color'}], @j[:tags]
 		qry("lat.untag_concept(9999, 1)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("lat.untag_concept(2, 9999)")
 		assert_equal [{id:1, tag:'flower'},{id:2, tag:'color'}], @j[:tags]
 	end
@@ -146,7 +146,7 @@ class LatTest < Minitest::Test
 		assert_equal 'http://en.wikipedia.org/wiki/Violets_Are_Blue', @j[:url]
 		assert_equal 'many refs here', @j[:notes]
 		qry("lat.delete_url(3)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_tags
@@ -227,7 +227,7 @@ class LatTest < Minitest::Test
 		qry("lat.delete_pairing(1)")
 		assert_equal 'describing flowers', @j[:thoughts]
 		qry("lat.delete_pairing(1)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_tag_pairing
