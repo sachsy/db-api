@@ -1,9 +1,6 @@
 define(«m4_NOTFOUND», «
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 »)dnl
 define(«m4_ERRVARS», «
 	err_code text;
@@ -18,7 +15,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
