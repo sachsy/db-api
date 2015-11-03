@@ -134,7 +134,7 @@ class MuckworkAPITest < Minitest::Test
 
 	def test_auth_client
 		qry("muckwork.auth_client($1, $2)", ['aaaaaaaa', 'bbbbbbbb'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("muckwork.auth_client($1, $2)", ['cccccccc', 'dddddddd'])
 		assert_equal({client_id: 1, person_id: 2}, @j)
 		qry("muckwork.auth_client($1, $2)", ['eeeeeeee', 'ffffffff'])
@@ -143,7 +143,7 @@ class MuckworkAPITest < Minitest::Test
 
 	def test_auth_worker
 		qry("muckwork.auth_worker($1, $2)", ['aaaaaaaa', 'bbbbbbbb'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("muckwork.auth_worker($1, $2)", ['gggggggg', 'hhhhhhhh'])
 		assert_equal({worker_id: 1, person_id: 4}, @j)
 		qry("muckwork.auth_worker($1, $2)", ['iiiiiiii', 'jjjjjjjj'])
@@ -154,9 +154,9 @@ class MuckworkAPITest < Minitest::Test
 		qry("muckwork.auth_manager($1, $2)", ['aaaaaaaa', 'bbbbbbbb'])
 		assert_equal({manager_id: 1, person_id: 1}, @j)
 		qry("muckwork.auth_manager($1, $2)", ['gggggggg', 'hhhhhhhh'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("muckwork.auth_manager($1, $2)", ['boo', 'hoo'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_client_owns_project
@@ -216,7 +216,7 @@ class MuckworkAPITest < Minitest::Test
 		r = {:id=>2, :person_id=>3, :currency=>'GBP', :cents_balance=>10000, :name=>'Veruca Salt', :email=>'veruca@salt.com', :address=>'Veruca', :company=>'Daddy Empires Ltd', :city=>'London', :state=>'England', :country=>'GB', :phone=>'+44 9273 7231'}
 		assert_equal r, @j
 		qry("muckwork.get_client(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_create_client
@@ -233,7 +233,7 @@ class MuckworkAPITest < Minitest::Test
 		r = {:id=>2, :person_id=>3, :currency=>'EUR', :cents_balance=>10000, :name=>'Veruca Darling', :email=>'veruca@salt.com', :address=>'Veruca', :company=>'Daddy Empires Ltd', :city=>'London', :state=>'England', :country=>'BE', :phone=>'+44 9273 7231'}
 		assert_equal r, @j
 		qry("muckwork.update_client(99, $1)", [up.to_json])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_get_workers
@@ -250,7 +250,7 @@ class MuckworkAPITest < Minitest::Test
 		r = {:id=>2, :person_id=>5, :currency=>'THB', :millicents_per_second=>1000, :name=>'Oompa Loompa', :email=>'oompa@loompa.mm', :address=>'Oompa Loompa', :company=>nil, :city=>'Hershey', :state=>'PA', :country=>'US', :phone=>nil}
 		assert_equal r, @j
 		qry("muckwork.get_worker(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_create_worker
@@ -267,7 +267,7 @@ class MuckworkAPITest < Minitest::Test
 		r = {:id=>2, :person_id=>5, :currency=>'INR', :millicents_per_second=>1234, :name=>'Oompa Wow', :email=>'oompa@loom.pa', :address=>'Oompa Loompa', :company=>'cash', :city=>'Hershey', :state=>'PA', :country=>'US', :phone=>nil}
 		assert_equal r, @j
 		qry("muckwork.update_worker(99, $1)", [up.to_json])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_get_projects
@@ -325,9 +325,9 @@ class MuckworkAPITest < Minitest::Test
 
 	def test_refuse_quote
 		qry("muckwork.refuse_quote(1, 'nah')")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("muckwork.refuse_quote(9, 'nah')")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("muckwork.refuse_quote(4, 'nah')")
 		assert_equal 2, @j[:id]
 		assert_equal 'nah', @j[:note]
@@ -347,7 +347,7 @@ class MuckworkAPITest < Minitest::Test
 		qry("muckwork.get_project_task(1, 1)")
 		assert_equal @task_view_1, @j
 		qry("muckwork.get_project_task(2, 1)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_create_task
