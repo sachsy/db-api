@@ -10,10 +10,10 @@ class TestWoodEgg < Minitest::Test
 		assert @j[:cookie]
 		assert_match /[a-zA-Z0-9]{32}:[a-zA-Z0-9]{32}/, @j[:cookie]
 		qry("woodegg.login($1, $2)", ['derek@sivers.org', 'derek'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		# catches short password exception and just says not found
 		qry("woodegg.login($1, $2)", ['derek@sivers.org', 'd'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_customer
@@ -22,7 +22,7 @@ class TestWoodEgg < Minitest::Test
 		assert_equal 1, @j[:id]
 		assert_equal 'Augustus Gloop', @j[:name]
 		qry("woodegg.get_customer($1)", ['a bad cookie value here'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_register
@@ -58,13 +58,13 @@ class TestWoodEgg < Minitest::Test
 		assert res[0]['body'].include? 'Hi Master Gloop'
 		assert res[0]['body'].include? 'we@woodegg.com'
 		qry("woodegg.forgot($1)", ['derek@sivers.org'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("woodegg.forgot($1)", ['x'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("woodegg.forgot($1)", [''])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("woodegg.forgot(NULL)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_forgot_sets_newpass
@@ -95,7 +95,7 @@ class TestWoodEgg < Minitest::Test
 		qry("woodegg.login($1, $2)", ['augustus@gloop.de', nu])
 		assert_match /[a-zA-Z0-9]{32}:[a-zA-Z0-9]{32}/, @j[:cookie]
 		qry("woodegg.set_customer_password($1, $2)", ['8LLRaMwm', nu])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_researcher
@@ -103,7 +103,7 @@ class TestWoodEgg < Minitest::Test
 		assert_equal '巩俐', @j[:name]
 		assert_equal 'This is Gong Li', @j[:bio]
 		qry("woodegg.get_researcher(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_writer
@@ -111,7 +111,7 @@ class TestWoodEgg < Minitest::Test
 		assert_equal 'Veruca Salt', @j[:name]
 		assert_equal 'This is Veruca Salt', @j[:bio]
 		qry("woodegg.get_writer(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_editor
@@ -119,7 +119,7 @@ class TestWoodEgg < Minitest::Test
 		assert_equal 'Derek Sivers', @j[:name]
 		assert_equal 'This is Derek', @j[:bio]
 		qry("woodegg.get_editor(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_country
@@ -137,7 +137,7 @@ class TestWoodEgg < Minitest::Test
 		assert_instance_of Array, @j[1][:subtopics]
 		assert_equal 2, @j[1][:subtopics].size
 		qry("woodegg.get_country('XXX')")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_country2
@@ -175,7 +175,7 @@ class TestWoodEgg < Minitest::Test
 		assert_equal 'Derek Sivers', @j[:essays][0][:editor][:name]
 		assert_equal '/images/200/editors-1.jpg', @j[:essays][0][:editor][:image]
 		qry("woodegg.get_question(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_book
@@ -194,7 +194,7 @@ class TestWoodEgg < Minitest::Test
 		assert_equal 'Derek Sivers', @j[:editors][0][:name]
 		assert_equal '/images/200/editors-1.jpg', @j[:editors][0][:image]
 		qry("woodegg.get_book(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_templates
@@ -235,7 +235,7 @@ class TestWoodEgg < Minitest::Test
 						:editor=>{:id=>2, :name=>'Willy Wonka', :image=>'/images/200/editors-2.jpg'}}]}]}
 		assert_equal x, @j
 		qry("woodegg.get_template(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_uploads
@@ -248,7 +248,7 @@ class TestWoodEgg < Minitest::Test
 			notes:'This is me interviewing someone.'}
 		assert_equal(x, @j[0])
 		qry("woodegg.get_uploads('XX')")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_upload
@@ -263,7 +263,7 @@ class TestWoodEgg < Minitest::Test
 			transcription:'This has a transcription.'}
 		assert_equal(x, @j)
 		qry("woodegg.get_upload(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 end

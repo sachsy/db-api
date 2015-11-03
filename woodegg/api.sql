@@ -4,7 +4,8 @@
 
 -- POST /login
 -- PARAMS: email, password
-CREATE OR REPLACE FUNCTION woodegg.login(text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.login(text, text,
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 	cook text;
@@ -16,7 +17,7 @@ BEGIN
 		SELECT cookie INTO cook FROM peeps.login_person_domain(pid, 'woodegg.com');
 	END IF;
 	IF cook IS NULL THEN m4_NOTFOUND ELSE
-		mime := 'application/json';
+		status := 200;
 		js := json_build_object('cookie', cook);
 	END IF;
 EXCEPTION WHEN OTHERS THEN m4_NOTFOUND
@@ -26,9 +27,10 @@ $$ LANGUAGE plpgsql;
 
 -- GET /customer/{cookie}
 -- PARAMS: cookie string
-CREATE OR REPLACE FUNCTION woodegg.get_customer(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.get_customer(text,
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r) FROM (SELECT c.id, name
 		FROM peeps.get_person_from_cookie($1) p, woodegg.customers c
 		WHERE p.id=c.person_id) r;
@@ -39,7 +41,8 @@ $$ LANGUAGE plpgsql;
 
 -- GET /reset/{reset_string}
 -- PARAMS: 8-char string from https://woodegg.com/reset/:str
-CREATE OR REPLACE FUNCTION woodegg.get_customer_reset(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.get_customer_reset(text,
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 	cid integer;
@@ -49,7 +52,7 @@ BEGIN
 		WHERE p.newpass=$1
 		AND p.id=c.person_id;
 	IF pid IS NULL THEN m4_NOTFOUND ELSE
-		mime := 'application/json';
+		status := 200;
 		-- this is just acknowledgement that it's approved to show reset form:
 		js := json_build_object('person_id', pid, 'customer_id', cid, 'reset', $1);
 	END IF;
@@ -59,7 +62,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /reset/{reset_string}
 -- PARAMS: reset string, new password
-CREATE OR REPLACE FUNCTION woodegg.set_customer_password(text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.set_customer_password(text, text,
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 	cid integer;
@@ -71,7 +75,7 @@ BEGIN
 		AND p.id=c.person_id;
 	IF pid IS NULL THEN m4_NOTFOUND ELSE
 		PERFORM peeps.set_hashpass(pid, $2);
-		mime := 'application/json';
+		status := 200;
 		-- this is just acknowledgement that it's done:
 		js := row_to_json(r) FROM (SELECT id, name, email, address
 			FROM peeps.people WHERE id=pid) r;
@@ -83,7 +87,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /register
 -- PARAMS: name, email, password, proof
-CREATE OR REPLACE FUNCTION woodegg.register(text, text, text, text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.register(text, text, text, text,
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 m4_ERRVARS
@@ -91,7 +96,7 @@ BEGIN
 	SELECT id INTO pid FROM peeps.person_create_pass($1, $2, $3);
 	INSERT INTO peeps.stats(person_id, statkey, statvalue)
 		VALUES (pid, 'proof-we14asia', $4);
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r) FROM (SELECT id, name, email, address
 		FROM peeps.people WHERE id=pid) r;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
@@ -102,7 +107,8 @@ $$ LANGUAGE plpgsql;
 
 -- POST /forgot
 -- PARAMS: email
-CREATE OR REPLACE FUNCTION woodegg.forgot(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.forgot(text,
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 	pnp text;
@@ -121,7 +127,7 @@ BEGIN
 			'your Wood Egg password reset link',
 			'Click to reset your password:\n\nhttps://woodegg.com/reset/' || pnp,
 			NULL);
-		mime := 'application/json';
+		status := 200;
 		js := row_to_json(r) FROM (SELECT id, name, email, address
 			FROM peeps.people WHERE id=pid) r;
 	END IF;
@@ -132,9 +138,10 @@ $$ LANGUAGE plpgsql;
 
 -- GET /researchers/1
 -- PARAMS: researcher_id
-CREATE OR REPLACE FUNCTION woodegg.get_researcher(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.get_researcher(integer,
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM woodegg.researcher_view r WHERE id = $1;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
@@ -143,9 +150,10 @@ $$ LANGUAGE plpgsql;
 
 -- GET /writers/1
 -- PARAMS: writer_id
-CREATE OR REPLACE FUNCTION woodegg.get_writer(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.get_writer(integer,
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM woodegg.writer_view r WHERE id = $1;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
@@ -154,9 +162,10 @@ $$ LANGUAGE plpgsql;
 
 -- GET /editors/1
 -- PARAMS: editor_id
-CREATE OR REPLACE FUNCTION woodegg.get_editor(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.get_editor(integer,
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM woodegg.editor_view r WHERE id = $1;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
@@ -165,14 +174,15 @@ $$ LANGUAGE plpgsql;
 
 -- GET /country/KR
 -- PARAMS: country code
-CREATE OR REPLACE FUNCTION woodegg.get_country(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.get_country(text,
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	rowcount integer;
 BEGIN
 	-- stop here if country code invalid (using books because least # of rows)
 	SELECT COUNT(*) INTO rowcount FROM woodegg.books WHERE country=$1;
 	IF rowcount = 0 THEN m4_NOTFOUND RETURN; END IF;
-	mime := 'application/json';
+	status := 200;
 	-- JSON here instead of VIEW because needs $1 for q.country join inside query
 	js := json_agg(cv) FROM (SELECT id, topic, (SELECT json_agg(st) AS subtopics FROM
 		(SELECT id, subtopic, (SELECT json_agg(qs) AS questions FROM
@@ -187,9 +197,10 @@ $$ LANGUAGE plpgsql;
 
 -- GET /questions/1234
 -- PARAMS: question id
-CREATE OR REPLACE FUNCTION woodegg.get_question(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.get_question(integer,
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM woodegg.question_view r WHERE id = $1;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
@@ -198,9 +209,10 @@ $$ LANGUAGE plpgsql;
 
 -- GET /books/23 
 -- PARAMS: book id
-CREATE OR REPLACE FUNCTION woodegg.get_book(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.get_book(integer,
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM woodegg.book_view r WHERE id = $1;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
@@ -208,9 +220,10 @@ $$ LANGUAGE plpgsql;
 
 
 -- GET /templates
-CREATE OR REPLACE FUNCTION woodegg.get_templates(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.get_templates(
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM woodegg.templates_view) r;
 END;
 $$ LANGUAGE plpgsql;
@@ -218,9 +231,10 @@ $$ LANGUAGE plpgsql;
 
 -- GET /templates/123
 -- PARAMS: template id
-CREATE OR REPLACE FUNCTION woodegg.get_template(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.get_template(integer,
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM woodegg.template_view r WHERE id = $1;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
@@ -229,9 +243,10 @@ $$ LANGUAGE plpgsql;
 
 -- GET /topics/5
 -- PARAMS: topic id
-CREATE OR REPLACE FUNCTION woodegg.get_topic(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.get_topic(integer,
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM woodegg.templates_view r WHERE id = $1;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
@@ -240,9 +255,10 @@ $$ LANGUAGE plpgsql;
 
 -- GET /uploads/KR
 -- PARAMS: country code
-CREATE OR REPLACE FUNCTION woodegg.get_uploads(text, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.get_uploads(text,
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM woodegg.uploads_view WHERE country=$1) r;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
@@ -251,9 +267,10 @@ $$ LANGUAGE plpgsql;
 
 -- GET /uploads/33
 -- PARAMS: upload id#
-CREATE OR REPLACE FUNCTION woodegg.get_upload(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.get_upload(integer,
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM woodegg.upload_view r WHERE id = $1;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
@@ -261,9 +278,10 @@ $$ LANGUAGE plpgsql;
 
 
 -- ADMIN ONLY:
-CREATE OR REPLACE FUNCTION woodegg.proofs(OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.proofs(
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT u.id, u.person_id, u.statvalue AS value,
 		u.created_at, p.email, p.name
 		FROM peeps.stats u
@@ -278,7 +296,8 @@ $$ LANGUAGE plpgsql;
 
 -- ADMIN ONLY:
 -- PARAMS: stats.id
-CREATE OR REPLACE FUNCTION woodegg.proof_to_customer(integer, OUT mime text, OUT js json) AS $$
+CREATE OR REPLACE FUNCTION woodegg.proof_to_customer(integer,
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 	cid integer;
@@ -293,7 +312,7 @@ BEGIN
 	PERFORM peeps.outgoing_email(1, pid, 'we@woodegg', 'we@woodegg',
 		'your Wood Egg book (thank you!)',
 		(SELECT body FROM peeps.formletters WHERE id=2), NULL);
-	mime := 'application/json';
+	status := 200;
 	js := json_build_object('person_id', pid, 'customer_id', cid);
 END;
 $$ LANGUAGE plpgsql;
