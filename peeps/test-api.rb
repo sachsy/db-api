@@ -10,22 +10,22 @@ class TestPeepsAPI < Minitest::Test
 		assert_equal 'bbbbbbbb', @j[:apass]
 		assert_equal %w(Peep SiversComments MuckworkManager), @j[:apis]
 		qry("auth_api('derek@sivers.org', 'derek', 'POP')")
-		assert_equal 'application/problem+json', @res[0]['mime']
+		assert_equal '404', @res[0]['status']
 		qry("auth_api('derek@sivers.org', 'doggy', 'Peep')")
-		assert_equal 'application/problem+json', @res[0]['mime']
+		assert_equal '404', @res[0]['status']
 		qry("auth_api('derek@sivers.org', 'x', 'Peep')")
-		assert_equal 'application/problem+json', @res[0]['mime']
+		assert_equal '500', @res[0]['status']
 		qry("auth_api('derek@sivers', 'derek', 'Peep')")
-		assert_equal 'application/problem+json', @res[0]['mime']
+		assert_equal '500', @res[0]['status']
 	end
 
 	def test_auth_emailer
 		qry("auth_emailer('aaaaaaaa', 'bbbbbbbb')")
 		assert_equal({id: 1}, @j)
 		qry("auth_emailer('aaaxaaaa', 'bbbbbbbb')")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("auth_emailer('cccccccc', 'dddddddd')")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("auth_emailer('gggggggg', 'hhhhhhhh')")
 		assert_equal({id: 2}, @j)
 	end
@@ -59,8 +59,8 @@ class TestPeepsAPI < Minitest::Test
 		assert_equal 'I refuse to wait', @j[:subject]
 		assert_equal 'I refuse to wait', @j[:body]
 		qry("open_next_email(1, 'we@woodegg', 'woodegg')")
-		assert_equal 'application/problem+json', @res[0]['mime']
-		assert_equal 'Not Found', @j[:title]
+		assert_equal '404', @res[0]['status']
+		assert_equal({}, @j)
 	end
 
 	def test_opened_emails
@@ -83,23 +83,21 @@ class TestPeepsAPI < Minitest::Test
 		qry("get_email(1, 6)")
 		assert_equal '2014-05-21', @j[:opened_at][0,10]
 		qry("get_email(3, 6)")
-		assert_equal 'application/problem+json', @res[0]['mime']
-		assert_equal 'about:blank', @j[:type]
-		assert_equal 'Not Found', @j[:title]
-		assert_equal 404, @j[:status]
+		assert_equal '404', @res[0]['status']
+		assert_equal({}, @j)
 	end
 
 	def test_update_email
 		qry("update_email(1, 8, $1)", ['{"subject":"boop", "ig":"nore"}'])
 		assert_equal 'boop', @j[:subject]
 		qry("update_email(3, 8, $1)", ['{"subject":"boop", "ig":"nore"}'])
-		assert_equal 'application/problem+json', @res[0]['mime']
-		assert_equal 'Not Found', @j[:title]
+		assert_equal '404', @res[0]['status']
+		assert_equal({}, @j)
 	end
 
 	def test_update_email_errors
 		qry("update_email(1, 8, $1)", ['{"opened_by":"boop"}'])
-		assert_equal 'application/problem+json', @res[0]['mime']
+		assert_equal '500', @res[0]['status']
 		assert @j[:type].include? '22P02'
 		assert @j[:title].include? 'invalid input syntax for integer'
 		assert @j[:detail].include? 'jsonupdate'
@@ -107,14 +105,14 @@ class TestPeepsAPI < Minitest::Test
 
 	def test_delete_email
 		qry("delete_email(1, 8)")
-		assert_equal 'application/json', @res[0]['mime']
+		assert_equal '200', @res[0]['status']
 		assert_equal 'I refuse to wait', @j[:subject]
 		qry("delete_email(1, 8)")
-		assert_equal 'application/problem+json', @res[0]['mime']
-		assert_equal 'Not Found', @j[:title]
+		assert_equal '404', @res[0]['status']
+		assert_equal({}, @j)
 		qry("delete_email(3, 1)")
-		assert_equal 'application/problem+json', @res[0]['mime']
-		assert_equal 'Not Found', @j[:title]
+		assert_equal '404', @res[0]['status']
+		assert_equal({}, @j)
 	end
 
 	def test_close_email
@@ -185,8 +183,8 @@ class TestPeepsAPI < Minitest::Test
 		assert @j[:body].include? 'I have a question'
 		assert @j[:headers].include? 'new@stranger.com'
 		qry("get_next_unknown(4)")
-		assert_equal 'application/problem+json', @res[0]['mime']
-		assert_equal 'Not Found', @j[:title]
+		assert_equal '404', @res[0]['status']
+		assert_equal({}, @j)
 	end
 
 	def test_set_unknown_person
@@ -200,20 +198,20 @@ class TestPeepsAPI < Minitest::Test
 
 	def test_set_unknown_person_fail
 		qry("set_unknown_person(1, 99, 5)")
-		assert_equal 'application/problem+json', @res[0]['mime']
-		assert_equal 'Not Found', @j[:title]
+		assert_equal '404', @res[0]['status']
+		assert_equal({}, @j)
 		qry("set_unknown_person(1, 5, 99)")
-		assert_equal 'application/problem+json', @res[0]['mime']
-		assert_equal 'Not Found', @j[:title]
+		assert_equal '404', @res[0]['status']
+		assert_equal({}, @j)
 	end
 
 	def test_delete_unknown
 		qry("delete_unknown(1, 5)")
 		assert_equal 'random question', @j[:subject]
 		qry("delete_unknown(1, 8)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("delete_unknown(4, 10)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("delete_unknown(3, 10)")
 		assert_equal 'remember me?', @j[:subject]
 	end
@@ -238,7 +236,7 @@ class TestPeepsAPI < Minitest::Test
 
 	def test_get_person
 		qry("get_person(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("get_person(2)")
 		assert_equal 'http://www.wonka.com/', @j[:urls][0][:url]
 		assert_equal 'you coming by?', @j[:emails][0][:subject]
@@ -252,14 +250,14 @@ class TestPeepsAPI < Minitest::Test
 		qry("make_newpass(8)")
 		assert_equal({id: 8}, @j)
 		qry("make_newpass(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("make_newpass(NULL)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_get_person_lopass
 		qry("get_person_lopass(2, 'bad1')")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("get_person_lopass(2, 'R5Gf')")
 		assert_equal 'http://www.wonka.com/', @j[:urls][0][:url]
 		assert_equal 'you coming by?', @j[:emails][0][:subject]
@@ -269,7 +267,7 @@ class TestPeepsAPI < Minitest::Test
 
 	def test_get_person_newpass
 		qry("get_person_newpass(2, 'Another1')")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("get_person_newpass(2, 'NvaGAkHK')")
 		assert_equal 'http://www.wonka.com/', @j[:urls][0][:url]
 		assert_equal 'you coming by?', @j[:emails][0][:subject]
@@ -283,22 +281,22 @@ class TestPeepsAPI < Minitest::Test
 		qry("get_person_password($1, $2)", [' Derek@Sivers.org  ', 'derek'])
 		assert_equal 'Derek Sivers', @j[:name]
 		qry("get_person_password($1, $2)", ['derek@sivers.org', 'deRek'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("get_person_password($1, $2)", ['derek@sivers.org', ''])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("get_person_password($1, $2)", ['', 'derek'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("get_person_password(NULL, NULL)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_get_person_cookie
 		qry("get_person_cookie($1)", ['2a9c0226c871c711a5e944bec5f6df5d:18e8b4f0a05db21eed590e96eb27be9c'])
 		assert_equal 'Derek Sivers', @j[:name]
 		qry("get_person_cookie($1)", ['c776d5b6249a9fb45eec8d2af2fd7954:18e8b4f0a05db21eed590e96eb27be9f'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("get_person_cookie($1)", ['95fcacd3d2c6e3e006906cc4f4cdf908:18e8b4f0a05db21eed590e96eb27be9c'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_cookie_from_id
@@ -320,11 +318,11 @@ class TestPeepsAPI < Minitest::Test
 		qry("cookie_from_login($1, $2, $3)", [' Derek@Sivers.org  ', 'derek', 'muckwork.com'])
 		assert_match /\A[a-f0-9]{32}:[a-zA-Z0-9]{32}\Z/, @j[:cookie]
 		qry("cookie_from_login($1, $2, $3)", ['derek@sivers.org', 'deRek', 'sivers.org'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("cookie_from_login($1, $2, $3)", ['', 'derek', 'muckwork.com'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("cookie_from_login(NULL, NULL, NULL)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("cookie_from_login($1, $2, $3)", ['veruca@salt.com', 'veruca', 'muckwork.com'])
 		qry("get_person_cookie($1)", [@j[:cookie]])
 		assert_equal 'Veruca Salt', @j[:name]
@@ -341,7 +339,7 @@ class TestPeepsAPI < Minitest::Test
 		qry("set_password(1, NULL)")
 		assert_equal 'short_password', @j[:title]
 		qry("set_password(9999, 'anOKpass')")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_update_person
@@ -352,7 +350,7 @@ class TestPeepsAPI < Minitest::Test
 
 	def test_update_person_fail
 		qry("update_person(99, $1)", ['{"country":"XXX"}'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("update_person(1, $1)", ['{"country":"XXX"}'])
 		assert @j[:title].include? 'value too long'
 	end
@@ -361,24 +359,24 @@ class TestPeepsAPI < Minitest::Test
 		qry("delete_person(1)")
 		assert @j[:title].include? 'violates foreign key'
 		qry("delete_person(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("delete_person(5)")
 		assert_equal 'Oompa Loompa', @j[:name]
 	end
 
 	def test_annihilate_person
 		qry("annihilate_person(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("annihilate_person(2)")
 		assert_equal 'Willy Wonka', @j[:name]
 		qry("get_person(2)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("get_email(1, 1)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("get_email(1, 3)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("get_url(3)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		# can't delete an emailer
 		qry("annihilate_person(1)")
 		assert @j[:title].include? 'foreign key constraint "emails_created_by_fkey"'
@@ -462,7 +460,7 @@ class TestPeepsAPI < Minitest::Test
 		qry("delete_stat(8)")
 		assert_equal 'interview', @j[:value]
 		qry("get_stat(8)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	# note for now it's statkey & statvalue, not name & value
@@ -471,7 +469,7 @@ class TestPeepsAPI < Minitest::Test
 		assert_equal 'm', @j[:name]
 		assert_equal 'i', @j[:value]
 		qry("update_stat(99, $1)", ['{"statkey":"x"}'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("update_stat(8, $1)", ['{"person_id":"boop"}'])
 		assert @j[:title].include? 'invalid input syntax'
 	end
@@ -487,7 +485,7 @@ class TestPeepsAPI < Minitest::Test
 		qry("delete_url(8)")
 		assert_equal 'http://oompa.loompa', @j[:url]
 		qry("delete_url(8)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_update_url
@@ -495,7 +493,7 @@ class TestPeepsAPI < Minitest::Test
 		assert_equal 'http://oompa.com', @j[:url]
 		assert_equal true, @j[:main]
 		qry("update_url(99, $1)", ['{"url":"http://oompa.com"}'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("update_url(8, $1)", ['{"main":"boop"}'])
 		assert @j[:title].include? 'invalid input syntax'
 	end
@@ -519,17 +517,17 @@ class TestPeepsAPI < Minitest::Test
 		assert_equal 'a body', @j[:body]
 		assert_equal 'weak', @j[:explanation]
 		qry("update_formletter(6, $1)", ['{"title":"one"}'])
-		assert_equal 'application/problem+json', @res[0]['mime']
+		assert_equal '500', @res[0]['status']
 		assert @j[:title].include? 'unique constraint'
 		qry("update_formletter(99, $1)", ['{"title":"one"}'])
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_delete_formletter
 		qry("delete_formletter(6)")
 		assert_equal 'meh', @j[:body]
 		qry("delete_formletter(6)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_parsed_formletter
@@ -559,7 +557,7 @@ class TestPeepsAPI < Minitest::Test
 		qry("state_count('US')")
 		assert_equal({state: 'PA', count: 3}, @j[0])
 		qry("state_count('IT')")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_city_count
@@ -568,7 +566,7 @@ class TestPeepsAPI < Minitest::Test
 		qry("city_count('US', 'PA')")
 		assert_equal({city: 'Hershey', count: 3}, @j[0])
 		qry("city_count('US', 'CA')")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_people_from
@@ -678,7 +676,7 @@ class TestPeepsAPI < Minitest::Test
 		qry("queued_emails()")
 		assert_equal([], @j)
 		qry("email_is_sent(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 	end
 
 	def test_sent_emails
@@ -707,7 +705,7 @@ class TestPeepsAPI < Minitest::Test
 		qry("get_person(1)")
 		assert_equal "DEAD EMAIL: derek@sivers.org\nThis is me.", @j[:notes]
 		qry("dead_email(99)")
-		assert_equal 'Not Found', @j[:title]
+		assert_equal({}, @j)
 		qry("dead_email(4)")
 		assert_equal({ok: 4}, @j)
 		qry("get_person(4)")

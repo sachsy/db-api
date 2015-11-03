@@ -867,7 +867,7 @@ CREATE TRIGGER null_categorize_as
 
 -- PARAMS: email, password, API_name
 CREATE OR REPLACE FUNCTION peeps.auth_api(text, text, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -876,16 +876,13 @@ DECLARE
 	err_context text;
 
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.api_keys r
 		WHERE person_id = (SELECT id FROM peeps.person_email_pass($1, $2))
 		AND $3 = ANY(apis);
 	IF js IS NULL THEN 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
  END IF;
 
 EXCEPTION
@@ -894,7 +891,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -906,19 +903,16 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: akey, apass
 CREATE OR REPLACE FUNCTION peeps.auth_emailer(text, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r) FROM (SELECT e.id 
 		FROM peeps.api_keys a, peeps.emailers e
 		WHERE a.akey=$1 AND a.apass=$2 AND 'Peep'=ANY(a.apis)
 		AND a.person_id = e.person_id) r;
 	IF js IS NULL THEN 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
  END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -931,9 +925,9 @@ $$ LANGUAGE plpgsql;
 -- "we@woodegg":{"woodeggRESEARCH":1,"woodegg":1,"we@woodegg":1}}
 -- PARAMS: emailer_id
 CREATE OR REPLACE FUNCTION peeps.unopened_email_count(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_object_agg(profile, cats) FROM (WITH unopened AS
 		(SELECT profile, category FROM peeps.emails WHERE id IN
 			(SELECT * FROM peeps.unopened_email_ids($1)))
@@ -952,9 +946,9 @@ $$ LANGUAGE plpgsql;
 -- GET /emails/unopened/:profile/:category
 -- PARAMS: emailer_id, profile, category
 CREATE OR REPLACE FUNCTION peeps.unopened_emails(integer, text, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM peeps.emails_view WHERE id IN
 		(SELECT id FROM peeps.emails WHERE id IN (SELECT * FROM peeps.unopened_email_ids($1))
 			AND profile = $2 AND category = $3) ORDER BY id) r;
@@ -969,7 +963,7 @@ $$ LANGUAGE plpgsql;
 -- Opens email (updates status as opened by this emailer) then returns view
 -- PARAMS: emailer_id, profile, category
 CREATE OR REPLACE FUNCTION peeps.open_next_email(integer, text, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
@@ -978,14 +972,11 @@ BEGIN
 		AND profile=$2 AND category=$3 ORDER BY id LIMIT 1;
 	IF eid IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
-		mime := 'application/json';
+		status := 200;
 		PERFORM open_email($1, eid);
 		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 	END IF;
@@ -996,9 +987,9 @@ $$ LANGUAGE plpgsql;
 -- GET /emails/opened
 -- PARAMS: emailer_id
 CREATE OR REPLACE FUNCTION peeps.opened_emails(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT e.id, subject, opened_at, p.name
 		FROM peeps.emails e
 		JOIN peeps.emailers r ON e.opened_by=r.id
@@ -1015,21 +1006,18 @@ $$ LANGUAGE plpgsql;
 -- GET /emails/:id
 -- PARAMS: emailer_id, email_id
 CREATE OR REPLACE FUNCTION peeps.get_email(integer, integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
 	eid := open_email($1, $2);
 	IF eid IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
-		mime := 'application/json';
+		status := 200;
 		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 	END IF;
 END;
@@ -1039,7 +1027,7 @@ $$ LANGUAGE plpgsql;
 -- PUT /emails/:id
 -- PARAMS: emailer_id, email_id, JSON of new values
 CREATE OR REPLACE FUNCTION peeps.update_email(integer, integer, json,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	eid integer;
 
@@ -1052,16 +1040,13 @@ BEGIN
 	eid := peeps.ok_email($1, $2);
 	IF eid IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
 		PERFORM core.jsonupdate('peeps.emails', eid, $3,
 			core.cols2update('peeps', 'emails', ARRAY['id', 'created_at']));
-		mime := 'application/json';
+		status := 200;
 		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 	END IF;
 
@@ -1071,7 +1056,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1084,21 +1069,18 @@ $$ LANGUAGE plpgsql;
 -- DELETE /emails/:id
 -- PARAMS: emailer_id, email_id
 CREATE OR REPLACE FUNCTION peeps.delete_email(integer, integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
 	eid := peeps.ok_email($1, $2);
 	IF eid IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
-		mime := 'application/json';
+		status := 200;
 		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 		DELETE FROM peeps.emails WHERE id = eid;
 	END IF;
@@ -1109,22 +1091,19 @@ $$ LANGUAGE plpgsql;
 -- PUT /emails/:id/close
 -- PARAMS: emailer_id, email_id
 CREATE OR REPLACE FUNCTION peeps.close_email(integer, integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
 	eid := peeps.ok_email($1, $2);
 	IF eid IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
 		UPDATE peeps.emails SET closed_at=NOW(), closed_by=$1 WHERE id = eid;
-		mime := 'application/json';
+		status := 200;
 		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 	END IF;
 END;
@@ -1134,22 +1113,19 @@ $$ LANGUAGE plpgsql;
 -- PUT /emails/:id/unread
 -- PARAMS: emailer_id, email_id
 CREATE OR REPLACE FUNCTION peeps.unread_email(integer, integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
 	eid := peeps.ok_email($1, $2);
 	IF eid IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
 		UPDATE peeps.emails SET opened_at=NULL, opened_by=NULL WHERE id = eid;
-		mime := 'application/json';
+		status := 200;
 		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 	END IF;
 END;
@@ -1159,25 +1135,22 @@ $$ LANGUAGE plpgsql;
 -- PUT /emails/:id/notme
 -- PARAMS: emailer_id, email_id
 CREATE OR REPLACE FUNCTION peeps.not_my_email(integer, integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	eid integer;
 BEGIN
 	eid := peeps.ok_email($1, $2);
 	IF eid IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
 		UPDATE peeps.emails SET opened_at=NULL, opened_by=NULL, category=(SELECT
 			substring(concat('not-', split_part(people.email,'@',1)) from 1 for 8)
 			FROM peeps.emailers JOIN people ON emailers.person_id=people.id
 			WHERE emailers.id = $1) WHERE id = eid;
-		mime := 'application/json';
+		status := 200;
 		js := row_to_json(r.*) FROM peeps.email_view r WHERE id = eid;
 	END IF;
 END;
@@ -1187,7 +1160,7 @@ $$ LANGUAGE plpgsql;
 -- POST /emails/:id/reply?body=blah
 -- PARAMS: emailer_id, email_id, body
 CREATE OR REPLACE FUNCTION peeps.reply_to_email(integer, integer, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	eid integer;
 	e emails;
@@ -1205,28 +1178,22 @@ BEGIN
 	eid := peeps.ok_email($1, $2);
 	IF eid IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
 		SELECT * INTO e FROM peeps.emails WHERE id = eid;
 		IF e IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 		ELSE
 			-- PARAMS: emailer_id, person_id, profile, category, subject, body, reference_id 
 			SELECT * INTO new_id FROM peeps.outgoing_email($1, e.person_id, e.profile, e.profile,
 				concat('re: ', e.subject), $3, $2);
 			UPDATE peeps.emails SET answer_id=new_id, closed_at=NOW(), closed_by=$1 WHERE id=$2;
-			mime := 'application/json';
+			status := 200;
 			js := json_build_object('id', new_id);
 		END IF;
 	END IF;
@@ -1237,7 +1204,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1250,9 +1217,9 @@ $$ LANGUAGE plpgsql;
 -- GET /unknowns/count
 -- PARAMS: emailer_id
 CREATE OR REPLACE FUNCTION peeps.count_unknowns(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_build_object('count', (SELECT COUNT(*) FROM peeps.unknown_email_ids($1)));
 END;
 $$ LANGUAGE plpgsql;
@@ -1261,9 +1228,9 @@ $$ LANGUAGE plpgsql;
 -- GET /unknowns
 -- PARAMS: emailer_id
 CREATE OR REPLACE FUNCTION peeps.get_unknowns(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM peeps.emails_view WHERE id IN
 		(SELECT * FROM peeps.unknown_email_ids($1))) r;
 	IF js IS NULL THEN
@@ -1276,18 +1243,15 @@ $$ LANGUAGE plpgsql;
 -- GET /unknowns/next
 -- PARAMS: emailer_id
 CREATE OR REPLACE FUNCTION peeps.get_next_unknown(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.unknown_view r
 		WHERE id IN (SELECT * FROM peeps.unknown_email_ids($1) LIMIT 1);
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 END;
@@ -1297,7 +1261,7 @@ $$ LANGUAGE plpgsql;
 -- POST /unknowns/:id?person_id=123 or 0 to create new
 -- PARAMS: emailer_id, email_id, person_id
 CREATE OR REPLACE FUNCTION peeps.set_unknown_person(integer, integer, integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	this_e emails;
 	newperson people;
@@ -1313,11 +1277,8 @@ BEGIN
 		(SELECT * FROM peeps.unknown_email_ids($1)) AND id = $2;
 	GET DIAGNOSTICS rowcount = ROW_COUNT;
 	IF rowcount = 0 THEN 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
  RETURN; END IF;
 	IF $3 = 0 THEN
 		SELECT * INTO newperson FROM peeps.person_create(this_e.their_name, this_e.their_email);
@@ -1325,17 +1286,14 @@ BEGIN
 		SELECT * INTO newperson FROM peeps.people WHERE id = $3;
 		GET DIAGNOSTICS rowcount = ROW_COUNT;
 		IF rowcount = 0 THEN 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
  RETURN; END IF;
 		UPDATE peeps.people SET email=this_e.their_email,
 			notes = concat('OLD EMAIL: ', email, E'\n', notes) WHERE id = $3;
 	END IF;
 	UPDATE peeps.emails SET person_id=newperson.id, category=profile WHERE id = $2;
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.email_view r WHERE id = $2;
 
 EXCEPTION
@@ -1344,7 +1302,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1357,18 +1315,15 @@ $$ LANGUAGE plpgsql;
 -- DELETE /unknowns/:id
 -- PARAMS: emailer_id, email_id
 CREATE OR REPLACE FUNCTION peeps.delete_unknown(integer, integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.unknown_view r
 		WHERE id IN (SELECT * FROM peeps.unknown_email_ids($1)) AND id = $2;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
  RETURN;
 	ELSE
 		DELETE FROM peeps.emails WHERE id = $2;
@@ -1382,7 +1337,7 @@ COMMIT;
 -- POST /people
 -- PARAMS: name, email
 CREATE OR REPLACE FUNCTION peeps.create_person(text, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 
@@ -1393,7 +1348,7 @@ DECLARE
 
 BEGIN
 	SELECT id INTO pid FROM peeps.person_create($1, $2);
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = pid;
 
 EXCEPTION
@@ -1402,7 +1357,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1415,21 +1370,18 @@ $$ LANGUAGE plpgsql;
 -- POST /people/:id/newpass
 -- PARAMS: person_id
 CREATE OR REPLACE FUNCTION peeps.make_newpass(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
 	UPDATE peeps.people
 		SET newpass=core.unique_for_table_field(8, 'peeps.people', 'newpass')
 		WHERE id=$1;
 	IF FOUND THEN
-		mime := 'application/json';
+		status := 200;
 		js := json_build_object('id', $1);
 	ELSE
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 END;
@@ -1439,17 +1391,14 @@ $$ LANGUAGE plpgsql;
 -- GET /people/:id
 -- PARAMS: person_id
 CREATE OR REPLACE FUNCTION peeps.get_person(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = $1;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 END;
@@ -1459,33 +1408,24 @@ $$ LANGUAGE plpgsql;
 -- GET /people/:email
 -- PARAMS: email
 CREATE OR REPLACE FUNCTION peeps.get_person_email(text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	clean_email text;
 BEGIN
 	IF $1 IS NULL THEN 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
  END IF;
 	clean_email := lower(regexp_replace($1, '\s', '', 'g'));
 	IF clean_email !~ '\A\S+@\S+\.\S+\Z' THEN 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
  END IF;
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.person_view r WHERE email = clean_email;
 	IF js IS NULL THEN 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
  END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1494,21 +1434,18 @@ $$ LANGUAGE plpgsql;
 -- GET /people/:id/:lopass
 -- PARAMS: person_id, lopass
 CREATE OR REPLACE FUNCTION peeps.get_person_lopass(integer, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
 	SELECT id INTO pid FROM peeps.people WHERE id=$1 AND lopass=$2;
 	IF pid IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
-		SELECT x.mime, x.js INTO mime, js FROM peeps.get_person($1) x;
+		SELECT x.status, x.js INTO status, js FROM peeps.get_person($1) x;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1517,21 +1454,18 @@ $$ LANGUAGE plpgsql;
 -- GET /people/:id/:newpass
 -- PARAMS: person_id, newpass
 CREATE OR REPLACE FUNCTION peeps.get_person_newpass(integer, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
 	SELECT id INTO pid FROM peeps.people WHERE id=$1 AND newpass=$2;
 	IF pid IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
-		SELECT x.mime, x.js INTO mime, js FROM peeps.get_person($1) x;
+		SELECT x.status, x.js INTO status, js FROM peeps.get_person($1) x;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1540,21 +1474,18 @@ $$ LANGUAGE plpgsql;
 -- GET /people?email=&password=
 -- PARAMS: email, password
 CREATE OR REPLACE FUNCTION peeps.get_person_password(text, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
 	SELECT p.pid INTO pid FROM peeps.pid_from_email_pass($1, $2) p;
 	IF pid IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
-		SELECT x.mime, x.js INTO mime, js FROM peeps.get_person(pid) x;
+		SELECT x.status, x.js INTO status, js FROM peeps.get_person(pid) x;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1563,21 +1494,18 @@ $$ LANGUAGE plpgsql;
 -- GET /person/{cookie}
 -- PARAMS: cookie string
 CREATE OR REPLACE FUNCTION peeps.get_person_cookie(text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
 	SELECT p.id INTO pid FROM peeps.get_person_from_cookie($1) p;
 	IF pid IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
-		SELECT x.mime, x.js INTO mime, js FROM peeps.get_person(pid) x;
+		SELECT x.status, x.js INTO status, js FROM peeps.get_person(pid) x;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1586,7 +1514,7 @@ $$ LANGUAGE plpgsql;
 -- POST /login
 -- PARAMS: person.id, domain
 CREATE OR REPLACE FUNCTION peeps.cookie_from_id(integer, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1595,7 +1523,7 @@ DECLARE
 	err_context text;
 
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r) FROM (SELECT cookie FROM peeps.login_person_domain($1, $2)) r;
 
 EXCEPTION
@@ -1604,7 +1532,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1617,19 +1545,16 @@ $$ LANGUAGE plpgsql;
 -- POST /login
 -- PARAMS: email, password, domain
 CREATE OR REPLACE FUNCTION peeps.cookie_from_login(text, text, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
 	SELECT p.pid INTO pid FROM peeps.pid_from_email_pass($1, $2) p;
 	IF pid IS NULL THEN 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
  ELSE
-		SELECT x.mime, x.js INTO mime, js FROM peeps.cookie_from_id(pid, $3) x;
+		SELECT x.status, x.js INTO status, js FROM peeps.cookie_from_id(pid, $3) x;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1638,7 +1563,7 @@ $$ LANGUAGE plpgsql;
 -- PUT /people/:id/password
 -- PARAMS: person_id, password
 CREATE OR REPLACE FUNCTION peeps.set_password(integer, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1648,7 +1573,7 @@ DECLARE
 
 BEGIN
 	PERFORM peeps.set_hashpass($1, $2);
-	SELECT x.mime, x.js INTO mime, js FROM peeps.get_person($1) x;
+	SELECT x.status, x.js INTO status, js FROM peeps.get_person($1) x;
 
 EXCEPTION
 	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
@@ -1656,7 +1581,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1669,7 +1594,7 @@ $$ LANGUAGE plpgsql;
 -- PUT /people/:id
 -- PARAMS: person_id, JSON of new values
 CREATE OR REPLACE FUNCTION peeps.update_person(integer, json,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1680,7 +1605,7 @@ DECLARE
 BEGIN
 	PERFORM core.jsonupdate('peeps.people', $1, $2,
 		core.cols2update('peeps', 'people', ARRAY['id', 'created_at']));
-	SELECT x.mime, x.js INTO mime, js FROM peeps.get_person($1) x;
+	SELECT x.status, x.js INTO status, js FROM peeps.get_person($1) x;
 
 EXCEPTION
 	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
@@ -1688,7 +1613,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1701,7 +1626,7 @@ $$ LANGUAGE plpgsql;
 -- DELETE /people/:id
 -- PARAMS: person_id
 CREATE OR REPLACE FUNCTION peeps.delete_person(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1710,15 +1635,12 @@ DECLARE
 	err_context text;
 
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = $1;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
 		DELETE FROM peeps.people WHERE id = $1;
@@ -1730,7 +1652,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1743,7 +1665,7 @@ $$ LANGUAGE plpgsql;
 -- DELETE /people/:id/annihilate
 -- PARAMS: person_id
 CREATE OR REPLACE FUNCTION peeps.annihilate_person(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	res RECORD;
 
@@ -1753,15 +1675,12 @@ DECLARE
 	err_context text;
 
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = $1;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
 		FOR res IN SELECT * FROM core.tables_referencing('peeps', 'people', 'id') LOOP
@@ -1777,7 +1696,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1790,7 +1709,7 @@ $$ LANGUAGE plpgsql;
 -- POST /people/:id/urls
 -- PARAMS: person_id, url
 CREATE OR REPLACE FUNCTION peeps.add_url(integer, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1799,7 +1718,7 @@ DECLARE
 	err_context text;
 
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	WITH nu AS (INSERT INTO urls(person_id, url)
 		VALUES ($1, $2) RETURNING *)
 		SELECT row_to_json(r.*) INTO js FROM nu r;
@@ -1810,7 +1729,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1823,7 +1742,7 @@ $$ LANGUAGE plpgsql;
 -- POST /people/:id/stats
 -- PARAMS: person_id, stat.name, stat.value
 CREATE OR REPLACE FUNCTION peeps.add_stat(integer, text, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1832,7 +1751,7 @@ DECLARE
 	err_context text;
 
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	WITH nu AS (INSERT INTO stats(person_id, statkey, statvalue)
 		VALUES ($1, $2, $3) RETURNING *)
 		SELECT row_to_json(r) INTO js FROM
@@ -1844,7 +1763,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1857,7 +1776,7 @@ $$ LANGUAGE plpgsql;
 -- POST /people/:id/emails
 -- PARAMS: emailer_id, person_id, profile, subject, body
 CREATE OR REPLACE FUNCTION peeps.new_email(integer, integer, text, text, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	new_id integer;
 
@@ -1869,7 +1788,7 @@ DECLARE
 BEGIN
 	-- PARAMS: emailer_id, person_id, profile, category, subject, body, reference_id (NULL unless reply)
 	SELECT * INTO new_id FROM peeps.outgoing_email($1, $2, $3, $3, $4, $5, NULL);
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.email_view r WHERE id = new_id;
 
 EXCEPTION
@@ -1878,7 +1797,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1891,9 +1810,9 @@ $$ LANGUAGE plpgsql;
 -- GET /people/:id/emails
 -- PARAMS: person_id
 CREATE OR REPLACE FUNCTION peeps.get_person_emails(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM
 		(SELECT * FROM peeps.emails_full_view WHERE person_id = $1 ORDER BY id) r;
 	IF js IS NULL THEN
@@ -1906,7 +1825,7 @@ $$ LANGUAGE plpgsql;
 -- POST /people/:id/merge?id=old_id
 -- PARAMS: person_id to KEEP, person_id to CHANGE
 CREATE OR REPLACE FUNCTION peeps.merge_person(integer, integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -1916,7 +1835,7 @@ DECLARE
 
 BEGIN
 	PERFORM person_merge_from_to($2, $1);
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = $1;
 
 EXCEPTION
@@ -1925,7 +1844,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1938,9 +1857,9 @@ $$ LANGUAGE plpgsql;
 -- GET /people/unmailed
 -- PARAMS: -none-
 CREATE OR REPLACE FUNCTION peeps.people_unemailed(
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view
 		WHERE email_count = 0 ORDER BY id DESC LIMIT 200) r;
 END;
@@ -1950,7 +1869,7 @@ $$ LANGUAGE plpgsql;
 -- GET /search?q=term
 -- PARAMS: search term
 CREATE OR REPLACE FUNCTION peeps.people_search(text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	q text;
 
@@ -1964,7 +1883,7 @@ BEGIN
 	IF LENGTH(q) < 4 THEN
 		RAISE 'search term too short';
 	END IF;
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM
 		(SELECT * FROM peeps.people_view WHERE id IN (SELECT id FROM peeps.people
 				WHERE name ILIKE q OR company ILIKE q OR email ILIKE q)
@@ -1979,7 +1898,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -1992,17 +1911,14 @@ $$ LANGUAGE plpgsql;
 -- GET /stats/:id
 -- PARAMS: stats.id
 CREATE OR REPLACE FUNCTION peeps.get_stat(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.stats_view r WHERE id=$1;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 END;
@@ -2013,7 +1929,7 @@ $$ LANGUAGE plpgsql;
 -- PUT /stat/:id
 -- PARAMS: stats.id, json
 CREATE OR REPLACE FUNCTION peeps.update_stat(integer, json,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -2024,15 +1940,12 @@ DECLARE
 BEGIN
 	PERFORM core.jsonupdate('peeps.stats', $1, $2,
 		core.cols2update('peeps', 'stats', ARRAY['id', 'created_at']));
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.stats_view r WHERE id=$1;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 
@@ -2042,7 +1955,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -2055,17 +1968,14 @@ $$ LANGUAGE plpgsql;
 -- DELETE /stats/:id
 -- PARAMS: stats.id
 CREATE OR REPLACE FUNCTION peeps.delete_stat(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.stats_view r WHERE id=$1;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
 		DELETE FROM peeps.stats WHERE id = $1;
@@ -2077,17 +1987,14 @@ $$ LANGUAGE plpgsql;
 -- GET /urls/:id
 -- PARAMS: urls.id
 CREATE OR REPLACE FUNCTION peeps.get_url(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.urls r WHERE id=$1;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 END;
@@ -2097,17 +2004,14 @@ $$ LANGUAGE plpgsql;
 -- DELETE /urls/:id
 -- PARAMS: urls.id
 CREATE OR REPLACE FUNCTION peeps.delete_url(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.urls r WHERE id = $1;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
 		DELETE FROM peeps.urls WHERE id = $1;
@@ -2119,7 +2023,7 @@ $$ LANGUAGE plpgsql;
 -- PUT /urls/:id
 -- PARAMS: urls.id, JSON with allowed: person_id::int, url::text, main::boolean
 CREATE OR REPLACE FUNCTION peeps.update_url(integer, json,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -2130,15 +2034,12 @@ DECLARE
 BEGIN
 	PERFORM core.jsonupdate('peeps.urls', $1, $2,
 		core.cols2update('peeps', 'urls', ARRAY['id']));
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.urls r WHERE id = $1;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 
@@ -2148,7 +2049,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -2161,9 +2062,9 @@ $$ LANGUAGE plpgsql;
 -- GET /formletters
 -- PARAMS: -none-
 CREATE OR REPLACE FUNCTION peeps.get_formletters(
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM
 		(SELECT * FROM peeps.formletters_view ORDER BY title) r;
 END;
@@ -2173,7 +2074,7 @@ $$ LANGUAGE plpgsql;
 -- POST /formletters
 -- PARAMS: title
 CREATE OR REPLACE FUNCTION peeps.create_formletter(text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	new_id integer;
 
@@ -2184,7 +2085,7 @@ DECLARE
 
 BEGIN
 	INSERT INTO formletters(title) VALUES ($1) RETURNING id INTO new_id;
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.formletter_view r WHERE id = new_id;
 
 EXCEPTION
@@ -2193,7 +2094,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -2206,17 +2107,14 @@ $$ LANGUAGE plpgsql;
 -- GET /formletters/:id
 -- PARAMS: formletters.id
 CREATE OR REPLACE FUNCTION peeps.get_formletter(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.formletter_view r WHERE id = $1;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 END;
@@ -2226,7 +2124,7 @@ $$ LANGUAGE plpgsql;
 -- PUT /formletters/:id
 -- PARAMS: formletters.id, JSON keys: title, explanation, body
 CREATE OR REPLACE FUNCTION peeps.update_formletter(integer, json,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -2237,15 +2135,12 @@ DECLARE
 BEGIN
 	PERFORM core.jsonupdate('peeps.formletters', $1, $2,
 		core.cols2update('peeps', 'formletters', ARRAY['id', 'created_at']));
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.formletter_view r WHERE id = $1;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 
@@ -2255,7 +2150,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -2268,17 +2163,14 @@ $$ LANGUAGE plpgsql;
 -- DELETE /formletters/:id
 -- PARAMS: formletters.id
 CREATE OR REPLACE FUNCTION peeps.delete_formletter(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.formletter_view r WHERE id = $1;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	ELSE
 		DELETE FROM peeps.formletters WHERE id = $1;
@@ -2292,9 +2184,9 @@ $$ LANGUAGE plpgsql;
 -- GET /people/:id/formletters/:id
 -- PARAMS: people.id, formletters.id
 CREATE OR REPLACE FUNCTION peeps.parsed_formletter(integer, integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_build_object('body', parse_formletter_body($1, $2));
 END;
 $$ LANGUAGE plpgsql;
@@ -2305,9 +2197,9 @@ $$ LANGUAGE plpgsql;
 -- RETURNS array of objects:
 -- [{"code":"AF","name":"Afghanistan"},{"code":"AX","name":"Åland Islands"}..]
 CREATE OR REPLACE FUNCTION peeps.all_countries(
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM peeps.countries ORDER BY name) r;
 END;
 $$ LANGUAGE plpgsql;
@@ -2318,9 +2210,9 @@ $$ LANGUAGE plpgsql;
 -- RETURNS single code:name object:
 -- {"AD":"Andorra","AE":"United Arab Emirates...  }
 CREATE OR REPLACE FUNCTION peeps.country_names(
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_object(
 		ARRAY(SELECT code FROM countries ORDER BY code),
 		ARRAY(SELECT name FROM countries ORDER BY code));
@@ -2331,9 +2223,9 @@ $$ LANGUAGE plpgsql;
 -- GET /countries
 -- PARAMS: -none-
 CREATE OR REPLACE FUNCTION peeps.country_count(
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT country, COUNT(*) FROM peeps.people
 		WHERE country IS NOT NULL GROUP BY country ORDER BY COUNT(*) DESC, country) r;
 END;
@@ -2343,19 +2235,16 @@ $$ LANGUAGE plpgsql;
 -- GET /states/:country_code
 -- PARAMS: 2-letter country code
 CREATE OR REPLACE FUNCTION peeps.state_count(char(2),
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT state, COUNT(*) FROM peeps.people
 		WHERE country = $1 AND state IS NOT NULL AND state != ''
 		GROUP BY state ORDER BY COUNT(*) DESC, state) r;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 END;
@@ -2365,19 +2254,16 @@ $$ LANGUAGE plpgsql;
 -- GET /cities/:country_code/:state
 -- PARAMS: 2-letter country code, state name
 CREATE OR REPLACE FUNCTION peeps.city_count(char(2), text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT city, COUNT(*) FROM peeps.people
 		WHERE country=$1 AND state=$2 AND (city IS NOT NULL AND city != '')
 		GROUP BY city ORDER BY COUNT(*) DESC, city) r;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 END;
@@ -2387,19 +2273,16 @@ $$ LANGUAGE plpgsql;
 -- GET /cities/:country_code
 -- PARAMS: 2-letter country code
 CREATE OR REPLACE FUNCTION peeps.city_count(char(2),
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT city, COUNT(*) FROM peeps.people
 		WHERE country=$1 AND (city IS NOT NULL AND city != '')
 		GROUP BY city ORDER BY COUNT(*) DESC, city) r;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 END;
@@ -2409,19 +2292,16 @@ $$ LANGUAGE plpgsql;
 -- GET /where/:country_code
 -- PARAMS: 2-letter country code
 CREATE OR REPLACE FUNCTION peeps.people_from_country(char(2),
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
 		(SELECT id FROM peeps.people WHERE country=$1)
 		ORDER BY email_count DESC, name) r;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 END;
@@ -2431,19 +2311,16 @@ $$ LANGUAGE plpgsql;
 -- GET /where/:country_code?state=XX
 -- PARAMS: 2-letter country code, state
 CREATE OR REPLACE FUNCTION peeps.people_from_state(char(2), text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
 		(SELECT id FROM peeps.people WHERE country=$1 AND state=$2)
 		ORDER BY email_count DESC, name) r;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 END;
@@ -2453,19 +2330,16 @@ $$ LANGUAGE plpgsql;
 -- GET /where/:country_code?city=XX
 -- PARAMS: 2-letter country code, state
 CREATE OR REPLACE FUNCTION peeps.people_from_city(char(2), text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
 		(SELECT id FROM peeps.people WHERE country=$1 AND city=$2)
 		ORDER BY email_count DESC, name) r;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 END;
@@ -2475,19 +2349,16 @@ $$ LANGUAGE plpgsql;
 -- GET /where/:country_code?city=XX&state=XX
 -- PARAMS: 2-letter country code, state, city
 CREATE OR REPLACE FUNCTION peeps.people_from_state_city(char(2), text, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
 		(SELECT id FROM peeps.people WHERE country=$1 AND state=$2 AND city=$3)
 		ORDER BY email_count DESC, name) r;
 	IF js IS NULL THEN
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 END;
@@ -2498,9 +2369,9 @@ $$ LANGUAGE plpgsql;
 -- GET /stats/:key/:value
 -- PARAMS: stats.name, stats.value
 CREATE OR REPLACE FUNCTION peeps.get_stats(text, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM peeps.stats_view
 		WHERE name = $1 AND value = $2) r;
 	IF js IS NULL THEN
@@ -2513,9 +2384,9 @@ $$ LANGUAGE plpgsql;
 -- GET /stats/:key
 -- PARAMS: stats.name
 CREATE OR REPLACE FUNCTION peeps.get_stats(text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM peeps.stats_view WHERE name = $1) r;
 	IF js IS NULL THEN
 		js := '[]';
@@ -2527,9 +2398,9 @@ $$ LANGUAGE plpgsql;
 -- GET /statcount/:key
 -- PARAMS: stats.name
 CREATE OR REPLACE FUNCTION peeps.get_stat_value_count(text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT statvalue AS value, COUNT(*) AS count
 		FROM peeps.stats WHERE statkey=$1 GROUP BY statvalue ORDER BY statvalue) r;
 	IF js IS NULL THEN
@@ -2542,9 +2413,9 @@ $$ LANGUAGE plpgsql;
 -- GET /statcount
 -- PARAMS: -none-
 CREATE OR REPLACE FUNCTION peeps.get_stat_name_count(
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT statkey AS name, COUNT(*) AS count
 		FROM peeps.stats GROUP BY statkey ORDER BY statkey) r;
 END;
@@ -2555,7 +2426,7 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: json of values to insert
 -- KEYS: profile category message_id their_email their_name subject headers body
 CREATE OR REPLACE FUNCTION peeps.import_email(json,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	eid integer;
 	pid integer;
@@ -2605,7 +2476,7 @@ BEGIN
 			SELECT eid AS email_id, mime_type, filename, bytes FROM
 			json_populate_recordset(null::peeps.email_attachments, $1 -> 'attachments');
 	END IF;
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM peeps.email_view r WHERE id=eid;
 
 EXCEPTION
@@ -2614,7 +2485,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -2628,7 +2499,7 @@ $$ LANGUAGE plpgsql;
 -- POST /list
 -- PARAMS name, email, listype ($3 should be: 'all', 'some', 'none', or 'dead')
 CREATE OR REPLACE FUNCTION peeps.list_update(text, text, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 	clean3 text;
@@ -2644,7 +2515,7 @@ BEGIN
 	INSERT INTO peeps.stats(person_id, statkey, statvalue)
 		VALUES (pid, 'listype', clean3);
 	UPDATE peeps.people SET listype=clean3 WHERE id=pid;
-	mime := 'application/json';
+	status := 200;
 	js := json_build_object('list', clean3);
 
 EXCEPTION
@@ -2653,7 +2524,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -2664,9 +2535,9 @@ $$ LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION peeps.queued_emails(
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT e.id, e.profile, e.their_email,
 		e.subject, e.body, e.message_id, ref.message_id AS referencing
 		FROM peeps.emails e
@@ -2679,7 +2550,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: emails.id
 CREATE OR REPLACE FUNCTION peeps.email_is_sent(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 
 	err_code text;
@@ -2688,17 +2559,14 @@ DECLARE
 	err_context text;
 
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	UPDATE peeps.emails SET outgoing=TRUE WHERE id=$1;
 	IF FOUND THEN
 		js := json_build_object('sent', $1);
 	ELSE
 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
 
 	END IF;
 
@@ -2708,7 +2576,7 @@ EXCEPTION
 		err_msg = MESSAGE_TEXT,
 		err_detail = PG_EXCEPTION_DETAIL,
 		err_context = PG_EXCEPTION_CONTEXT;
-	mime := 'application/problem+json';
+	status := 500;
 	js := json_build_object(
 		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
 		'title', err_msg,
@@ -2721,9 +2589,9 @@ $$ LANGUAGE plpgsql;
 -- GET /emails/sent
 -- PARAMS: howmany
 CREATE OR REPLACE FUNCTION peeps.sent_emails(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM peeps.emails_view WHERE id IN
 		(SELECT id FROM peeps.emails WHERE outgoing IS TRUE ORDER BY id DESC LIMIT $1)
 		ORDER BY id DESC) r;
@@ -2733,9 +2601,9 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: -none-
 CREATE OR REPLACE FUNCTION peeps.sent_emails_grouped(
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT p.id, p.name, (SELECT json_agg(x) AS sent FROM
 		(SELECT id, subject, created_at, their_name, their_email FROM peeps.emails
 			WHERE closed_by=e.id AND outgoing IS TRUE
@@ -2751,9 +2619,9 @@ $$ LANGUAGE plpgsql;
 
 -- Array of {person_id: 1234, twitter: 'username'}
 CREATE OR REPLACE FUNCTION peeps.twitter_unfollowed(
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT person_id,
 		regexp_replace(regexp_replace(url, 'https?://twitter.com/', ''), '/$', '')
 		AS twitter FROM peeps.urls WHERE url LIKE '%twitter.com%'
@@ -2767,20 +2635,17 @@ $$ LANGUAGE plpgsql;
 -- Mark this a dead email - by ID
 -- PARAMS: person_id
 CREATE OR REPLACE FUNCTION peeps.dead_email(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
 	UPDATE peeps.people SET email=NULL, listype=NULL,
 		notes=CONCAT('DEAD EMAIL: ', email, E'\n', notes)
 		WHERE id = $1 AND email IS NOT NULL;
 	IF FOUND THEN
-		mime := 'application/json';
+		status := 200;
 		js := json_build_object('ok', $1);
 	ELSE 
-	mime := 'application/problem+json';
-	js := json_build_object(
-		'type', 'about:blank',
-		'title', 'Not Found',
-		'status', 404);
+	status := 404;
+	js := '{}';
  END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -2789,7 +2654,7 @@ $$ LANGUAGE plpgsql;
 -- ARRAY of schema.tablenames where with this person_id
 -- PARAMS: person_id
 CREATE OR REPLACE FUNCTION peeps.tables_with_person(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 DECLARE
 	res RECORD;
 	tablez text[] := ARRAY[]::text[];
@@ -2803,7 +2668,7 @@ BEGIN
 			tablez := tablez || res.tablename;
 		END IF;
 	END LOOP;
-	mime := 'application/json';
+	status := 200;
 	js := array_to_json(tablez);
 END;
 $$ LANGUAGE plpgsql;
@@ -2812,9 +2677,9 @@ $$ LANGUAGE plpgsql;
 -- Array of people's [[id, email, address, lopass]] for emailing
 -- PARAMS: key,val to be used in WHERE _key_ = _val_
 CREATE OR REPLACE FUNCTION peeps.ieal_where(text, text,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	EXECUTE format ('SELECT json_agg(json_build_array(id, email, address, lopass))
 		FROM peeps.people WHERE email IS NOT NULL AND %I=%L', $1, $2) INTO js;
 	IF js IS NULL THEN js := '[]'; END IF;
@@ -2824,9 +2689,9 @@ $$ LANGUAGE plpgsql;
 
 -- now.urls missing person_id
 CREATE OR REPLACE FUNCTION peeps.now_unknowns(
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM
 		(SELECT id, short, long FROM now.urls WHERE person_id IS NULL) r;
 	IF js IS NULL THEN js := '[]'; END IF;
@@ -2836,9 +2701,9 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: now.urls.id
 CREATE OR REPLACE FUNCTION peeps.now_url(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := row_to_json(r.*) FROM now.urls r WHERE id = $1;
 END;
 $$ LANGUAGE plpgsql;
@@ -2846,9 +2711,9 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: now.urls.id
 CREATE OR REPLACE FUNCTION peeps.now_unknown_find(integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
 	js := json_agg(r) FROM (SELECT * FROM peeps.people_view WHERE id IN
 		(SELECT * FROM now.find_person($1))) r;
 	IF js IS NULL THEN js := '[]'; END IF;
@@ -2858,9 +2723,10 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: now.urls.id, person_id
 CREATE OR REPLACE FUNCTION peeps.now_unknown_assign(integer, integer,
-	OUT mime text, OUT js json) AS $$
+	OUT status smallint, OUT js json) AS $$
 BEGIN
-	mime := 'application/json';
+	status := 200;
+	UPDATE now.urls SET person_id = $2 WHERE id = $1;
 	js := row_to_json(r.*) FROM now.urls r WHERE id = $1;
 END;
 $$ LANGUAGE plpgsql;
