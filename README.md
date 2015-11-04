@@ -18,7 +18,7 @@ For some explanation, see <http://sivers.org/pg>
 
 ## In each schema directory:
 
-* **api.sql** : main public functions, each returning mime & JSON
+* **api.sql** : main public functions, each returning status & JSON
 * **fixtures.sh** : shell script to output fixtures.sql
 * **fixtures.sql** : dump of values for testing, to be loaded with each test
 * **functions.sql** : any other functions, not API

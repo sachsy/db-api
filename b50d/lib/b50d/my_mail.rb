@@ -41,7 +41,7 @@ module MyMail
 				puts mail.message_id + "\t" + mail.from[0]
 				jsonemail = parse(mail, profile).to_json
 				res = db.exec_params('SELECT * FROM peeps.import_email($1)', [jsonemail])
-				if res[0]['mime'].include? 'problem'
+				unless res[0]['status'] == '200'
 					puts res[0]['js']
 				end
 				mail = Mail.find(what2find)

@@ -29,11 +29,10 @@ end
 # OUTPUT: [boolean, hash] where hash is JSON of response or problem
 def okres(res)
 	js = JSON.parse(res[0]['js'], symbolize_names: true)
-	if res[0]['mime'].include? 'problem'
-		[false, {error: js[:title], message: js[:detail]}]
-	else
-		[true, js]
-	end
+	ok = (res[0]['status'] == '200')
+	# previous transform of js if not ok: {error: js[:title], message: js[:detail]}
+	# TODO: if not 200 then return status in JSON?
+	[ok, js]
 end
 
 # return params string for PostgreSQL exec_params
@@ -46,12 +45,12 @@ end
 # The real functional function we're going to curry, below
 # INPUT: PostgreSQL connection, schema string, function string, params array
 def calldb(pg, schema, func, params)
-	pg.exec_params('SELECT mime, js FROM %s.%s%s' %
+	pg.exec_params('SELECT status, js FROM %s.%s%s' %
 		[schema, func, paramstring(params)], params)
 end
 
 def calldb_noschema(pg, fullfunc, params)
-	pg.exec_params('SELECT mime, js FROM %s%s' %
+	pg.exec_params('SELECT status, js FROM %s%s' %
 		[fullfunc, paramstring(params)], params)
 end
 
