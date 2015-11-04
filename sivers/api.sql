@@ -4,6 +4,7 @@
 
 -- GET %r{^/comments/([0-9]+)$}
 -- PARAMS: comment id
+DROP FUNCTION IF EXISTS get_comment(integer);
 CREATE OR REPLACE FUNCTION get_comment(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -21,6 +22,7 @@ $$ LANGUAGE plpgsql;
 
 -- POST %r{^/comments/([0-9]+)$}
 -- PARAMS: uri, name, email, html
+DROP FUNCTION IF EXISTS add_comment(text, text, text, text);
 CREATE OR REPLACE FUNCTION add_comment(text, text, text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -51,6 +53,7 @@ $$ LANGUAGE plpgsql;
 
 -- PUT %r{^/comments/([0-9]+)$}
 -- PARAMS: comments.id, JSON of values to update
+DROP FUNCTION IF EXISTS update_comment(integer, json);
 CREATE OR REPLACE FUNCTION update_comment(integer, json,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -70,6 +73,7 @@ $$ LANGUAGE plpgsql;
 
 -- POST %r{^/comments/([0-9]+)/reply$}
 -- PARAMS: comment_id, my reply
+DROP FUNCTION IF EXISTS reply_to_comment(integer, text);
 CREATE OR REPLACE FUNCTION reply_to_comment(integer, text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -88,6 +92,7 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE %r{^/comments/([0-9]+)$}
 -- PARAMS: comment_id
+DROP FUNCTION IF EXISTS delete_comment(integer);
 CREATE OR REPLACE FUNCTION delete_comment(integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -106,6 +111,7 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE %r{^/comments/([0-9]+)/spam$}
 -- PARAMS: comment_id
+DROP FUNCTION IF EXISTS spam_comment(integer);
 CREATE OR REPLACE FUNCTION spam_comment(integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -127,7 +133,9 @@ $$ LANGUAGE plpgsql;
 
 -- GET '/comments/new'
 -- PARAMS: -none-
-CREATE OR REPLACE FUNCTION new_comments(OUT status smallint, OUT js json) AS $$
+DROP FUNCTION IF EXISTS new_comments();
+CREATE OR REPLACE FUNCTION new_comments(
+	OUT status smallint, OUT js json) AS $$
 BEGIN
 	status := 200;
 	js := json_agg(r) FROM
@@ -138,6 +146,7 @@ $$ LANGUAGE plpgsql;
 
 -- GET %r{^/person/([0-9]+)/comments$}
 -- PARAMS: person_id
+DROP FUNCTION IF EXISTS comments_by_person(integer);
 CREATE OR REPLACE FUNCTION comments_by_person(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN

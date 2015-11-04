@@ -7,6 +7,7 @@
 -- PARAMS: -none-
 -- RETURNS array of objects:
 -- [{"code":"AUD","name":"Australian Dollar"},{"code":"BGN","name":"Bulgarian Lev"}... ]
+DROP FUNCTION IF EXISTS core.all_currencies();
 CREATE OR REPLACE FUNCTION core.all_currencies(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -20,6 +21,7 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: -none-
 -- RETURNS single code:name object:
 -- {"AUD":"Australian Dollar", "BGN":"Bulgarian Lev", ...}
+DROP FUNCTION IF EXISTS core.currency_names();
 CREATE OR REPLACE FUNCTION core.currency_names(
 	OUT status smallint, OUT js json) AS $$
 BEGIN

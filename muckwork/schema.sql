@@ -750,6 +750,7 @@ CREATE VIEW muckwork.project_detail_view AS SELECT id, title, description, creat
 
 -- PARAMS: api_key, api_pass
 -- RESPONSE: {client_id: (integer)} or not found
+DROP FUNCTION IF EXISTS muckwork.auth_client(text, text);
 CREATE OR REPLACE FUNCTION muckwork.auth_client(text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -774,6 +775,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: api_key, api_pass
 -- RESPONSE: {worker_id: (integer)} or not found
+DROP FUNCTION IF EXISTS muckwork.auth_worker(text, text);
 CREATE OR REPLACE FUNCTION muckwork.auth_worker(text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -798,6 +800,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: api_key, api_pass
 -- RESPONSE: {manager_id: (integer)} or not found
+DROP FUNCTION IF EXISTS muckwork.auth_manager(text, text);
 CREATE OR REPLACE FUNCTION muckwork.auth_manager(text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -822,6 +825,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: client_id, project_id
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
+DROP FUNCTION IF EXISTS muckwork.client_owns_project(integer, integer);
 CREATE OR REPLACE FUNCTION muckwork.client_owns_project(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -838,6 +842,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: worker_id, task_id
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
+DROP FUNCTION IF EXISTS muckwork.worker_owns_task(integer, integer);
 CREATE OR REPLACE FUNCTION muckwork.worker_owns_task(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -854,6 +859,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: project_id, progress
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
+DROP FUNCTION IF EXISTS muckwork.project_has_progress(integer, text);
 CREATE OR REPLACE FUNCTION muckwork.project_has_progress(integer, text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -872,6 +878,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: task_id, progress
 -- RESPONSE: {'ok' = boolean}  (so 'ok' = 'false' means no)
+DROP FUNCTION IF EXISTS muckwork.task_has_progress(integer, text);
 CREATE OR REPLACE FUNCTION muckwork.task_has_progress(integer, text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -889,6 +896,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: (none)
+DROP FUNCTION IF EXISTS muckwork.get_clients();
 CREATE OR REPLACE FUNCTION muckwork.get_clients(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -902,6 +910,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: client_id
+DROP FUNCTION IF EXISTS muckwork.get_client(integer);
 CREATE OR REPLACE FUNCTION muckwork.get_client(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -920,6 +929,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: person_id
+DROP FUNCTION IF EXISTS muckwork.create_client(integer);
 CREATE OR REPLACE FUNCTION muckwork.create_client(integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -952,6 +962,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: client_id, JSON of key=>values to update
+DROP FUNCTION IF EXISTS muckwork.update_client(integer, json);
 CREATE OR REPLACE FUNCTION muckwork.update_client(integer, json,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -988,6 +999,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: (none)
+DROP FUNCTION IF EXISTS muckwork.get_workers();
 CREATE OR REPLACE FUNCTION muckwork.get_workers(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1002,6 +1014,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: worker_id
+DROP FUNCTION IF EXISTS muckwork.get_worker(integer);
 CREATE OR REPLACE FUNCTION muckwork.get_worker(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1020,6 +1033,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: person_id
+DROP FUNCTION IF EXISTS muckwork.create_worker(integer);
 CREATE OR REPLACE FUNCTION muckwork.create_worker(integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1052,6 +1066,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: worker_id, JSON of key=>values to update
+DROP FUNCTION IF EXISTS muckwork.update_worker(integer, json);
 CREATE OR REPLACE FUNCTION muckwork.update_worker(integer, json,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1088,6 +1103,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS:  (none)
+DROP FUNCTION IF EXISTS muckwork.get_projects();
 CREATE OR REPLACE FUNCTION muckwork.get_projects(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1100,6 +1116,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS:  client_id
+DROP FUNCTION IF EXISTS muckwork.client_get_projects(integer);
 CREATE OR REPLACE FUNCTION muckwork.client_get_projects(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1113,6 +1130,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: progress ('created','quoted','approved','refused','started','finished')
+DROP FUNCTION IF EXISTS muckwork.get_projects_with_progress(text);
 CREATE OR REPLACE FUNCTION muckwork.get_projects_with_progress(text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1126,6 +1144,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id
+DROP FUNCTION IF EXISTS muckwork.get_project(integer);
 CREATE OR REPLACE FUNCTION muckwork.get_project(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1141,6 +1160,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: client_id, title, description
+DROP FUNCTION IF EXISTS muckwork.create_project(integer, text, text);
 CREATE OR REPLACE FUNCTION muckwork.create_project(integer, text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1175,6 +1195,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id, title, description
+DROP FUNCTION IF EXISTS muckwork.update_project(integer, text, text);
 CREATE OR REPLACE FUNCTION muckwork.update_project(integer, text, text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1191,6 +1212,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id, ratetype, currency, cents
+DROP FUNCTION IF EXISTS muckwork.quote_project(integer, text, text, integer);
 CREATE OR REPLACE FUNCTION muckwork.quote_project(integer, text, text, integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1205,6 +1227,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id
+DROP FUNCTION IF EXISTS muckwork.approve_quote(integer);
 CREATE OR REPLACE FUNCTION muckwork.approve_quote(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1217,6 +1240,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id, explanation
+DROP FUNCTION IF EXISTS muckwork.refuse_quote(integer, text);
 CREATE OR REPLACE FUNCTION muckwork.refuse_quote(integer, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1241,6 +1265,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id
+DROP FUNCTION IF EXISTS muckwork.get_task(integer);
 CREATE OR REPLACE FUNCTION muckwork.get_task(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1257,6 +1282,7 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: project_id, task.id
 -- (Same as get_task but including project_id for ownership verification.)
+DROP FUNCTION IF EXISTS muckwork.get_project_task(integer, integer);
 CREATE OR REPLACE FUNCTION muckwork.get_project_task(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1273,6 +1299,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: project_id, title, description, sortid(or NULL)
+DROP FUNCTION IF EXISTS muckwork.create_task(integer, text, text, integer);
 CREATE OR REPLACE FUNCTION muckwork.create_task(integer, text, text, integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1306,6 +1333,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id, title, description, sortid(or NULL)
+DROP FUNCTION IF EXISTS muckwork.update_task(integer, text, text, integer);
 CREATE OR REPLACE FUNCTION muckwork.update_task(integer, text, text, integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1338,6 +1366,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id, worker_id
+DROP FUNCTION IF EXISTS muckwork.claim_task(integer, integer);
 CREATE OR REPLACE FUNCTION muckwork.claim_task(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1369,6 +1398,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id
+DROP FUNCTION IF EXISTS muckwork.unclaim_task(integer);
 CREATE OR REPLACE FUNCTION muckwork.unclaim_task(integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1400,6 +1430,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id
+DROP FUNCTION IF EXISTS muckwork.start_task(integer);
 CREATE OR REPLACE FUNCTION muckwork.start_task(integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1431,6 +1462,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: task.id
+DROP FUNCTION IF EXISTS muckwork.finish_task(integer);
 CREATE OR REPLACE FUNCTION muckwork.finish_task(integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1462,6 +1494,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS:  worker_id
+DROP FUNCTION IF EXISTS muckwork.worker_get_tasks(integer);
 CREATE OR REPLACE FUNCTION muckwork.worker_get_tasks(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1478,6 +1511,7 @@ $$ LANGUAGE plpgsql;
 -- lists just the next unclaimed task (lowest sortid) for each project
 -- use this to avoid workers claiming tasks out of order
 -- PARAMS: -none-
+DROP FUNCTION IF EXISTS muckwork.next_available_tasks();
 CREATE OR REPLACE FUNCTION muckwork.next_available_tasks(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1495,6 +1529,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: progress ('created','quoted','approved','refused','started','finished')
+DROP FUNCTION IF EXISTS muckwork.get_tasks_with_progress(text);
 CREATE OR REPLACE FUNCTION muckwork.get_tasks_with_progress(text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN

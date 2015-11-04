@@ -7,6 +7,7 @@
 
 -- get '/languages'
 -- PARAMS: -none-
+DROP FUNCTION IF EXISTS musicthoughts.languages();
 CREATE OR REPLACE FUNCTION musicthoughts.languages(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -18,6 +19,7 @@ $$ LANGUAGE plpgsql;
 
 -- get '/categories'
 -- PARAMS: lang
+DROP FUNCTION IF EXISTS musicthoughts.all_categories(char(2));
 CREATE OR REPLACE FUNCTION musicthoughts.all_categories(char(2),
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -33,6 +35,7 @@ $$ LANGUAGE plpgsql;
 
 -- get %r{^/categories/([0-9]+)$}
 -- PARAMS: lang, category_id
+DROP FUNCTION IF EXISTS musicthoughts.category(char(2), integer);
 CREATE OR REPLACE FUNCTION musicthoughts.category(char(2), integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -57,6 +60,7 @@ $$ LANGUAGE plpgsql;
 -- get '/authors'
 -- get '/authors/top'
 -- PARAMS: top limit  (NULL for all)
+DROP FUNCTION IF EXISTS musicthoughts.top_authors(integer);
 CREATE OR REPLACE FUNCTION musicthoughts.top_authors(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -68,6 +72,7 @@ $$ LANGUAGE plpgsql;
 
 -- get %r{^/authors/([0-9]+)$}
 -- PARAMS: lang, author id
+DROP FUNCTION IF EXISTS musicthoughts.get_author(char(2), integer);
 CREATE OR REPLACE FUNCTION musicthoughts.get_author(char(2), integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -94,6 +99,7 @@ $$ LANGUAGE plpgsql;
 -- get '/contributors'
 -- get '/contributors/top'
 -- PARAMS: top limit  (NULL for all)
+DROP FUNCTION IF EXISTS musicthoughts.top_contributors(integer);
 CREATE OR REPLACE FUNCTION musicthoughts.top_contributors(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -105,6 +111,7 @@ $$ LANGUAGE plpgsql;
 
 -- get %r{^/contributors/([0-9]+)$}
 -- PARAMS: lang, contributor id
+DROP FUNCTION IF EXISTS musicthoughts.get_contributor(char(2), integer);
 CREATE OR REPLACE FUNCTION musicthoughts.get_contributor(char(2), integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -129,6 +136,7 @@ $$ LANGUAGE plpgsql;
 
 -- get '/thoughts/random'
 -- PARAMS: lang
+DROP FUNCTION IF EXISTS musicthoughts.random_thought(char(2));
 CREATE OR REPLACE FUNCTION musicthoughts.random_thought(char(2),
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -143,6 +151,7 @@ $$ LANGUAGE plpgsql;
 
 -- get %r{^/thoughts/([0-9]+)$}
 -- PARAMS: lang, thought id
+DROP FUNCTION IF EXISTS musicthoughts.get_thought(char(2), integer);
 CREATE OR REPLACE FUNCTION musicthoughts.get_thought(char(2), integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -158,6 +167,7 @@ $$ LANGUAGE plpgsql;
 -- get '/thoughts'
 -- get '/thoughts/new'
 -- PARAMS: lang, newest limit (NULL for all)
+DROP FUNCTION IF EXISTS musicthoughts.new_thoughts(char(2), integer);
 CREATE OR REPLACE FUNCTION musicthoughts.new_thoughts(char(2), integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -168,6 +178,7 @@ $$ LANGUAGE plpgsql;
 
 -- get '/search/:q'
 -- PARAMS: lang, search term
+DROP FUNCTION IF EXISTS musicthoughts.search(char(2), text);
 CREATE OR REPLACE FUNCTION musicthoughts.search(char(2), text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -215,6 +226,7 @@ $$ LANGUAGE plpgsql;
 -- $9 = array of category ids
 -- Having ordered params is a drag, so is accepting then unnesting JSON with specific key names.
 -- Returns simple hash of ids, since thought is unapproved and untranslated, no view yet.
+DROP FUNCTION IF EXISTS musicthoughts.add_thought();
 CREATE OR REPLACE FUNCTION musicthoughts.add_thought(
 	char(2), text, text, text, text, text, text, text, integer[],
 	OUT status smallint, OUT js json) AS $$
