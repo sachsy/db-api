@@ -3,7 +3,6 @@
 ----------------------------------------
 
 -- PARAMS: none
-DROP FUNCTION IF EXISTS lat.get_concepts();
 CREATE OR REPLACE FUNCTION lat.get_concepts(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -14,7 +13,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: concept.id
-DROP FUNCTION IF EXISTS lat.get_concept(integer);
 CREATE OR REPLACE FUNCTION lat.get_concept(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -26,7 +24,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS:  array of concept.ids
-DROP FUNCTION IF EXISTS lat.get_concepts(integer[]);
 CREATE OR REPLACE FUNCTION lat.get_concepts(integer[],
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -38,7 +35,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: title, concept
-DROP FUNCTION IF EXISTS lat.create_concept(text, text);
 CREATE OR REPLACE FUNCTION lat.create_concept(text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -53,7 +49,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: concept.id, updated title, updated concept
-DROP FUNCTION IF EXISTS lat.update_concept(integer, text, text);
 CREATE OR REPLACE FUNCTION lat.update_concept(integer, text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -67,7 +62,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: concept.id
-DROP FUNCTION IF EXISTS lat.delete_concept(integer);
 CREATE OR REPLACE FUNCTION lat.delete_concept(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -78,7 +72,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: concept.id, text of tag
-DROP FUNCTION IF EXISTS lat.tag_concept(integer, text);
 CREATE OR REPLACE FUNCTION lat.tag_concept(integer, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -104,7 +97,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: concept.id, tag.id
-DROP FUNCTION IF EXISTS lat.untag_concept(integer, integer);
 CREATE OR REPLACE FUNCTION lat.untag_concept(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -115,7 +107,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: url.id
-DROP FUNCTION IF EXISTS lat.get_url(integer);
 CREATE OR REPLACE FUNCTION lat.get_url(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -127,7 +118,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: concept.id, url, url.notes
-DROP FUNCTION IF EXISTS lat.add_url(integer, text, text);
 CREATE OR REPLACE FUNCTION lat.add_url(integer, text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -143,7 +133,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: url.id, url, url.notes
-DROP FUNCTION IF EXISTS lat.update_url(integer, text, text);
 CREATE OR REPLACE FUNCTION lat.update_url(integer, text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -157,7 +146,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: url.id
-DROP FUNCTION IF EXISTS lat.delete_url(integer);
 CREATE OR REPLACE FUNCTION lat.delete_url(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -168,7 +156,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: none
-DROP FUNCTION IF EXISTS lat.tags();
 CREATE OR REPLACE FUNCTION lat.tags(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -180,7 +167,6 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: text of tag
 -- Returns array of concepts or empty array if none found.
-DROP FUNCTION IF EXISTS lat.concepts_tagged(text);
 CREATE OR REPLACE FUNCTION lat.concepts_tagged(text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -193,7 +179,6 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: none
 -- Returns array of concepts or empty array if none found.
-DROP FUNCTION IF EXISTS lat.untagged_concepts();
 CREATE OR REPLACE FUNCTION lat.untagged_concepts(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -206,7 +191,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: none. all pairings.
-DROP FUNCTION IF EXISTS lat.get_pairings();
 CREATE OR REPLACE FUNCTION lat.get_pairings(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -220,7 +204,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: pairing.id
-DROP FUNCTION IF EXISTS lat.get_pairing(integer);
 CREATE OR REPLACE FUNCTION lat.get_pairing(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -232,7 +215,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: none. it's random
-DROP FUNCTION IF EXISTS lat.create_pairing();
 CREATE OR REPLACE FUNCTION lat.create_pairing(
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -247,7 +229,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: pairing.id, updated thoughts
-DROP FUNCTION IF EXISTS lat.update_pairing(integer, text);
 CREATE OR REPLACE FUNCTION lat.update_pairing(integer, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -261,7 +242,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: pairing.id
-DROP FUNCTION IF EXISTS lat.delete_pairing(integer);
 CREATE OR REPLACE FUNCTION lat.delete_pairing(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -273,7 +253,6 @@ $$ LANGUAGE plpgsql;
 
 -- PARAMS: pairing.id, tag text
 -- Adds that tag to both concepts in the pair
-DROP FUNCTION IF EXISTS lat.tag_pairing(integer, text);
 CREATE OR REPLACE FUNCTION lat.tag_pairing(integer, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE

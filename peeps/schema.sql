@@ -866,7 +866,6 @@ CREATE TRIGGER null_categorize_as
 -- peeps.emailers.id needed as first argument to many functions here
 
 -- PARAMS: email, password, API_name
-DROP FUNCTION IF EXISTS peeps.auth_api(text, text, text);
 CREATE OR REPLACE FUNCTION peeps.auth_api(text, text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -903,7 +902,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: akey, apass
-DROP FUNCTION IF EXISTS peeps.auth_emailer(text, text);
 CREATE OR REPLACE FUNCTION peeps.auth_emailer(text, text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -926,7 +924,6 @@ $$ LANGUAGE plpgsql;
 --{"derek@sivers":{"derek@sivers":43,"derek":2,"programmer":1},
 -- "we@woodegg":{"woodeggRESEARCH":1,"woodegg":1,"we@woodegg":1}}
 -- PARAMS: emailer_id
-DROP FUNCTION IF EXISTS peeps.unopened_email_count(integer);
 CREATE OR REPLACE FUNCTION peeps.unopened_email_count(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -948,7 +945,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /emails/unopened/:profile/:category
 -- PARAMS: emailer_id, profile, category
-DROP FUNCTION IF EXISTS peeps.unopened_emails(integer, text, text);
 CREATE OR REPLACE FUNCTION peeps.unopened_emails(integer, text, text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -966,7 +962,6 @@ $$ LANGUAGE plpgsql;
 -- POST /emails/next/:profile/:category
 -- Opens email (updates status as opened by this emailer) then returns view
 -- PARAMS: emailer_id, profile, category
-DROP FUNCTION IF EXISTS peeps.open_next_email(integer, text, text);
 CREATE OR REPLACE FUNCTION peeps.open_next_email(integer, text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -991,7 +986,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /emails/opened
 -- PARAMS: emailer_id
-DROP FUNCTION IF EXISTS peeps.opened_emails(integer);
 CREATE OR REPLACE FUNCTION peeps.opened_emails(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1011,7 +1005,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /emails/:id
 -- PARAMS: emailer_id, email_id
-DROP FUNCTION IF EXISTS peeps.get_email(integer, integer);
 CREATE OR REPLACE FUNCTION peeps.get_email(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1033,7 +1026,6 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /emails/:id
 -- PARAMS: emailer_id, email_id, JSON of new values
-DROP FUNCTION IF EXISTS peeps.update_email(integer, integer, json);
 CREATE OR REPLACE FUNCTION peeps.update_email(integer, integer, json,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1076,7 +1068,6 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /emails/:id
 -- PARAMS: emailer_id, email_id
-DROP FUNCTION IF EXISTS peeps.delete_email(integer, integer);
 CREATE OR REPLACE FUNCTION peeps.delete_email(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1099,7 +1090,6 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /emails/:id/close
 -- PARAMS: emailer_id, email_id
-DROP FUNCTION IF EXISTS peeps.close_email(integer, integer);
 CREATE OR REPLACE FUNCTION peeps.close_email(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1122,7 +1112,6 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /emails/:id/unread
 -- PARAMS: emailer_id, email_id
-DROP FUNCTION IF EXISTS peeps.unread_email(integer, integer);
 CREATE OR REPLACE FUNCTION peeps.unread_email(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1145,7 +1134,6 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /emails/:id/notme
 -- PARAMS: emailer_id, email_id
-DROP FUNCTION IF EXISTS peeps.not_my_email(integer, integer);
 CREATE OR REPLACE FUNCTION peeps.not_my_email(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1171,7 +1159,6 @@ $$ LANGUAGE plpgsql;
 
 -- POST /emails/:id/reply?body=blah
 -- PARAMS: emailer_id, email_id, body
-DROP FUNCTION IF EXISTS peeps.reply_to_email(integer, integer, text);
 CREATE OR REPLACE FUNCTION peeps.reply_to_email(integer, integer, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1229,7 +1216,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /unknowns/count
 -- PARAMS: emailer_id
-DROP FUNCTION IF EXISTS peeps.count_unknowns(integer);
 CREATE OR REPLACE FUNCTION peeps.count_unknowns(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1241,7 +1227,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /unknowns
 -- PARAMS: emailer_id
-DROP FUNCTION IF EXISTS peeps.get_unknowns(integer);
 CREATE OR REPLACE FUNCTION peeps.get_unknowns(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1257,7 +1242,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /unknowns/next
 -- PARAMS: emailer_id
-DROP FUNCTION IF EXISTS peeps.get_next_unknown(integer);
 CREATE OR REPLACE FUNCTION peeps.get_next_unknown(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1276,7 +1260,6 @@ $$ LANGUAGE plpgsql;
 
 -- POST /unknowns/:id?person_id=123 or 0 to create new
 -- PARAMS: emailer_id, email_id, person_id
-DROP FUNCTION IF EXISTS peeps.set_unknown_person(integer, integer, integer);
 CREATE OR REPLACE FUNCTION peeps.set_unknown_person(integer, integer, integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1331,7 +1314,6 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /unknowns/:id
 -- PARAMS: emailer_id, email_id
-DROP FUNCTION IF EXISTS peeps.delete_unknown(integer, integer);
 CREATE OR REPLACE FUNCTION peeps.delete_unknown(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1354,7 +1336,6 @@ COMMIT;
 
 -- POST /people
 -- PARAMS: name, email
-DROP FUNCTION IF EXISTS peeps.create_person(text, text);
 CREATE OR REPLACE FUNCTION peeps.create_person(text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1388,7 +1369,6 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/newpass
 -- PARAMS: person_id
-DROP FUNCTION IF EXISTS peeps.make_newpass(integer);
 CREATE OR REPLACE FUNCTION peeps.make_newpass(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1410,7 +1390,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:id
 -- PARAMS: person_id
-DROP FUNCTION IF EXISTS peeps.get_person(integer);
 CREATE OR REPLACE FUNCTION peeps.get_person(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1428,7 +1407,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:email
 -- PARAMS: email
-DROP FUNCTION IF EXISTS peeps.get_person_email(text);
 CREATE OR REPLACE FUNCTION peeps.get_person_email(text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1455,7 +1433,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:id/:lopass
 -- PARAMS: person_id, lopass
-DROP FUNCTION IF EXISTS peeps.get_person_lopass(integer, text);
 CREATE OR REPLACE FUNCTION peeps.get_person_lopass(integer, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1476,7 +1453,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:id/:newpass
 -- PARAMS: person_id, newpass
-DROP FUNCTION IF EXISTS peeps.get_person_newpass(integer, text);
 CREATE OR REPLACE FUNCTION peeps.get_person_newpass(integer, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1497,7 +1473,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people?email=&password=
 -- PARAMS: email, password
-DROP FUNCTION IF EXISTS peeps.get_person_password(text, text);
 CREATE OR REPLACE FUNCTION peeps.get_person_password(text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1518,7 +1493,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /person/{cookie}
 -- PARAMS: cookie string
-DROP FUNCTION IF EXISTS peeps.get_person_cookie(text);
 CREATE OR REPLACE FUNCTION peeps.get_person_cookie(text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1539,7 +1513,6 @@ $$ LANGUAGE plpgsql;
 
 -- POST /login
 -- PARAMS: person.id, domain
-DROP FUNCTION IF EXISTS peeps.cookie_from_id(integer, text);
 CREATE OR REPLACE FUNCTION peeps.cookie_from_id(integer, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1571,7 +1544,6 @@ $$ LANGUAGE plpgsql;
 
 -- POST /login
 -- PARAMS: email, password, domain
-DROP FUNCTION IF EXISTS peeps.cookie_from_login(text, text, text);
 CREATE OR REPLACE FUNCTION peeps.cookie_from_login(text, text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1590,7 +1562,6 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /people/:id/password
 -- PARAMS: person_id, password
-DROP FUNCTION IF EXISTS peeps.set_password(integer, text);
 CREATE OR REPLACE FUNCTION peeps.set_password(integer, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1622,7 +1593,6 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /people/:id
 -- PARAMS: person_id, JSON of new values
-DROP FUNCTION IF EXISTS peeps.update_person(integer, json);
 CREATE OR REPLACE FUNCTION peeps.update_person(integer, json,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1655,7 +1625,6 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /people/:id
 -- PARAMS: person_id
-DROP FUNCTION IF EXISTS peeps.delete_person(integer);
 CREATE OR REPLACE FUNCTION peeps.delete_person(integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1695,7 +1664,6 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /people/:id/annihilate
 -- PARAMS: person_id
-DROP FUNCTION IF EXISTS peeps.annihilate_person(integer);
 CREATE OR REPLACE FUNCTION peeps.annihilate_person(integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1740,7 +1708,6 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/urls
 -- PARAMS: person_id, url
-DROP FUNCTION IF EXISTS peeps.add_url(integer, text);
 CREATE OR REPLACE FUNCTION peeps.add_url(integer, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1774,7 +1741,6 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/stats
 -- PARAMS: person_id, stat.name, stat.value
-DROP FUNCTION IF EXISTS peeps.add_stat(integer, text, text);
 CREATE OR REPLACE FUNCTION peeps.add_stat(integer, text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1809,7 +1775,6 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/emails
 -- PARAMS: emailer_id, person_id, profile, subject, body
-DROP FUNCTION IF EXISTS peeps.new_email(integer, integer, text, text, text);
 CREATE OR REPLACE FUNCTION peeps.new_email(integer, integer, text, text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1844,7 +1809,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/:id/emails
 -- PARAMS: person_id
-DROP FUNCTION IF EXISTS peeps.get_person_emails(integer);
 CREATE OR REPLACE FUNCTION peeps.get_person_emails(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1860,7 +1824,6 @@ $$ LANGUAGE plpgsql;
 
 -- POST /people/:id/merge?id=old_id
 -- PARAMS: person_id to KEEP, person_id to CHANGE
-DROP FUNCTION IF EXISTS peeps.merge_person(integer, integer);
 CREATE OR REPLACE FUNCTION peeps.merge_person(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1893,7 +1856,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /people/unmailed
 -- PARAMS: -none-
-DROP FUNCTION IF EXISTS peeps.people_unemailed();
 CREATE OR REPLACE FUNCTION peeps.people_unemailed(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1906,7 +1868,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /search?q=term
 -- PARAMS: search term
-DROP FUNCTION IF EXISTS peeps.people_search(text);
 CREATE OR REPLACE FUNCTION peeps.people_search(text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -1949,7 +1910,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /stats/:id
 -- PARAMS: stats.id
-DROP FUNCTION IF EXISTS peeps.get_stat(integer);
 CREATE OR REPLACE FUNCTION peeps.get_stat(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -1968,7 +1928,6 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /stat/:id
 -- PARAMS: stats.id, json
-DROP FUNCTION IF EXISTS peeps.update_stat(integer, json);
 CREATE OR REPLACE FUNCTION peeps.update_stat(integer, json,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -2008,7 +1967,6 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /stats/:id
 -- PARAMS: stats.id
-DROP FUNCTION IF EXISTS peeps.delete_stat(integer);
 CREATE OR REPLACE FUNCTION peeps.delete_stat(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2028,7 +1986,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /urls/:id
 -- PARAMS: urls.id
-DROP FUNCTION IF EXISTS peeps.get_url(integer);
 CREATE OR REPLACE FUNCTION peeps.get_url(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2046,7 +2003,6 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /urls/:id
 -- PARAMS: urls.id
-DROP FUNCTION IF EXISTS peeps.delete_url(integer);
 CREATE OR REPLACE FUNCTION peeps.delete_url(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2066,7 +2022,6 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /urls/:id
 -- PARAMS: urls.id, JSON with allowed: person_id::int, url::text, main::boolean
-DROP FUNCTION IF EXISTS peeps.update_url(integer, json);
 CREATE OR REPLACE FUNCTION peeps.update_url(integer, json,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -2106,7 +2061,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /formletters
 -- PARAMS: -none-
-DROP FUNCTION IF EXISTS peeps.get_formletters();
 CREATE OR REPLACE FUNCTION peeps.get_formletters(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2119,7 +2073,6 @@ $$ LANGUAGE plpgsql;
 
 -- POST /formletters
 -- PARAMS: title
-DROP FUNCTION IF EXISTS peeps.create_formletter(text);
 CREATE OR REPLACE FUNCTION peeps.create_formletter(text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -2153,7 +2106,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /formletters/:id
 -- PARAMS: formletters.id
-DROP FUNCTION IF EXISTS peeps.get_formletter(integer);
 CREATE OR REPLACE FUNCTION peeps.get_formletter(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2171,7 +2123,6 @@ $$ LANGUAGE plpgsql;
 
 -- PUT /formletters/:id
 -- PARAMS: formletters.id, JSON keys: title, explanation, body
-DROP FUNCTION IF EXISTS peeps.update_formletter(integer, json);
 CREATE OR REPLACE FUNCTION peeps.update_formletter(integer, json,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -2211,7 +2162,6 @@ $$ LANGUAGE plpgsql;
 
 -- DELETE /formletters/:id
 -- PARAMS: formletters.id
-DROP FUNCTION IF EXISTS peeps.delete_formletter(integer);
 CREATE OR REPLACE FUNCTION peeps.delete_formletter(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2233,7 +2183,6 @@ $$ LANGUAGE plpgsql;
 -- If wrong IDs given, value is null
 -- GET /people/:id/formletters/:id
 -- PARAMS: people.id, formletters.id
-DROP FUNCTION IF EXISTS peeps.parsed_formletter(integer, integer);
 CREATE OR REPLACE FUNCTION peeps.parsed_formletter(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2247,7 +2196,6 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: -none-
 -- RETURNS array of objects:
 -- [{"code":"AF","name":"Afghanistan"},{"code":"AX","name":"Åland Islands"}..]
-DROP FUNCTION IF EXISTS peeps.all_countries();
 CREATE OR REPLACE FUNCTION peeps.all_countries(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2261,7 +2209,6 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: -none-
 -- RETURNS single code:name object:
 -- {"AD":"Andorra","AE":"United Arab Emirates...  }
-DROP FUNCTION IF EXISTS peeps.country_names();
 CREATE OR REPLACE FUNCTION peeps.country_names(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2275,7 +2222,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /countries
 -- PARAMS: -none-
-DROP FUNCTION IF EXISTS peeps.country_count();
 CREATE OR REPLACE FUNCTION peeps.country_count(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2288,7 +2234,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /states/:country_code
 -- PARAMS: 2-letter country code
-DROP FUNCTION IF EXISTS peeps.state_count(char(2));
 CREATE OR REPLACE FUNCTION peeps.state_count(char(2),
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2308,7 +2253,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /cities/:country_code/:state
 -- PARAMS: 2-letter country code, state name
-DROP FUNCTION IF EXISTS peeps.city_count(char(2), text);
 CREATE OR REPLACE FUNCTION peeps.city_count(char(2), text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2328,7 +2272,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /cities/:country_code
 -- PARAMS: 2-letter country code
-DROP FUNCTION IF EXISTS peeps.city_count(char(2));
 CREATE OR REPLACE FUNCTION peeps.city_count(char(2),
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2348,7 +2291,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /where/:country_code
 -- PARAMS: 2-letter country code
-DROP FUNCTION IF EXISTS peeps.people_from_country(char(2));
 CREATE OR REPLACE FUNCTION peeps.people_from_country(char(2),
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2368,7 +2310,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /where/:country_code?state=XX
 -- PARAMS: 2-letter country code, state
-DROP FUNCTION IF EXISTS peeps.people_from_state(char(2), text);
 CREATE OR REPLACE FUNCTION peeps.people_from_state(char(2), text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2388,7 +2329,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /where/:country_code?city=XX
 -- PARAMS: 2-letter country code, state
-DROP FUNCTION IF EXISTS peeps.people_from_city(char(2), text);
 CREATE OR REPLACE FUNCTION peeps.people_from_city(char(2), text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2408,7 +2348,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /where/:country_code?city=XX&state=XX
 -- PARAMS: 2-letter country code, state, city
-DROP FUNCTION IF EXISTS peeps.people_from_state_city(char(2), text, text);
 CREATE OR REPLACE FUNCTION peeps.people_from_state_city(char(2), text, text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2429,7 +2368,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /stats/:key/:value
 -- PARAMS: stats.name, stats.value
-DROP FUNCTION IF EXISTS peeps.get_stats(text, text);
 CREATE OR REPLACE FUNCTION peeps.get_stats(text, text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2445,7 +2383,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /stats/:key
 -- PARAMS: stats.name
-DROP FUNCTION IF EXISTS peeps.get_stats(text);
 CREATE OR REPLACE FUNCTION peeps.get_stats(text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2460,7 +2397,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /statcount/:key
 -- PARAMS: stats.name
-DROP FUNCTION IF EXISTS peeps.get_stat_value_count(text);
 CREATE OR REPLACE FUNCTION peeps.get_stat_value_count(text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2476,7 +2412,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /statcount
 -- PARAMS: -none-
-DROP FUNCTION IF EXISTS peeps.get_stat_name_count();
 CREATE OR REPLACE FUNCTION peeps.get_stat_name_count(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2490,7 +2425,6 @@ $$ LANGUAGE plpgsql;
 -- POST /email
 -- PARAMS: json of values to insert
 -- KEYS: profile category message_id their_email their_name subject headers body
-DROP FUNCTION IF EXISTS peeps.import_email(json);
 CREATE OR REPLACE FUNCTION peeps.import_email(json,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -2564,7 +2498,6 @@ $$ LANGUAGE plpgsql;
 -- Update mailing list settings for this person (whether new or existing)
 -- POST /list
 -- PARAMS name, email, listype ($3 should be: 'all', 'some', 'none', or 'dead')
-DROP FUNCTION IF EXISTS peeps.list_update(text, text, text);
 CREATE OR REPLACE FUNCTION peeps.list_update(text, text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -2601,7 +2534,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-DROP FUNCTION IF EXISTS peeps.queued_emails();
 CREATE OR REPLACE FUNCTION peeps.queued_emails(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2617,7 +2549,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: emails.id
-DROP FUNCTION IF EXISTS peeps.email_is_sent(integer);
 CREATE OR REPLACE FUNCTION peeps.email_is_sent(integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -2657,7 +2588,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /emails/sent
 -- PARAMS: howmany
-DROP FUNCTION IF EXISTS peeps.sent_emails(integer);
 CREATE OR REPLACE FUNCTION peeps.sent_emails(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2670,7 +2600,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: -none-
-DROP FUNCTION IF EXISTS peeps.sent_emails_grouped();
 CREATE OR REPLACE FUNCTION peeps.sent_emails_grouped(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2689,7 +2618,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- Array of {person_id: 1234, twitter: 'username'}
-DROP FUNCTION IF EXISTS peeps.twitter_unfollowed();
 CREATE OR REPLACE FUNCTION peeps.twitter_unfollowed(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2706,7 +2634,6 @@ $$ LANGUAGE plpgsql;
 
 -- Mark this a dead email - by ID
 -- PARAMS: person_id
-DROP FUNCTION IF EXISTS peeps.dead_email(integer);
 CREATE OR REPLACE FUNCTION peeps.dead_email(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2726,7 +2653,6 @@ $$ LANGUAGE plpgsql;
 
 -- ARRAY of schema.tablenames where with this person_id
 -- PARAMS: person_id
-DROP FUNCTION IF EXISTS peeps.tables_with_person(integer);
 CREATE OR REPLACE FUNCTION peeps.tables_with_person(integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -2750,7 +2676,6 @@ $$ LANGUAGE plpgsql;
 
 -- Array of people's [[id, email, address, lopass]] for emailing
 -- PARAMS: key,val to be used in WHERE _key_ = _val_
-DROP FUNCTION IF EXISTS peeps.ieal_where(text, text);
 CREATE OR REPLACE FUNCTION peeps.ieal_where(text, text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2763,7 +2688,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- now.urls missing person_id
-DROP FUNCTION IF EXISTS peeps.now_unknowns();
 CREATE OR REPLACE FUNCTION peeps.now_unknowns(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2776,7 +2700,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: now.urls.id
-DROP FUNCTION IF EXISTS peeps.now_url(integer);
 CREATE OR REPLACE FUNCTION peeps.now_url(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2787,7 +2710,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: now.urls.id
-DROP FUNCTION IF EXISTS peeps.now_unknown_find(integer);
 CREATE OR REPLACE FUNCTION peeps.now_unknown_find(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2800,7 +2722,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: now.urls.id, person_id
-DROP FUNCTION IF EXISTS peeps.now_unknown_assign(integer, integer);
 CREATE OR REPLACE FUNCTION peeps.now_unknown_assign(integer, integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN

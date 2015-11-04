@@ -347,7 +347,6 @@ CREATE VIEW woodegg.upload_view AS
 
 -- POST /login
 -- PARAMS: email, password
-DROP FUNCTION IF EXISTS woodegg.login(text, text);
 CREATE OR REPLACE FUNCTION woodegg.login(text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -377,7 +376,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /customer/{cookie}
 -- PARAMS: cookie string
-DROP FUNCTION IF EXISTS woodegg.get_customer(text);
 CREATE OR REPLACE FUNCTION woodegg.get_customer(text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -395,7 +393,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /reset/{reset_string}
 -- PARAMS: 8-char string from https://woodegg.com/reset/:str
-DROP FUNCTION IF EXISTS woodegg.get_customer_reset(text);
 CREATE OR REPLACE FUNCTION woodegg.get_customer_reset(text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -420,7 +417,6 @@ $$ LANGUAGE plpgsql;
 
 -- POST /reset/{reset_string}
 -- PARAMS: reset string, new password
-DROP FUNCTION IF EXISTS woodegg.set_customer_password(text, text);
 CREATE OR REPLACE FUNCTION woodegg.set_customer_password(text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -466,7 +462,6 @@ $$ LANGUAGE plpgsql;
 
 -- POST /register
 -- PARAMS: name, email, password, proof
-DROP FUNCTION IF EXISTS woodegg.register(text, text, text, text);
 CREATE OR REPLACE FUNCTION woodegg.register(text, text, text, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -507,7 +502,6 @@ $$ LANGUAGE plpgsql;
 
 -- POST /forgot
 -- PARAMS: email
-DROP FUNCTION IF EXISTS woodegg.forgot(text);
 CREATE OR REPLACE FUNCTION woodegg.forgot(text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -559,7 +553,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /researchers/1
 -- PARAMS: researcher_id
-DROP FUNCTION IF EXISTS woodegg.get_researcher(integer);
 CREATE OR REPLACE FUNCTION woodegg.get_researcher(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -575,7 +568,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /writers/1
 -- PARAMS: writer_id
-DROP FUNCTION IF EXISTS woodegg.get_writer(integer);
 CREATE OR REPLACE FUNCTION woodegg.get_writer(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -591,7 +583,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /editors/1
 -- PARAMS: editor_id
-DROP FUNCTION IF EXISTS woodegg.get_editor(integer);
 CREATE OR REPLACE FUNCTION woodegg.get_editor(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -607,7 +598,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /country/KR
 -- PARAMS: country code
-DROP FUNCTION IF EXISTS woodegg.get_country(text);
 CREATE OR REPLACE FUNCTION woodegg.get_country(text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
@@ -634,7 +624,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /questions/1234
 -- PARAMS: question id
-DROP FUNCTION IF EXISTS woodegg.get_question(integer);
 CREATE OR REPLACE FUNCTION woodegg.get_question(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -650,7 +639,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /books/23 
 -- PARAMS: book id
-DROP FUNCTION IF EXISTS woodegg.get_book(integer);
 CREATE OR REPLACE FUNCTION woodegg.get_book(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -665,7 +653,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- GET /templates
-DROP FUNCTION IF EXISTS woodegg.get_templates();
 CREATE OR REPLACE FUNCTION woodegg.get_templates(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -677,7 +664,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /templates/123
 -- PARAMS: template id
-DROP FUNCTION IF EXISTS woodegg.get_template(integer);
 CREATE OR REPLACE FUNCTION woodegg.get_template(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -693,7 +679,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /topics/5
 -- PARAMS: topic id
-DROP FUNCTION IF EXISTS woodegg.get_topic(integer);
 CREATE OR REPLACE FUNCTION woodegg.get_topic(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -709,7 +694,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /uploads/KR
 -- PARAMS: country code
-DROP FUNCTION IF EXISTS woodegg.get_uploads(text);
 CREATE OR REPLACE FUNCTION woodegg.get_uploads(text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -725,7 +709,6 @@ $$ LANGUAGE plpgsql;
 
 -- GET /uploads/33
 -- PARAMS: upload id#
-DROP FUNCTION IF EXISTS woodegg.get_upload(integer);
 CREATE OR REPLACE FUNCTION woodegg.get_upload(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -740,7 +723,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- ADMIN ONLY:
-DROP FUNCTION IF EXISTS woodegg.proofs();
 CREATE OR REPLACE FUNCTION woodegg.proofs(
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -759,7 +741,6 @@ $$ LANGUAGE plpgsql;
 
 -- ADMIN ONLY:
 -- PARAMS: stats.id
-DROP FUNCTION IF EXISTS woodegg.proof_to_customer(integer);
 CREATE OR REPLACE FUNCTION woodegg.proof_to_customer(integer,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
