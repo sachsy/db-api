@@ -58,7 +58,6 @@ For the websites that use these, see <https://github.com/50pop/50web>
 
 * email parsing: set personID using email address first before in-reply-to
 * Where to translate ugly errors (probably using regexp matching) into simple i18n keys for the UI to show in user's language?
-* combine Gengo features into one CLI script
 
 ## API:
 
