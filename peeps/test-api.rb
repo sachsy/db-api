@@ -396,7 +396,7 @@ class TestPeepsAPI < Minitest::Test
 
 	def test_add_stat
 		qry("add_stat(5, ' s OM e ', '  v alu e ')")
-		assert_equal 9, @j[:id]
+		assert_equal 14, @j[:id]
 		assert_equal 'some', @j[:name]
 		assert_equal 'v alu e', @j[:value]
 		qry("add_stat(5, '  ', 'val')")
