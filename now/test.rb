@@ -25,6 +25,13 @@ class TestNow < Minitest::Test
 		assert_equal '5', res[0]['find_person']
 	end
 
+	def test_knowns
+		qry('now.knowns()')
+		assert_equal(@j, [
+			{id: 1, person_id: 1, short: 'sivers.org/now'},
+			{id: 2, person_id: 2, short: 'wonka.com/now'}])
+	end
+
 	def test_unknowns
 		qry('now.unknowns()')
 		assert_equal(@j, [
@@ -60,5 +67,53 @@ class TestNow < Minitest::Test
 			tiny: 'salt',
 			short: 'salt.com/now',
 			long: 'http://salt.com/now/'})
+	end
+
+	def test_urls_for_person
+		qry('now.urls_for_person(1)')
+		assert_equal(@j, [{id: 1,
+			person_id: 1,
+			created_at: '2015-11-10',
+			updated_at: '2015-11-10',
+			tiny: 'sivers',
+			short: 'sivers.org/now',
+			long: 'http://sivers.org/now'}])
+	end
+
+	def test_stats_for_person
+		qry('now.stats_for_person(1)')
+		assert_equal(@j, [
+			{id: 9, name: 'now-liner', value: 'I make useful things', created_at: '2015-11-10'},
+			{id:10, name: 'now-read', value: 'Wisdom of No Escape', created_at: '2015-11-10'},
+			{id:11, name: 'now-thought', value: 'You can change how you feel', created_at: '2015-11-10'},
+			{id:12, name: 'now-title', value: 'Writer, programmer, entrepreneur', created_at: '2015-11-10'},
+			{id:13, name: 'now-why', value: 'Learning for the sake of creating for the sake of learning for the sake of creating.', created_at: '2015-11-10'}
+		])
+		qry('now.stats_for_person(2)')
+		assert_equal([], @j)
+	end
+
+	def test_add_url
+		qry("now.add_url(1, '50.io/now')")
+		assert_equal 6, @j[:id]
+		assert_equal '50.io/now', @j[:short]
+		assert_equal nil, @j[:long]
+		assert_equal nil, @j[:tiny]
+		assert_equal nil, @j[:updated_at]
+		refute_equal nil, @j[:created_at]
+		qry("now.add_url(1, '50.io/now')")
+		assert @j[:title].include? 'duplicate'
+	end
+
+	def test_update_url
+		qry('now.update_url(5, $1)', [{person_id: 7}.to_json])
+		assert_equal 7, @j[:person_id]
+		assert_equal nil, @j[:long]
+		long = 'http://gongli.cn/now/'
+		tiny = 'gongli'
+		qry('now.update_url(5, $1)', [{long: long, tiny: tiny, ignore: 'this'}.to_json])
+		assert_equal 7, @j[:person_id]
+		assert_equal long, @j[:long]
+		assert_equal tiny, @j[:tiny]
 	end
 end
