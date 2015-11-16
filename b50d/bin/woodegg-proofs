@@ -13,7 +13,7 @@ while proofs.size > 0 do
 	id = proofs[0][:id]
 	print "Type ok to approve: "
 	if 'ok' == gets.strip
-		res = db.exec_params('SELECT js FROM woodegg.proofs_to_customer($1)', [id])
+		res = db.exec_params('SELECT js FROM woodegg.proof_to_customer($1)', [id])
 		puts res[0]['js']
 	end
 	res = db.exec('SELECT js FROM woodegg.proofs()')
