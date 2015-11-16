@@ -416,6 +416,19 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- PARAMS: formletter.id, email address
+CREATE OR REPLACE FUNCTION peeps.reset_email(integer, text,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+	pid integer;
+BEGIN
+	-- fail unless valid email
+	-- get people.id if email exists
+	-- fail unless id
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- GET /people/:id
 -- PARAMS: person_id
 CREATE OR REPLACE FUNCTION peeps.get_person(integer,
@@ -435,13 +448,12 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION peeps.get_person_email(text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
-	clean_email text;
+	pid integer;
 BEGIN
-	IF $1 IS NULL THEN m4_NOTFOUND END IF;
-	clean_email := lower(regexp_replace($1, '\s', '', 'g'));
-	IF clean_email !~ '\A\S+@\S+\.\S+\Z' THEN m4_NOTFOUND END IF;
+	SELECT id INTO pid FROM peeps.get_person_id_from_email($1);
+	IF pid IS NULL THEN m4_NOTFOUND END IF;
 	status := 200;
-	js := row_to_json(r.*) FROM peeps.person_view r WHERE email = clean_email;
+	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = pid;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -1338,7 +1350,3 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP FUNCTION IF EXISTS peeps.now_unknowns();
-DROP FUNCTION IF EXISTS peeps.now_url(integer);
-DROP FUNCTION IF EXISTS peeps.now_unknown_find(integer);
-DROP FUNCTION IF EXISTS peeps.now_unknown_assign(integer, integer);

@@ -409,5 +409,15 @@ class TestPeeps < Minitest::Test
 		assert_equal '2', res[0]['id']
 	end
 
+	def test_get_person_id_from_email
+		res = DB.exec_params("SELECT id FROM peeps.get_person_id_from_email($1)", [' Derek@siVERs . ORG '])
+		assert_equal '1', res[0]['id']
+		res = DB.exec_params("SELECT id FROM peeps.get_person_id_from_email($1)", ['derek@sivers'])
+		assert_equal nil, res[0]['id']
+		res = DB.exec("SELECT id FROM peeps.get_person_id_from_email('')")
+		assert_equal nil, res[0]['id']
+		res = DB.exec("SELECT id FROM peeps.get_person_id_from_email(NULL)")
+		assert_equal nil, res[0]['id']
+	end
 end
 
