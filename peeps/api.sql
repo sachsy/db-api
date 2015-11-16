@@ -405,26 +405,24 @@ CREATE OR REPLACE FUNCTION peeps.make_newpass(integer,
 BEGIN
 	UPDATE peeps.people
 		SET newpass=core.unique_for_table_field(8, 'peeps.people', 'newpass')
-		WHERE id=$1;
+		WHERE id=$1 AND newpass IS NULL;
 	IF FOUND THEN
 		status := 200;
 		js := json_build_object('id', $1);
-	ELSE
-m4_NOTFOUND
-	END IF;
+	ELSE m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;
 
 
+-- sets newpass if none, sends email if not already sent recently
 -- PARAMS: formletter.id, email address
 CREATE OR REPLACE FUNCTION peeps.reset_email(integer, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
-	-- fail unless valid email
-	-- get people.id if email exists
-	-- fail unless id
+	SELECT id INTO pid FROM peeps.get_person_id_from_email($2);
+	IF pid IS NULL THEN m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -436,9 +434,7 @@ CREATE OR REPLACE FUNCTION peeps.get_person(integer,
 BEGIN
 	status := 200;
 	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = $1;
-	IF js IS NULL THEN
-m4_NOTFOUND
-	END IF;
+	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;
 

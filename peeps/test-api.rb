@@ -259,6 +259,7 @@ class TestPeepsAPI < Minitest::Test
 	end
 
 	def test_make_newpass
+		DB.exec("UPDATE peeps.people SET newpass = NULL WHERE id = 8")
 		qry("make_newpass(1)")
 		assert_equal({id: 1}, @j)
 		qry("make_newpass(8)")

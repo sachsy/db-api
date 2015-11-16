@@ -56,6 +56,9 @@ For the websites that use these, see <https://github.com/50pop/50web>
 
 # TODO:
 
+* formletters.subject
+* send_formletter_to(formletter_id, person_id, profile)
+* NOTIFY / LISTEN for outgoing emails
 * email parsing: set personID using email address first before in-reply-to
 * Where to translate ugly errors (probably using regexp matching) into simple i18n keys for the UI to show in user's language?
 
