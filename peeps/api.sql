@@ -5,6 +5,27 @@
 -- API REQUIRES AUTHENTICATION. User must be in peeps.emailers
 -- peeps.emailers.id needed as first argument to many functions here
 
+-- PARAMS: person_id, API_name
+CREATE OR REPLACE FUNCTION peeps.add_api(integer, text,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+	pid integer;
+m4_ERRVARS
+BEGIN
+	SELECT person_id INTO pid FROM peeps.api_keys WHERE person_id = $1;
+	IF pid IS NULL THEN
+		INSERT INTO peeps.api_keys(person_id) VALUES ($1);
+	END IF;
+	status := 200;
+	WITH nu AS (UPDATE peeps.api_keys
+		SET apis = array_append(array_remove(apis, $2), $2)
+		WHERE person_id=$1 RETURNING *)
+		SELECT row_to_json(nu.*) INTO js FROM nu;
+m4_ERRCATCH
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- PARAMS: email, password, API_name
 CREATE OR REPLACE FUNCTION peeps.auth_api(text, text, text,
 	OUT status smallint, OUT js json) AS $$

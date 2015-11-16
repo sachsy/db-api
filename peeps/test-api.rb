@@ -3,6 +3,20 @@ require '../test_tools.rb'
 class TestPeepsAPI < Minitest::Test
 	include JDB
 
+	def test_add_api
+		qry('add_api($1, $2)', [8, 'Data'])
+		assert_equal 8, @j[:person_id]
+		assert_match /[a-zA-Z0-9]{8}/, @j[:akey]
+		assert_match /[a-zA-Z0-9]{8}/, @j[:apass]
+		assert_equal ['Data'], @j[:apis]
+		qry('add_api($1, $2)', [5, 'Data'])
+		assert_equal ['Data', 'Muckworker'], @j[:apis].sort
+		qry('add_api($1, $2)', [5, 'Data'])
+		assert_equal ['Data', 'Muckworker'], @j[:apis].sort
+		qry('add_api($1, $2)', [2, 'MuckworkClient'])
+		assert_equal ['MuckworkClient'], @j[:apis]
+	end
+
 	def test_auth_api
 		qry("auth_api('derek@sivers.org', 'derek', 'Peep')")
 		assert_equal 1, @j[:person_id]
