@@ -308,10 +308,7 @@ BEGIN
 	IF cid IS NULL THEN
 		INSERT INTO woodegg.customers(person_id) VALUES (pid) RETURNING id INTO cid;
 	END IF;
-	-- PARAMS: emailer_id, person_id, profile, category, subject, body, reference_id
-	PERFORM peeps.outgoing_email(1, pid, 'we@woodegg', 'we@woodegg',
-		'your Wood Egg book (thank you!)',
-		(SELECT body FROM peeps.formletters WHERE id=2), NULL);
+	PERFORM peeps.send_person_formletter(pid, 2, 'we@woodegg');
 	status := 200;
 	js := json_build_object('person_id', pid, 'customer_id', cid);
 END;
