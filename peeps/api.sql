@@ -414,20 +414,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- sets newpass if none, sends email if not already sent recently
--- PARAMS: formletter.id, email address
-CREATE OR REPLACE FUNCTION peeps.reset_email(integer, text,
-	OUT status smallint, OUT js json) AS $$
-DECLARE
-	pid integer;
-BEGIN
-	SELECT id INTO pid FROM peeps.get_person_id_from_email($2);
-	IF pid IS NULL THEN m4_NOTFOUND END IF;
-	PERFORM peeps.make_newpass(pid);
-END;
-$$ LANGUAGE plpgsql;
-
-
 -- GET /people/:id
 -- PARAMS: person_id
 CREATE OR REPLACE FUNCTION peeps.get_person(integer,
@@ -945,6 +931,23 @@ BEGIN
 		NULL);
 	status := 200;
 	js := row_to_json(r.*) FROM peeps.email_view r WHERE id = email_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- sets newpass if none, sends email if not already sent recently
+-- PARAMS: formletter.id, email address
+CREATE OR REPLACE FUNCTION peeps.reset_email(integer, text,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+	pid integer;
+BEGIN
+	SELECT id INTO pid FROM peeps.get_person_id_from_email($2);
+	IF pid IS NULL THEN m4_NOTFOUND ELSE
+		PERFORM peeps.make_newpass(pid);
+		SELECT x.status, x.js INTO status, js FROM
+			peeps.send_person_formletter(pid, $1, 'derek@sivers') x;
+	END IF;
 END;
 $$ LANGUAGE plpgsql;
 
