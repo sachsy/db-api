@@ -437,5 +437,6 @@ class TestPeeps < Minitest::Test
 		res = DB.exec("SELECT * FROM peeps.parse_formletter_subject(1, 3)")
 		assert_equal nil, res[0]['subject']
 	end
+
 end
 

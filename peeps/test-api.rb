@@ -756,4 +756,15 @@ class TestPeepsAPI < Minitest::Test
 		assert_equal({code: 'ZW', name: 'Zimbabwe'}, @j[241])
 	end
 
+	def test_send_person_formletter
+		qry("send_person_formletter(1, 1, 'derek@sivers')")
+		assert_equal 11, @j[:id]
+		assert_equal 'derek@sivers', @j[:profile]
+		assert_equal 'derek@sivers', @j[:category]
+		assert_equal 2, @j[:creator][:id]
+		assert_equal 2, @j[:closor][:id]
+		assert_equal nil, @j[:outgoing]
+		assert_equal 'Derek your email', @j[:subject]
+		assert_equal "Hi Derek -\n\nYour email is derek@sivers.org. Here is your URL: https://sivers.org/u/1/Dyh15IHs\n\n--\nDerek Sivers  derek@sivers.org  http://sivers.org/", @j[:body]
+	end
 end
