@@ -406,20 +406,37 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: people.id, formletters.id
-CREATE OR REPLACE FUNCTION peeps.parse_formletter_body(integer, integer) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION peeps.parse_formletter_body(integer, integer,
+	OUT body text) AS $$
 DECLARE
-	new_body text;
 	thisvar text;
 	thisval text;
 BEGIN
-	SELECT body INTO new_body FROM peeps.formletters WHERE id = $2;
-	FOR thisvar IN SELECT regexp_matches(body, '{([^}]+)}', 'g') FROM peeps.formletters
-		WHERE id = $2 LOOP
+	SELECT f.body INTO body FROM peeps.formletters f WHERE id = $2;
+	FOR thisvar IN SELECT regexp_matches(f.body, '{([^}]+)}', 'g')
+		FROM peeps.formletters f WHERE id = $2 LOOP
 		EXECUTE format ('SELECT %s::text FROM peeps.people WHERE id=%L',
 			btrim(thisvar, '{}'), $1) INTO thisval;
-		new_body := regexp_replace(new_body, thisvar, thisval);
+		body := replace(body, thisvar, thisval);
 	END LOOP;
-	RETURN new_body;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: people.id, formletters.id
+CREATE OR REPLACE FUNCTION peeps.parse_formletter_subject(integer, integer,
+	OUT subject text) AS $$
+DECLARE
+	thisvar text;
+	thisval text;
+BEGIN
+	SELECT f.subject INTO subject FROM peeps.formletters f WHERE id = $2;
+	FOR thisvar IN SELECT regexp_matches(f.subject, '{([^}]+)}', 'g')
+		FROM peeps.formletters f WHERE id = $2 LOOP
+		EXECUTE format ('SELECT %s::text FROM peeps.people WHERE id=%L',
+			btrim(thisvar, '{}'), $1) INTO thisval;
+		subject := replace(subject, thisvar, thisval);
+	END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 

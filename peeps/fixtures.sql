@@ -445,12 +445,12 @@ SELECT pg_catalog.setval('emails_id_seq', 10, true);
 
 ALTER TABLE formletters DISABLE TRIGGER ALL;
 
-INSERT INTO formletters (id, title, explanation, body, created_at) VALUES (1, 'one', 'use for one', 'Your email is {email}. Here is your URL: https://sivers.org/u/{id}/{newpass}', '2014-12-22');
-INSERT INTO formletters (id, title, explanation, body, created_at) VALUES (2, 'two', 'can not do fields outside of person object', 'Hi {address}. Thank you for buying something on somedate.', '2014-12-22');
-INSERT INTO formletters (id, title, explanation, body, created_at) VALUES (3, 'three', 'blah', 'meh', '2014-12-22');
-INSERT INTO formletters (id, title, explanation, body, created_at) VALUES (4, 'four', 'blah', 'meh', '2014-12-22');
-INSERT INTO formletters (id, title, explanation, body, created_at) VALUES (5, 'five', 'blah', 'meh', '2014-12-22');
-INSERT INTO formletters (id, title, explanation, body, created_at) VALUES (6, 'six', 'blah', 'meh', '2014-12-22');
+INSERT INTO formletters (id, title, explanation, subject, body, created_at) VALUES (3, 'three', 'blah', NULL, 'meh', '2014-12-22');
+INSERT INTO formletters (id, title, explanation, subject, body, created_at) VALUES (4, 'four', 'blah', NULL, 'meh', '2014-12-22');
+INSERT INTO formletters (id, title, explanation, subject, body, created_at) VALUES (5, 'five', 'blah', NULL, 'meh', '2014-12-22');
+INSERT INTO formletters (id, title, explanation, subject, body, created_at) VALUES (6, 'six', 'blah', NULL, 'meh', '2014-12-22');
+INSERT INTO formletters (id, title, explanation, subject, body, created_at) VALUES (2, 'two', 'replace braces only', '{address} thanks address', 'Hi {address}. Thank you for buying something on somedate. We will ship it to your address.', '2014-12-22');
+INSERT INTO formletters (id, title, explanation, subject, body, created_at) VALUES (1, 'one', 'use for one', '{address} your email', 'Your email is {email}. Here is your URL: https://sivers.org/u/{id}/{newpass}', '2014-12-22');
 
 
 ALTER TABLE formletters ENABLE TRIGGER ALL;

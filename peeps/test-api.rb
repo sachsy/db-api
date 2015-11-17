@@ -259,11 +259,17 @@ class TestPeepsAPI < Minitest::Test
 	end
 
 	def test_make_newpass
-		DB.exec("UPDATE peeps.people SET newpass = NULL WHERE id = 8")
 		qry("make_newpass(1)")
-		assert_equal({id: 1}, @j)
+		assert_equal({id: 1, newpass: 'Dyh15IHs'}, @j)
+		qry("make_newpass(1)")
+		assert_equal({id: 1, newpass: 'Dyh15IHs'}, @j)
+		DB.exec("UPDATE peeps.people SET newpass = NULL WHERE id = 8")
 		qry("make_newpass(8)")
-		assert_equal({id: 8}, @j)
+		assert_equal 8, @j[:id]
+		assert_match /\A[a-zA-Z0-9]{8}\Z/, @j[:newpass]
+		newpass8 = @j[:newpass]
+		qry("make_newpass(8)")
+		assert_equal newpass8, @j[:newpass]
 		qry("make_newpass(99)")
 		assert_equal({}, @j)
 		qry("make_newpass(NULL)")

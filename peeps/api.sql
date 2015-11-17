@@ -405,11 +405,11 @@ CREATE OR REPLACE FUNCTION peeps.make_newpass(integer,
 BEGIN
 	UPDATE peeps.people
 		SET newpass=core.unique_for_table_field(8, 'peeps.people', 'newpass')
-		WHERE id=$1 AND newpass IS NULL;
-	IF FOUND THEN
-		status := 200;
-		js := json_build_object('id', $1);
-	ELSE m4_NOTFOUND END IF;
+		WHERE id = $1 AND newpass IS NULL;
+	status := 200;
+	SELECT json_build_object('id', id, 'newpass', newpass) INTO js
+		FROM peeps.people WHERE id = $1;
+	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -423,6 +423,7 @@ DECLARE
 BEGIN
 	SELECT id INTO pid FROM peeps.get_person_id_from_email($2);
 	IF pid IS NULL THEN m4_NOTFOUND END IF;
+	PERFORM peeps.make_newpass(pid);
 END;
 $$ LANGUAGE plpgsql;
 

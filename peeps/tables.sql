@@ -124,6 +124,7 @@ CREATE TABLE peeps.formletters (
 	id serial primary key,
 	title varchar(64) UNIQUE,
 	explanation varchar(255),
+	subject varchar(64),
 	body text,
 	created_at date not null default CURRENT_DATE
 );

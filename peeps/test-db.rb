@@ -419,5 +419,23 @@ class TestPeeps < Minitest::Test
 		res = DB.exec("SELECT id FROM peeps.get_person_id_from_email(NULL)")
 		assert_equal nil, res[0]['id']
 	end
+
+	def test_parse_formletter_body
+		res = DB.exec("SELECT * FROM peeps.parse_formletter_body(1, 1)")
+		assert_equal 'Your email is derek@sivers.org. Here is your URL: https://sivers.org/u/1/Dyh15IHs', res[0]['body']
+		res = DB.exec("SELECT * FROM peeps.parse_formletter_body(1, 2)")
+		assert_equal 'Hi Derek. Thank you for buying something on somedate. We will ship it to your address.', res[0]['body']
+		res = DB.exec("SELECT * FROM peeps.parse_formletter_body(1, 3)")
+		assert_equal 'meh', res[0]['body']
+	end
+
+	def test_parse_formletter_subject
+		res = DB.exec("SELECT * FROM peeps.parse_formletter_subject(1, 1)")
+		assert_equal 'Derek your email', res[0]['subject']
+		res = DB.exec("SELECT * FROM peeps.parse_formletter_subject(1, 2)")
+		assert_equal 'Derek thanks address', res[0]['subject']
+		res = DB.exec("SELECT * FROM peeps.parse_formletter_subject(1, 3)")
+		assert_equal nil, res[0]['subject']
+	end
 end
 

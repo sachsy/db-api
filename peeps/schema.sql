@@ -124,6 +124,7 @@ CREATE TABLE peeps.formletters (
 	id serial primary key,
 	title varchar(64) UNIQUE,
 	explanation varchar(255),
+	subject varchar(64),
 	body text,
 	created_at date not null default CURRENT_DATE
 );
@@ -624,20 +625,37 @@ $$ LANGUAGE plpgsql;
 
 
 -- PARAMS: people.id, formletters.id
-CREATE OR REPLACE FUNCTION peeps.parse_formletter_body(integer, integer) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION peeps.parse_formletter_body(integer, integer,
+	OUT body text) AS $$
 DECLARE
-	new_body text;
 	thisvar text;
 	thisval text;
 BEGIN
-	SELECT body INTO new_body FROM peeps.formletters WHERE id = $2;
-	FOR thisvar IN SELECT regexp_matches(body, '{([^}]+)}', 'g') FROM peeps.formletters
-		WHERE id = $2 LOOP
+	SELECT f.body INTO body FROM peeps.formletters f WHERE id = $2;
+	FOR thisvar IN SELECT regexp_matches(f.body, '{([^}]+)}', 'g')
+		FROM peeps.formletters f WHERE id = $2 LOOP
 		EXECUTE format ('SELECT %s::text FROM peeps.people WHERE id=%L',
 			btrim(thisvar, '{}'), $1) INTO thisval;
-		new_body := regexp_replace(new_body, thisvar, thisval);
+		body := replace(body, thisvar, thisval);
 	END LOOP;
-	RETURN new_body;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: people.id, formletters.id
+CREATE OR REPLACE FUNCTION peeps.parse_formletter_subject(integer, integer,
+	OUT subject text) AS $$
+DECLARE
+	thisvar text;
+	thisval text;
+BEGIN
+	SELECT f.subject INTO subject FROM peeps.formletters f WHERE id = $2;
+	FOR thisvar IN SELECT regexp_matches(f.subject, '{([^}]+)}', 'g')
+		FROM peeps.formletters f WHERE id = $2 LOOP
+		EXECUTE format ('SELECT %s::text FROM peeps.people WHERE id=%L',
+			btrim(thisvar, '{}'), $1) INTO thisval;
+		subject := replace(subject, thisvar, thisval);
+	END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1427,29 +1445,31 @@ CREATE OR REPLACE FUNCTION peeps.make_newpass(integer,
 BEGIN
 	UPDATE peeps.people
 		SET newpass=core.unique_for_table_field(8, 'peeps.people', 'newpass')
-		WHERE id=$1;
-	IF FOUND THEN
-		status := 200;
-		js := json_build_object('id', $1);
-	ELSE
-
+		WHERE id = $1 AND newpass IS NULL;
+	status := 200;
+	SELECT json_build_object('id', id, 'newpass', newpass) INTO js
+		FROM peeps.people WHERE id = $1;
+	IF js IS NULL THEN 
 	status := 404;
 	js := '{}';
-
-	END IF;
+ END IF;
 END;
 $$ LANGUAGE plpgsql;
 
 
+-- sets newpass if none, sends email if not already sent recently
 -- PARAMS: formletter.id, email address
 CREATE OR REPLACE FUNCTION peeps.reset_email(integer, text,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
 	pid integer;
 BEGIN
-	-- fail unless valid email
-	-- get people.id if email exists
-	-- fail unless id
+	SELECT id INTO pid FROM peeps.get_person_id_from_email($2);
+	IF pid IS NULL THEN 
+	status := 404;
+	js := '{}';
+ END IF;
+	PERFORM peeps.make_newpass(pid);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1461,12 +1481,10 @@ CREATE OR REPLACE FUNCTION peeps.get_person(integer,
 BEGIN
 	status := 200;
 	js := row_to_json(r.*) FROM peeps.person_view r WHERE id = $1;
-	IF js IS NULL THEN
-
+	IF js IS NULL THEN 
 	status := 404;
 	js := '{}';
-
-	END IF;
+ END IF;
 END;
 $$ LANGUAGE plpgsql;
 
