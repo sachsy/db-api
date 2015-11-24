@@ -20,7 +20,7 @@ CREATE TABLE peeps.people (
 	email varchar(127) UNIQUE CONSTRAINT valid_email CHECK (email ~ '\A\S+@\S+\.\S+\Z'),
 	name varchar(127) NOT NULL CONSTRAINT no_name CHECK (LENGTH(name) > 0),
 	address varchar(64), --  not mailing address, but "how do I address you?".  Usually firstname.
-	public_id char(4), -- random used for public URLs
+	public_id char(4) UNIQUE, -- random used for public URLs
 	hashpass varchar(72), -- user-chosen password, blowfish crypted using set_hashpass function below.
 	lopass char(4), -- random used with id for low-security unsubscribe links to deter id spoofing
 	newpass char(8) UNIQUE, -- random for "forgot my password" emails, erased when set_hashpass
