@@ -1,5 +1,18 @@
 # TODO:
 
+## Profile URL:
+
+```sql
+UPDATE peeps ADD COLUMN profile char(4);
+CREATE INDEX on peeps(profile);
+```
+
+* random generate function
+* add for existing
+* now.urls adding runs peeps.generate_profile_chars if not there
+* update merge function to keep whichever one has the profile url
+* map nginx nownownow current profile to these
+
 ## Tweets:
 
 ```sql
