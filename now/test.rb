@@ -46,7 +46,6 @@ class TestNow < Minitest::Test
 			person_id: 2,
 			created_at: '2015-11-10',
 			updated_at: '2015-11-10',
-			tiny: 'wonka',
 			short: 'wonka.com/now',
 			long: 'http://www.wonka.com/now/'})
 	end
@@ -64,7 +63,6 @@ class TestNow < Minitest::Test
 			person_id: 3,
 			created_at: '2015-11-10',
 			updated_at: '2015-11-10',
-			tiny: 'salt',
 			short: 'salt.com/now',
 			long: 'http://salt.com/now/'})
 	end
@@ -75,7 +73,6 @@ class TestNow < Minitest::Test
 			person_id: 1,
 			created_at: '2015-11-10',
 			updated_at: '2015-11-10',
-			tiny: 'sivers',
 			short: 'sivers.org/now',
 			long: 'http://sivers.org/now'}])
 	end
@@ -98,7 +95,6 @@ class TestNow < Minitest::Test
 		assert_equal 6, @j[:id]
 		assert_equal '50.io/now', @j[:short]
 		assert_equal nil, @j[:long]
-		assert_equal nil, @j[:tiny]
 		assert_equal nil, @j[:updated_at]
 		refute_equal nil, @j[:created_at]
 		qry("now.add_url(1, '50.io/now')")
@@ -110,10 +106,8 @@ class TestNow < Minitest::Test
 		assert_equal 7, @j[:person_id]
 		assert_equal nil, @j[:long]
 		long = 'http://gongli.cn/now/'
-		tiny = 'gongli'
-		qry('now.update_url(5, $1)', [{long: long, tiny: tiny, ignore: 'this'}.to_json])
+		qry('now.update_url(5, $1)', [{long: long, ignore: 'this'}.to_json])
 		assert_equal 7, @j[:person_id]
 		assert_equal long, @j[:long]
-		assert_equal tiny, @j[:tiny]
 	end
 end

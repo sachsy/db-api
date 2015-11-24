@@ -10,7 +10,6 @@ CREATE TABLE now.urls (
 	person_id integer REFERENCES peeps.people(id) ON DELETE CASCADE,
 	created_at date not null default CURRENT_DATE,
 	updated_at date,
-	tiny varchar(24) UNIQUE,
 	short varchar(72) UNIQUE,
 	long varchar(100) UNIQUE CONSTRAINT url_format CHECK (long ~ '^https?://[0-9a-zA-Z_-]+\.[a-zA-Z0-9]+')
 );
@@ -196,4 +195,7 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql;
 
+-- NOTE: will also use from peeps schema:
+-- peeps.update_stat(id, json)
+-- peeps.add_stat(person_id, name, value)
 

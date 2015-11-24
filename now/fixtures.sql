@@ -19,11 +19,11 @@ SET SESSION AUTHORIZATION DEFAULT;
 
 ALTER TABLE urls DISABLE TRIGGER ALL;
 
-INSERT INTO urls (id, person_id, created_at, updated_at, tiny, short, long) VALUES (1, 1, '2015-11-10', '2015-11-10', 'sivers', 'sivers.org/now', 'http://sivers.org/now');
-INSERT INTO urls (id, person_id, created_at, updated_at, tiny, short, long) VALUES (2, 2, '2015-11-10', '2015-11-10', 'wonka', 'wonka.com/now', 'http://www.wonka.com/now/');
-INSERT INTO urls (id, person_id, created_at, updated_at, tiny, short, long) VALUES (3, NULL, '2015-11-10', '2015-11-10', 'salt', 'salt.com/now', 'http://salt.com/now/');
-INSERT INTO urls (id, person_id, created_at, updated_at, tiny, short, long) VALUES (4, NULL, '2015-11-10', '2015-11-10', 'oompa', 'oompa.net/now.html', 'http://oompa.net/now.html');
-INSERT INTO urls (id, person_id, created_at, updated_at, tiny, short, long) VALUES (5, NULL, '2015-11-10', '2015-11-10', NULL, 'gongli.cn/now', NULL);
+INSERT INTO urls (id, person_id, created_at, updated_at, short, long) VALUES (1, 1, '2015-11-10', '2015-11-10', 'sivers.org/now', 'http://sivers.org/now');
+INSERT INTO urls (id, person_id, created_at, updated_at, short, long) VALUES (2, 2, '2015-11-10', '2015-11-10', 'wonka.com/now', 'http://www.wonka.com/now/');
+INSERT INTO urls (id, person_id, created_at, updated_at, short, long) VALUES (3, NULL, '2015-11-10', '2015-11-10', 'salt.com/now', 'http://salt.com/now/');
+INSERT INTO urls (id, person_id, created_at, updated_at, short, long) VALUES (4, NULL, '2015-11-10', '2015-11-10', 'oompa.net/now.html', 'http://oompa.net/now.html');
+INSERT INTO urls (id, person_id, created_at, updated_at, short, long) VALUES (5, NULL, '2015-11-10', '2015-11-10', 'gongli.cn/now', NULL);
 
 
 ALTER TABLE urls ENABLE TRIGGER ALL;
