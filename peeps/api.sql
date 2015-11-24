@@ -1364,8 +1364,10 @@ CREATE OR REPLACE FUNCTION peeps.ieal_where(text, text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
 	status := 200;
-	EXECUTE format ('SELECT json_agg(json_build_array(id, email, address, lopass))
-		FROM peeps.people WHERE email IS NOT NULL AND %I=%L', $1, $2) INTO js;
+	EXECUTE format ('SELECT json_agg(j) FROM
+		(SELECT json_build_array(id, email, address, lopass) AS j
+		FROM peeps.people WHERE email IS NOT NULL
+		AND %I=%L ORDER BY id) r', $1, $2) INTO js;
 	IF js IS NULL THEN js := '[]'; END IF;
 END;
 $$ LANGUAGE plpgsql;

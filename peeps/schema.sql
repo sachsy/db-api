@@ -333,10 +333,17 @@ BEGIN
 			done_tables := done_tables || res.tablename;
 		END IF;
 	END LOOP;
-	-- copy better(longer) data from old to new
-	-- company, city, state, postalcode, country, phone, categorize_as
 	SELECT * INTO old_p FROM peeps.people WHERE id = old_id;
 	SELECT * INTO new_p FROM peeps.people WHERE id = new_id;
+	-- if both have a public_id, we've got a problem
+	IF LENGTH(old_p.public_id) = 4 AND LENGTH(new_p.public_id) = 4 THEN
+		RAISE 'both_have_public_id';
+	END IF;
+	-- copy better(longer) data from old to new
+	-- public_id, company, city, state, postalcode, country, phone, categorize_as
+	IF COALESCE(LENGTH(old_p.public_id), 0) > COALESCE(LENGTH(new_p.public_id), 0) THEN
+		UPDATE peeps.people SET public_id = old_p.public_id WHERE id = new_id;
+	END IF;
 	IF COALESCE(LENGTH(old_p.company), 0) > COALESCE(LENGTH(new_p.company), 0) THEN
 		UPDATE peeps.people SET company = old_p.company WHERE id = new_id;
 	END IF;
@@ -2785,8 +2792,10 @@ CREATE OR REPLACE FUNCTION peeps.ieal_where(text, text,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
 	status := 200;
-	EXECUTE format ('SELECT json_agg(json_build_array(id, email, address, lopass))
-		FROM peeps.people WHERE email IS NOT NULL AND %I=%L', $1, $2) INTO js;
+	EXECUTE format ('SELECT json_agg(j) FROM
+		(SELECT json_build_array(id, email, address, lopass) AS j
+		FROM peeps.people WHERE email IS NOT NULL
+		AND %I=%L ORDER BY id) r', $1, $2) INTO js;
 	IF js IS NULL THEN js := '[]'; END IF;
 END;
 $$ LANGUAGE plpgsql;
