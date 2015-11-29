@@ -260,10 +260,9 @@ class TestPeepsAPI < Minitest::Test
 
 	def test_make_newpass
 		qry("make_newpass(1)")
-		assert_equal({id: 1, newpass: 'Dyh15IHs'}, @j)
+		newpass1 = @j[:newpass]
 		qry("make_newpass(1)")
-		assert_equal({id: 1, newpass: 'Dyh15IHs'}, @j)
-		DB.exec("UPDATE peeps.people SET newpass = NULL WHERE id = 8")
+		assert_equal({id: 1, newpass: newpass1}, @j)
 		qry("make_newpass(8)")
 		assert_equal 8, @j[:id]
 		assert_match /\A[a-zA-Z0-9]{8}\Z/, @j[:newpass]
@@ -289,7 +288,9 @@ class TestPeepsAPI < Minitest::Test
 	def test_get_person_newpass
 		qry("get_person_newpass(2, 'Another1')")
 		assert_equal({}, @j)
-		qry("get_person_newpass(2, 'NvaGAkHK')")
+		qry("make_newpass(2)")
+		newpass = @j[:newpass]
+		qry("get_person_newpass(2, $1)", [newpass])
 		assert_equal 'http://www.wonka.com/', @j[:urls][0][:url]
 		assert_equal 'you coming by?', @j[:emails][0][:subject]
 		assert_equal 'musicthoughts', @j[:stats][1][:name]
@@ -552,8 +553,8 @@ class TestPeepsAPI < Minitest::Test
 	end
 
 	def test_parsed_formletter
-		qry("parsed_formletter(1, 1)")
-		assert_equal 'Your email is derek@sivers.org. Here is your URL: https://sivers.org/u/1/Dyh15IHs', @j[:body]
+		qry("parsed_formletter(1, 2)")
+		assert @j[:body].start_with? 'Hi Derek'
 		qry("parsed_formletter(99, 1)")
 		assert_nil @j[:body]
 		qry("parsed_formletter(1, 99)")
@@ -757,23 +758,15 @@ class TestPeepsAPI < Minitest::Test
 	end
 
 	def test_send_person_formletter
-		qry("send_person_formletter(1, 1, 'derek@sivers')")
+		qry("send_person_formletter(1, 2, 'derek@sivers')")
 		assert_equal 11, @j[:id]
 		assert_equal 'derek@sivers', @j[:profile]
 		assert_equal 'derek@sivers', @j[:category]
 		assert_equal 2, @j[:creator][:id]
 		assert_equal 2, @j[:closor][:id]
 		assert_equal nil, @j[:outgoing]
-		assert_equal 'Derek your email', @j[:subject]
-		assert_equal "Hi Derek -\n\nYour email is derek@sivers.org. Here is your URL: https://sivers.org/u/1/Dyh15IHs\n\n--\nDerek Sivers  derek@sivers.org  http://sivers.org/", @j[:body]
-	end
-
-	def test_reset_email
-		qry("reset_email(1, 'derek@sivers.org')")
-		assert_equal 11, @j[:id]
-		assert_equal nil, @j[:outgoing]
-		assert_equal 'Derek your email', @j[:subject]
-		assert_equal "Hi Derek -\n\nYour email is derek@sivers.org. Here is your URL: https://sivers.org/u/1/Dyh15IHs\n\n--\nDerek Sivers  derek@sivers.org  http://sivers.org/", @j[:body]
+		assert_equal 'Derek thanks address', @j[:subject]
+		assert @j[:body].start_with? 'Hi Derek'
 	end
 
 	def test_reset_email_nu
@@ -782,11 +775,10 @@ class TestPeepsAPI < Minitest::Test
 	end
 
 	def test_reset_email_reset
-		DB.exec("UPDATE peeps.people SET newpass = NULL WHERE id = 8")
 		qry("reset_email(1, 'yoko@ono.com')")
 		assert_equal 11, @j[:id]
 		assert_equal nil, @j[:outgoing]
 		assert @j[:body].include? 'Your email is yoko@ono.com'
-		assert_match %r{sivers.org/u/8/[a-zA-Z0-9]{8}\s}, @j[:body]
+		assert_match %r{data.sivers.org/newpass/8/[a-zA-Z0-9]{8}\s}, @j[:body]
 	end
 end

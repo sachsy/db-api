@@ -145,7 +145,7 @@ class TestPeeps < Minitest::Test
 		assert_nil x['hashpass']
 		# INSERT creates default values
 		assert_equal 4, x['lopass'].size
-		assert_equal 8, x['newpass'].size
+		assert_nil x['newpass']
 		assert_equal '0', x['email_count']
 		assert_equal Time.now.to_s[0,10], x['created_at']
 		# if cleaned email exists in db already, returns that row
@@ -421,8 +421,11 @@ class TestPeeps < Minitest::Test
 	end
 
 	def test_parse_formletter_body
+		res = DB.exec("SELECT js FROM peeps.make_newpass(1)")
+		js = JSON.parse(res[0]['js'])
+		newpass = js['newpass']
 		res = DB.exec("SELECT * FROM peeps.parse_formletter_body(1, 1)")
-		assert_equal 'Your email is derek@sivers.org. Here is your URL: https://sivers.org/u/1/Dyh15IHs', res[0]['body']
+		assert_equal("Your email is derek@sivers.org. Here is your URL: https://data.sivers.org/newpass/1/#{newpass} OK?", res[0]['body'])
 		res = DB.exec("SELECT * FROM peeps.parse_formletter_body(1, 2)")
 		assert_equal 'Hi Derek. Thank you for buying something on somedate. We will ship it to your address.', res[0]['body']
 		res = DB.exec("SELECT * FROM peeps.parse_formletter_body(1, 3)")
