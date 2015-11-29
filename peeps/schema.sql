@@ -323,6 +323,7 @@ DECLARE
 	rowcount integer;
 	old_p peeps.people;
 	new_p peeps.people;
+	move_public_id text;
 BEGIN
 	-- update ids to point to new one
 	FOR res IN SELECT * FROM core.tables_referencing('peeps', 'people', 'id') LOOP
@@ -342,7 +343,9 @@ BEGIN
 	-- copy better(longer) data from old to new
 	-- public_id, company, city, state, postalcode, country, phone, categorize_as
 	IF COALESCE(LENGTH(old_p.public_id), 0) > COALESCE(LENGTH(new_p.public_id), 0) THEN
-		UPDATE peeps.people SET public_id = old_p.public_id WHERE id = new_id;
+		move_public_id := old_p.public_id; -- because must be unique:
+		UPDATE peeps.people SET public_id = NULL WHERE id = old_id;
+		UPDATE peeps.people SET public_id = move_public_id WHERE id = new_id;
 	END IF;
 	IF COALESCE(LENGTH(old_p.company), 0) > COALESCE(LENGTH(new_p.company), 0) THEN
 		UPDATE peeps.people SET company = old_p.company WHERE id = new_id;
