@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+require 'pg'
+DB = PG::Connection.new(dbname: 'd50b', user: 'd50b')
+
+qry = []
+qry << "SELECT id, city, state FROM peeps.people WHERE country='US' AND state IS NOT NULL AND state NOT IN ('AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY') ORDER BY LOWER(state)"
+qry << "SELECT id, city, state FROM peeps.people WHERE country='CA' AND state IS NOT NULL AND state NOT IN ('AB','BC','MB','NB','NL','NS','ON','PE','QC','SK','NT','NU','YT') ORDER BY LOWER(state)"
+qry << "SELECT id, city, state FROM peeps.people WHERE country='AU' AND state IS NOT NULL AND state NOT IN ('ACT','NSW','NT','Qld','SA','Tas','Vic','WA') ORDER BY LOWER(state)"
+
+qry.each do |sql|
+	puts "\n\n=============\n"
+	puts sql + "\n"
+	res = DB.exec(sql)
+	res.each do |r|
+		puts r.inspect
+	end
+end
