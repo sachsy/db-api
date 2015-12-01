@@ -101,6 +101,14 @@ class TestNow < Minitest::Test
 		assert @j[:title].include? 'duplicate'
 	end
 
+	def test_delete_url
+		qry("now.delete_url(3)")
+		assert_equal 3, @j[:id]
+		assert_equal 'salt.com/now', @j[:short]
+		qry("now.delete_url(3)")
+		assert_equal '404', @res[0]['status']
+	end
+
 	def test_update_url
 		qry('now.update_url(5, $1)', [{person_id: 7}.to_json])
 		assert_equal 7, @j[:person_id]

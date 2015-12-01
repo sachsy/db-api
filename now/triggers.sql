@@ -16,3 +16,33 @@ DROP TRIGGER IF EXISTS ensure_public_id ON now.urls CASCADE;
 CREATE TRIGGER ensure_public_id AFTER INSERT OR UPDATE OF person_id ON now.urls
 	FOR EACH ROW EXECUTE PROCEDURE now.ensure_public_id();
 
+
+CREATE OR REPLACE FUNCTION now.clean_short() RETURNS TRIGGER AS $$
+BEGIN
+	NEW.short = regexp_replace(NEW.short, '\s', '', 'g');
+	NEW.short = regexp_replace(NEW.short, '^https?://', '');
+	NEW.short = regexp_replace(NEW.short, '^www.', '');
+	NEW.short = regexp_replace(NEW.short, '/$', '');
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS clean_short ON now.urls CASCADE;
+CREATE TRIGGER clean_short
+	BEFORE INSERT OR UPDATE OF short ON now.urls
+	FOR EACH ROW EXECUTE PROCEDURE now.clean_short();
+
+
+CREATE OR REPLACE FUNCTION now.clean_long() RETURNS TRIGGER AS $$
+BEGIN
+	NEW.long = regexp_replace(NEW.long, '\s', '', 'g');
+	IF NEW.long !~ '^https?://' THEN
+		NEW.long = 'http://' || NEW.long;
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS clean_long ON now.urls CASCADE;
+CREATE TRIGGER clean_long
+	BEFORE INSERT OR UPDATE OF long ON now.urls
+	FOR EACH ROW EXECUTE PROCEDURE now.clean_long();
+

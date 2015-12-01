@@ -28,4 +28,22 @@ class TestNowDB < Minitest::Test
 		assert_match /[a-zA-Z0-9]{4}/, res[0]['public_id']
 	end
 
+	def test_clean_short
+		res = DB.exec_params("INSERT INTO now.urls(person_id, short) VALUES (5, $1) RETURNING short",
+			["\t\n https://www.this.is/now/ \r"])
+		assert_equal 'this.is/now', res[0]['short']
+		res = DB.exec_params("UPDATE now.urls SET short=$1 WHERE id=5 RETURNING short",
+			["\t\n https://www.thus.us/now/ \r"])
+		assert_equal 'thus.us/now', res[0]['short']
+	end
+
+	def test_clean_long
+		res = DB.exec_params("INSERT INTO now.urls(person_id, short, long) VALUES (5, $1, $2) RETURNING long",
+			['this.is/now', "\t\n www.this.is/now/ \r"])
+		assert_equal 'http://www.this.is/now/', res[0]['long']
+		res = DB.exec_params("UPDATE now.urls SET long=$1 WHERE id=5 RETURNING long",
+			["\t\n https://www.thus.us/now/ \r"])
+		assert_equal 'https://www.thus.us/now/', res[0]['long']
+	end
 end
+

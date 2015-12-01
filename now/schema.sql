@@ -37,7 +37,7 @@ $$ LANGUAGE plpgsql;
 ----------------------------
 
 -- everyone with a now.url will probably a public_id soon, so after 
--- insert of now.url, create one if not there already
+-- insert of now.url, or update of person_id, create public_id if not there already
 CREATE OR REPLACE FUNCTION now.ensure_public_id() RETURNS TRIGGER AS $$
 BEGIN
 	UPDATE peeps.people
@@ -49,6 +49,36 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS ensure_public_id ON now.urls CASCADE;
 CREATE TRIGGER ensure_public_id AFTER INSERT OR UPDATE OF person_id ON now.urls
 	FOR EACH ROW EXECUTE PROCEDURE now.ensure_public_id();
+
+
+CREATE OR REPLACE FUNCTION now.clean_short() RETURNS TRIGGER AS $$
+BEGIN
+	NEW.short = regexp_replace(NEW.short, '\s', '', 'g');
+	NEW.short = regexp_replace(NEW.short, '^https?://', '');
+	NEW.short = regexp_replace(NEW.short, '^www.', '');
+	NEW.short = regexp_replace(NEW.short, '/$', '');
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS clean_short ON now.urls CASCADE;
+CREATE TRIGGER clean_short
+	BEFORE INSERT OR UPDATE OF short ON now.urls
+	FOR EACH ROW EXECUTE PROCEDURE now.clean_short();
+
+
+CREATE OR REPLACE FUNCTION now.clean_long() RETURNS TRIGGER AS $$
+BEGIN
+	NEW.long = regexp_replace(NEW.long, '\s', '', 'g');
+	IF NEW.long !~ '^https?://' THEN
+		NEW.long = 'http://' || NEW.long;
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS clean_long ON now.urls CASCADE;
+CREATE TRIGGER clean_long
+	BEFORE INSERT OR UPDATE OF long ON now.urls
+	FOR EACH ROW EXECUTE PROCEDURE now.clean_long();
 
 ----------------------------------------
 ------------------------- API FUNCTIONS:
@@ -160,6 +190,36 @@ BEGIN
 	WITH nu AS (INSERT INTO now.urls(person_id, short)
 		VALUES ($1, $2) RETURNING *)
 		SELECT row_to_json(r) INTO js FROM (SELECT * FROM nu) r;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	status := 500;
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: now.urls.id
+CREATE OR REPLACE FUNCTION now.delete_url(integer,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
+BEGIN
+	SELECT x.status, x.js INTO status, js FROM now.url($1) x;
+	DELETE FROM now.urls WHERE id = $1;
 
 EXCEPTION
 	WHEN OTHERS THEN GET STACKED DIAGNOSTICS

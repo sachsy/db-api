@@ -102,6 +102,19 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- PARAMS: now.urls.id
+CREATE OR REPLACE FUNCTION now.delete_url(integer,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+m4_ERRVARS
+BEGIN
+	SELECT x.status, x.js INTO status, js FROM now.url($1) x;
+	DELETE FROM now.urls WHERE id = $1;
+m4_ERRCATCH
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- PARAMS: now.urls.id, JSON of new values
 CREATE OR REPLACE FUNCTION now.update_url(integer, json,
 	OUT status smallint, OUT js json) AS $$
