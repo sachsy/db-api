@@ -1372,3 +1372,94 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- PARAMS person_id, schema, table, id
+CREATE OR REPLACE FUNCTION peeps.log(integer, text, text, integer,
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := '{}';
+	INSERT INTO core.changelog(person_id, schema_name, table_name, table_id)
+		VALUES($1, $2, $3, $4);
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- awaiting changelog by group
+CREATE OR REPLACE FUNCTION peeps.inspections_grouped(
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := json_agg(r) FROM (SELECT schema_name, table_name, COUNT(*)
+		FROM core.changelog WHERE approved IS FALSE
+		GROUP BY schema_name, table_name) r;
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION peeps.inspect_peeps_people(
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := json_agg(r) FROM (SELECT c.id, c.person_id, city, state, country, email
+		FROM core.changelog c LEFT JOIN peeps.people p
+		ON c.table_id=p.id WHERE c.approved IS FALSE
+		AND schema_name='peeps' AND table_name='people') r;
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION peeps.inspect_peeps_urls(
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := json_agg(r) FROM (SELECT c.id, c.person_id, url
+		FROM core.changelog c LEFT JOIN peeps.urls u
+		ON c.table_id=u.id WHERE c.approved IS FALSE
+		AND schema_name='peeps' AND table_name='urls') r;
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION peeps.inspect_peeps_stats(
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := json_agg(r) FROM (SELECT c.id, c.person_id, statkey, statvalue
+		FROM core.changelog c LEFT JOIN peeps.stats s
+		ON c.table_id=s.id WHERE c.approved IS FALSE
+		AND schema_name='peeps' AND table_name='stats') r;
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION peeps.inspect_now_urls(
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := json_agg(r) FROM (SELECT c.id, c.person_id, short, long
+		FROM core.changelog c LEFT JOIN now.urls u
+		ON c.table_id=u.id WHERE c.approved IS FALSE
+		AND schema_name='now' AND table_name='urls') r;
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- TODO: cast JSON array elements as ::integer instead of casting id::text
+-- PARAMS: JSON array of integer ids: core.changelog.id
+CREATE OR  REPLACE FUNCTION peeps.log_approve(json,
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	UPDATE core.changelog SET approved=TRUE WHERE id::text IN
+		(SELECT * FROM json_array_elements_text($1));
+	status := 200;
+	js := {};
+END;
+$$ LANGUAGE plpgsql;
+
+
