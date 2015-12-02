@@ -44,6 +44,18 @@ CREATE TABLE core.translations (
 	zh text
 );
 
+CREATE TABLE core.changelog (
+	id serial primary key,
+	person_id integer NOT NULL REFERENCES peeps.people(id),
+	created_at date NOT NULL DEFAULT CURRENT_DATE,
+	schema_name varchar(16),
+	table_name varchar(32),
+	table_id integer,
+	approved boolean DEFAULT false
+);
+CREATE INDEX changelog_person_id ON core.changelog(person_id);
+CREATE INDEX changelog_approved ON core.changelog(approved);
+
 COMMIT;
 
 ---------------------------------
@@ -313,6 +325,28 @@ CREATE TRIGGER translations_code_gen
 	FOR EACH ROW WHEN (NEW.code IS NULL)
 	EXECUTE PROCEDURE core.translations_code_gen();
 
+
+CREATE OR REPLACE FUNCTION core.changelog_nodupe() RETURNS TRIGGER AS $$
+DECLARE
+	cid integer;
+BEGIN
+	SELECT id INTO cid FROM core.changelog
+		WHERE person_id=NEW.person_id
+		AND schema_name=NEW.schema_name
+		AND table_name=NEW.table_name
+		AND table_id=NEW.table_id
+		AND approved IS NOT TRUE LIMIT 1;
+	IF cid IS NULL THEN
+		RETURN NEW;
+	ELSE
+		RETURN NULL;
+	END IF;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS changelog_nodupe ON core.changelog CASCADE;
+CREATE TRIGGER changelog_nodupe
+	BEFORE INSERT ON core.changelog
+	FOR EACH ROW EXECUTE PROCEDURE core.changelog_nodupe();
 
 ------------------------------------------------
 -------------------------------------- JSON API:

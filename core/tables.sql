@@ -44,5 +44,17 @@ CREATE TABLE core.translations (
 	zh text
 );
 
+CREATE TABLE core.changelog (
+	id serial primary key,
+	person_id integer NOT NULL REFERENCES peeps.people(id),
+	created_at date NOT NULL DEFAULT CURRENT_DATE,
+	schema_name varchar(16),
+	table_name varchar(32),
+	table_id integer,
+	approved boolean DEFAULT false
+);
+CREATE INDEX changelog_person_id ON core.changelog(person_id);
+CREATE INDEX changelog_approved ON core.changelog(approved);
+
 COMMIT;
 

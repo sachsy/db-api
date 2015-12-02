@@ -114,4 +114,18 @@ class CoreTest < Minitest::Test
 		assert_equal @lines[2], res[2]['en']
 		assert_equal @fr[2], res[2]['fr']
 	end
+
+	def test_changelog_nodupe
+		DB.exec("INSERT INTO core.changelog(person_id, schema_name, table_name, table_id) VALUES (1, 'now', 'urls', 1)")
+		res = DB.exec("SELECT * FROM core.changelog WHERE person_id=1")
+		assert_equal 1, res.ntuples
+		assert_equal '1', res[0]['id']
+		DB.exec("INSERT INTO core.changelog(person_id, schema_name, table_name, table_id) VALUES (1, 'now', 'urls', 1)")
+		res = DB.exec("SELECT * FROM core.changelog WHERE person_id=1")
+		assert_equal 1, res.ntuples
+		DB.exec("UPDATE core.changelog SET approved=TRUE WHERE id=1")
+		DB.exec("INSERT INTO core.changelog(person_id, schema_name, table_name, table_id) VALUES (1, 'now', 'urls', 1)")
+		res = DB.exec("SELECT * FROM core.changelog WHERE person_id=1")
+		assert_equal 2, res.ntuples
+	end
 end
