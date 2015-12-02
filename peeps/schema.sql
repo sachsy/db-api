@@ -2888,7 +2888,7 @@ BEGIN
 	UPDATE core.changelog SET approved=TRUE WHERE id::text IN
 		(SELECT * FROM json_array_elements_text($1));
 	status := 200;
-	js := {};
+	js := '{}';
 END;
 $$ LANGUAGE plpgsql;
 
