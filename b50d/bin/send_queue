@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 exit unless 'sivers.org' == %x{hostname}.strip
+# only one instance of this Ruby script running at one time:
+exit unless File.new(__FILE__).flock(File::LOCK_EX | File::LOCK_NB)
 require 'pg'
 require 'json'
 require 'b50d/my_mail'
