@@ -1,0 +1,6 @@
+Symlink into Ruby's existing $: path dir, like:
+
+* /usr/local/lib/ruby/site_ruby/2.2/x86_64-openbsd
+* … or …
+* /usr/lib/ruby/site_ruby/2.2.0/x86_64-linux
+
