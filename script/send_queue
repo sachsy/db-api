@@ -4,8 +4,8 @@ exit unless 'sivers.org' == %x{hostname}.strip
 exit unless File.new(__FILE__).flock(File::LOCK_EX | File::LOCK_NB)
 require 'pg'
 require 'json'
-require 'b50d/my_mail'
-require 'b50d-config.rb'
+require 'my_mail'
+require 'peeps-config.rb'
 
 db = PG::Connection.new(dbname: 'd50b', user: 'd50b')
 

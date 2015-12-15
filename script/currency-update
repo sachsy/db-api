@@ -4,7 +4,7 @@
 require 'pg'
 require 'json'
 require 'net/http'
-require 'b50d-config.rb'
+require 'peeps-config.rb'
 
 db = PG::Connection.new(dbname: 'd50b', user: 'd50b')
 

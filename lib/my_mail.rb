@@ -1,5 +1,4 @@
 # Transform stuff from Mikel's Mail class into my PostgreSQL-ready clean data
-#require_relative 'peeps.rb'
 require 'mail'
 require 'date'
 require 'net/smtp'
@@ -8,7 +7,7 @@ module MyMail
 	class << self
 
 		# email = hash with id, profile, their_email, subject, body, message_id, referencing
-		# ms = PROFILES[profile][:smtp] from b50d-config.rb
+		# ms = PROFILES[profile][:smtp] from peeps-config.rb
 		def send(email, ms)
 			msg =  "From: %s\n" % ms[:from]
 			msg << "To: %s\n" % email[:their_email]

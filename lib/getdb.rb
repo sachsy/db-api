@@ -1,5 +1,5 @@
 # USAGE
-# require 'b50d/getdb'
+# require 'getdb'
 # db = getdb('peeps')
 # ok, res = db.call('get_stats', 'programmer', 'elm')
 # ok, res = db.call('update_person', 1, {email: 'boo'}.to_json)

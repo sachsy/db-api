@@ -5,7 +5,7 @@ require 'json'
 require 'erb'
 require 'date'
 require 'mandrill'
-require 'b50d-config.rb'
+require 'peeps-config.rb'
 
 mandrill = Mandrill::API.new(MANDRILL)
 
