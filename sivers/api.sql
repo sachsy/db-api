@@ -180,6 +180,7 @@ DECLARE
 	new_msg text;
 	new_ref bigint;
 	r record;
+m4_ERRVARS
 BEGIN
 	new_id := ($1->>'id')::bigint;
 	new_ca := $1->>'created_at';
@@ -195,7 +196,9 @@ BEGIN
 	INSERT INTO sivers.tweets
 		(entire, id, created_at, handle, person_id, message, reference_id)
 		VALUES ($1, new_id, new_ca, new_handle, new_pid, new_msg, new_ref);
-	SELECT x.status, x.js INTO status, js FROM sivers.get_tweet(new_id) x;
+	status := 200;
+	js := json_build_object('id', new_id);
+m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
 

@@ -317,6 +317,12 @@ DECLARE
 	new_msg text;
 	new_ref bigint;
 	r record;
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
 BEGIN
 	new_id := ($1->>'id')::bigint;
 	new_ca := $1->>'created_at';
@@ -332,7 +338,21 @@ BEGIN
 	INSERT INTO sivers.tweets
 		(entire, id, created_at, handle, person_id, message, reference_id)
 		VALUES ($1, new_id, new_ca, new_handle, new_pid, new_msg, new_ref);
-	SELECT x.status, x.js INTO status, js FROM sivers.get_tweet(new_id) x;
+	status := 200;
+	js := json_build_object('id', new_id);
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	status := 500;
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
 END;
 $$ LANGUAGE plpgsql;
 
