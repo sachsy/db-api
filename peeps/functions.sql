@@ -467,7 +467,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- PARAMS: twitter handle like '@whatEver'
+-- PARAMS: twitter handle like '@whatEver' (with or without @)
 CREATE OR REPLACE FUNCTION peeps.pid_for_twitter_handle(text, OUT pid integer) AS $$
 BEGIN
 	SELECT person_id INTO pid FROM peeps.urls

@@ -161,7 +161,8 @@ CREATE OR REPLACE FUNCTION sivers.get_tweet(bigint,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
 	status := 200;
-	js := row_to_json(r.*) FROM sivers.tweets r WHERE id = $1;
+	js := row_to_json(r) FROM (SELECT id, created_at, person_id, handle,
+		message, reference_id, seen FROM sivers.tweets WHERE id = $1) r;
 	IF js IS NULL THEN m4_NOTFOUND END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -181,8 +182,6 @@ DECLARE
 	r record;
 BEGIN
 	new_id := ($1->>'id')::bigint;
-	-- TODO: this gets timezone wrong, because it ignores it:
-	-- new_ca := to_timestamp($1->>'created_at', 'dy Mon DD HH24:MI:SS +0000 YYYY');
 	new_ca := $1->>'created_at';
 	new_handle := $1->'user'->>'screen_name';
 	new_pid := peeps.pid_for_twitter_handle(new_handle);
