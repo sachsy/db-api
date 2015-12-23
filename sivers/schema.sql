@@ -325,6 +325,12 @@ DECLARE
 
 BEGIN
 	new_id := ($1->>'id')::bigint;
+	status := 200;
+	js := json_build_object('id', new_id);
+	PERFORM 1 FROM sivers.tweets WHERE id = new_id;
+	IF FOUND THEN
+		RETURN;
+	END IF;
 	new_ca := $1->>'created_at';
 	new_handle := $1->'user'->>'screen_name';
 	new_pid := peeps.pid_for_twitter_handle(new_handle);
@@ -338,8 +344,6 @@ BEGIN
 	INSERT INTO sivers.tweets
 		(entire, id, created_at, handle, person_id, message, reference_id)
 		VALUES ($1, new_id, new_ca, new_handle, new_pid, new_msg, new_ref);
-	status := 200;
-	js := json_build_object('id', new_id);
 
 EXCEPTION
 	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
