@@ -33,7 +33,8 @@ For some explanation, see <http://sivers.org/pg>
 
 ## What's this other stuff?
 
-* **b50d** Ruby gem with shared scripts, libraries, and configs
+* **script/** directory of scripts. set shell $PATH to add this
+* **lib/** directory of require includes. symlink into $: Ruby path.
 * **defs.m4** m4 macros used by schema.m4 in each schema directory
 * **test_tools.rb** testing tools used by each schema directory
 

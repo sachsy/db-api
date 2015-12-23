@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 require 'pg'
-require 'b50d-config.rb'
+require 'peeps-config.rb'
 require 'gengo'
 DB = PG::Connection.new(dbname: 'd50b', user: 'd50b')
 

@@ -1,4 +1,3 @@
-# copy to /usr/lib/ruby/site_ruby/b50d-config.rb
 API_KEY = ''
 API_PASS = ''
 HONEYPOT = ''

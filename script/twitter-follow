@@ -2,7 +2,7 @@
 exit unless 'sivers.org' == %x{hostname}.strip
 require 'pg'
 require 'json'
-require 'b50d-config.rb'
+require 'peeps-config.rb'
 require 'twitter'
 
 db = PG::Connection.new(dbname: 'd50b', user: 'd50b')
