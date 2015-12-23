@@ -441,5 +441,14 @@ class TestPeeps < Minitest::Test
 		assert_equal nil, res[0]['subject']
 	end
 
+	def test_pid_for_twitter_handle
+		res = DB.exec("SELECT pid FROM peeps.pid_for_twitter_handle('@siVers')")
+		assert_equal '1', res[0]['pid']
+		res = DB.exec("SELECT pid FROM peeps.pid_for_twitter_handle('WONKa')")
+		assert_equal '2', res[0]['pid']
+		res = DB.exec("SELECT pid FROM peeps.pid_for_twitter_handle('notFound')")
+		assert_equal nil, res[0]['pid']
+	end
+
 end
 
