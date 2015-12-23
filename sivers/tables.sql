@@ -17,5 +17,19 @@ CREATE TABLE sivers.comments (
 CREATE INDEX comuri ON sivers.comments(uri);
 CREATE INDEX compers ON sivers.comments(person_id);
 
+CREATE TABLE sivers.tweets (
+	id bigint primary key,
+	entire jsonb,
+	created_at timestamp(0),
+	person_id integer REFERENCES peeps.people(id) ON DELETE CASCADE,
+	handle varchar(15),
+	message text,
+	reference_id bigint,
+	seen boolean
+);
+CREATE INDEX stpi ON sivers.tweets(person_id);
+CREATE INDEX sthandle ON sivers.tweets(handle);
+CREATE INDEX stseen ON sivers.tweets(seen);
+
 COMMIT;
 
