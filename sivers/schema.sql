@@ -63,12 +63,10 @@ BEGIN
 		(SELECT *, (SELECT row_to_json(p) AS person FROM
 			(SELECT * FROM peeps.person_view WHERE id=sivers.comments.person_id) p)
 		FROM sivers.comments WHERE id=$1) r;
-	IF js IS NULL THEN
-
+	IF js IS NULL THEN 
 	status := 404;
 	js := '{}';
-
-	END IF;
+ END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -136,12 +134,10 @@ BEGIN
 		core.cols2update('sivers', 'comments', ARRAY['id','created_at']));
 	status := 200;
 	js := row_to_json(r.*) FROM sivers.comments r WHERE id = $1;
-	IF js IS NULL THEN
-
+	IF js IS NULL THEN 
 	status := 404;
 	js := '{}';
-
-	END IF;
+ END IF;
 
 EXCEPTION
 	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
@@ -170,12 +166,10 @@ BEGIN
 		' -- Derek</span>') WHERE id = $1;
 	status := 200;
 	js := row_to_json(r.*) FROM sivers.comments r WHERE id = $1;
-	IF js IS NULL THEN
-
+	IF js IS NULL THEN 
 	status := 404;
 	js := '{}';
-
-	END IF;
+ END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -194,12 +188,10 @@ DECLARE
 BEGIN
 	status := 200;
 	js := row_to_json(r.*) FROM sivers.comments r WHERE id = $1;
-	IF js IS NULL THEN
-
+	IF js IS NULL THEN 
 	status := 404;
 	js := '{}';
-
-	END IF;
+ END IF;
 	DELETE FROM sivers.comments WHERE id = $1;
 
 EXCEPTION
@@ -234,12 +226,10 @@ BEGIN
 	SELECT person_id INTO pid FROM sivers.comments WHERE id = $1;
 	status := 200;
 	js := row_to_json(r.*) FROM sivers.comments r WHERE id = $1;
-	IF js IS NULL THEN
-
+	IF js IS NULL THEN 
 	status := 404;
 	js := '{}';
-
-	END IF;
+ END IF;
 	DELETE FROM sivers.comments WHERE person_id = pid;
 	DELETE FROM peeps.people WHERE id = pid;
 
@@ -282,6 +272,68 @@ BEGIN
 	IF js IS NULL THEN
 		js := '[]';
 	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: person_id
+CREATE OR REPLACE FUNCTION sivers.tweets_by_person(integer,
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := json_agg(r) FROM (SELECT id, created_at, message, reference_id
+		FROM sivers.tweets WHERE person_id=$1 ORDER BY id DESC) r;
+	IF js IS NULL THEN
+		js := '[]';
+	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: tweets.id
+CREATE OR REPLACE FUNCTION sivers.get_tweet(bigint,
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := row_to_json(r.*) FROM sivers.tweets r WHERE id = $1;
+	IF js IS NULL THEN 
+	status := 404;
+	js := '{}';
+ END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: json from Twitter API as seen here:
+-- https://dev.twitter.com/rest/reference/get/statuses/mentions_timeline
+CREATE OR REPLACE FUNCTION sivers.add_tweet(jsonb,
+	OUT status smallint, OUT js jsonb) AS $$
+DECLARE
+	new_id bigint;
+	new_ca timestamp(0) with time zone;
+	new_handle varchar(15);
+	new_pid integer;
+	new_msg text;
+	new_ref bigint;
+	r record;
+BEGIN
+	new_id := ($1->>'id')::bigint;
+	-- TODO: this gets timezone wrong, because it ignores it:
+	-- new_ca := to_timestamp($1->>'created_at', 'dy Mon DD HH24:MI:SS +0000 YYYY');
+	new_ca := $1->>'created_at';
+	new_handle := $1->'user'->>'screen_name';
+	new_pid := peeps.pid_for_twitter_handle(new_handle);
+	new_msg := replace($1->>'text', E'\n', ' ');
+	FOR r IN SELECT * FROM jsonb_array_elements($1->'entities'->'urls') LOOP
+		new_msg := replace(new_msg, r.value->>'url', r.value->>'expanded_url');
+	END LOOP;
+	IF LENGTH($1->>'in_reply_to_status_id') > 0 THEN
+		new_ref := ($1->>'in_reply_to_status_id')::bigint;
+	END IF;
+	INSERT INTO sivers.tweets
+		(entire, id, created_at, handle, person_id, message, reference_id)
+		VALUES ($1, new_id, new_ca, new_handle, new_pid, new_msg, new_ref);
+	SELECT x.status, x.js INTO status, js FROM sivers.get_tweet(new_id) x;
 END;
 $$ LANGUAGE plpgsql;
 
