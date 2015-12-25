@@ -54,19 +54,13 @@ def calldb_noschema(pg, fullfunc, params)
 		[fullfunc, paramstring(params)], params)
 end
 
-# PG Pool of connections. Simple as can be. Bypassed if test database.
+# was a pool, but getting "too many connection" errors, so now just use one:
 class PGPool
-	@@pool = []
-	@@counter = 0
 	class << self
 		def get(live_or_test='live')
-			if 'test' == live_or_test
-				return PG::Connection.new(dbname: 'd50b_test', user: 'd50b')
-			end
-			my_id = @@counter
-			@@counter += 1
-			@@counter = 0 if 3 == @@counter
-			@@pool[my_id] ||= PG::Connection.new(dbname: 'd50b', user: 'd50b')
+			dbname = ('test' == live_or_test) ? 'd50b_test' : 'd50b'
+			@@conn ||= PG::Connection.new(dbname: dbname, user: 'd50b')
+			@@conn
 		end
 	end
 end
