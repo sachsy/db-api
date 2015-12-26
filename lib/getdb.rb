@@ -11,11 +11,15 @@
 require 'pg'
 require 'json'
 
+def getcon(server)
+
+end
+
 # ONLY USE THIS: Curry calldb with a DB connection & schema
 def getdb(schema, server='live')
 	dbname = ('test' == live_or_test) ? 'd50b_test' : 'd50b'
 	unless Object.const_defined?(:DB)
-		DB = PG::Connection.new(dbname: dbname, user: 'd50b')
+		Object.const_set(:DB, PG::Connection.new(dbname: dbname, user: 'd50b'))
 	end
 	Proc.new do |func, *params|
 		okres(calldb(DB, schema, func, params))
@@ -26,7 +30,7 @@ end
 def getdb_noschema(server='live')
 	dbname = ('test' == live_or_test) ? 'd50b_test' : 'd50b'
 	unless Object.const_defined?(:DB)
-		DB = PG::Connection.new(dbname: dbname, user: 'd50b')
+		Object.const_set(:DB, PG::Connection.new(dbname: dbname, user: 'd50b'))
 	end
 	Proc.new do |fullfunc, *params|
 		okres(calldb_noschema(DB, fullfunc, params))
