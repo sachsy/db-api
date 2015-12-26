@@ -17,7 +17,7 @@ end
 
 # ONLY USE THIS: Curry calldb with a DB connection & schema
 def getdb(schema, server='live')
-	dbname = ('test' == live_or_test) ? 'd50b_test' : 'd50b'
+	dbname = ('test' == server) ? 'd50b_test' : 'd50b'
 	unless Object.const_defined?(:DB)
 		Object.const_set(:DB, PG::Connection.new(dbname: dbname, user: 'd50b'))
 	end
@@ -28,7 +28,7 @@ end
 
 # ALTERNATE: when I don't want to auto-prefix a schema
 def getdb_noschema(server='live')
-	dbname = ('test' == live_or_test) ? 'd50b_test' : 'd50b'
+	dbname = ('test' == server) ? 'd50b_test' : 'd50b'
 	unless Object.const_defined?(:DB)
 		Object.const_set(:DB, PG::Connection.new(dbname: dbname, user: 'd50b'))
 	end
