@@ -13,15 +13,19 @@ require 'json'
 
 # ONLY USE THIS: Curry calldb with a DB connection & schema
 def getdb(schema, server='live')
+	dbname = ('test' == live_or_test) ? 'd50b_test' : 'd50b'
+	DB ||= PG::Connection.new(dbname: dbname, user: 'd50b')
 	Proc.new do |func, *params|
-		okres(calldb(PGPool.get(server), schema, func, params))
+		okres(calldb(DB, schema, func, params))
 	end
 end
 
 # ALTERNATE: when I don't want to auto-prefix a schema
 def getdb_noschema(server='live')
+	dbname = ('test' == live_or_test) ? 'd50b_test' : 'd50b'
+	DB ||= PG::Connection.new(dbname: dbname, user: 'd50b')
 	Proc.new do |fullfunc, *params|
-		okres(calldb_noschema(PGPool.get(server), fullfunc, params))
+		okres(calldb_noschema(DB, fullfunc, params))
 	end
 end
 
@@ -52,16 +56,5 @@ end
 def calldb_noschema(pg, fullfunc, params)
 	pg.exec_params('SELECT status, js FROM %s%s' %
 		[fullfunc, paramstring(params)], params)
-end
-
-# was a pool, but getting "too many connection" errors, so now just use one:
-class PGPool
-	class << self
-		def get(live_or_test='live')
-			dbname = ('test' == live_or_test) ? 'd50b_test' : 'd50b'
-			@@conn ||= PG::Connection.new(dbname: dbname, user: 'd50b')
-			@@conn
-		end
-	end
 end
 
