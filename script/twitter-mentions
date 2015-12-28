@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+require 'pg'
+require 'json'
+require 'peeps-config.rb'
+require 'twitter'
+
+db = PG::Connection.new(dbname: 'd50b', user: 'd50b')
+
+client = Twitter::REST::Client.new do |config|
+	config.consumer_key = TWITTER_CONSUMER_KEY
+	config.consumer_secret = TWITTER_CONSUMER_SECRET
+	config.access_token = TWITTER_ACCESS_TOKEN
+	config.access_token_secret = TWITTER_ACCESS_SECRET
+end
+
+client.mentions_timeline(count: 5000).each do |t|
+	res = db.exec_params('SELECT js FROM sivers.add_tweet($1)', [t.to_hash.to_json.gsub("\n", ' ')])
+	#puts res[0]['js']
+end

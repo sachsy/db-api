@@ -18,7 +18,7 @@ client = Twitter::REST::Client.new do |config|
 	config.access_token_secret = TWITTER_ACCESS_SECRET
 end
 
-twits.each do |t|
+twits[0,6].each do |t|
 	print t
 	begin
 		u = client.follow(t[:twitter])
@@ -26,7 +26,7 @@ twits.each do |t|
 			res = db.exec_params('SELECT * FROM peeps.add_stat($1, $2, $3)',
 				[t[:person_id], 'twitter', '%d = %s' % [u[0].id, t[:twitter]]])
 			if res[0]['status'] == '200'
-				puts " DONE"
+				#puts " DONE"
 			else
 				puts " STAT TROUBLE"
 			end
