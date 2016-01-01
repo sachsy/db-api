@@ -27,7 +27,6 @@ CREATE TABLE peeps.people (
 	company varchar(127),
 	city varchar(32),
 	state varchar(16),
-	postalcode varchar(12),
 	country char(2) REFERENCES peeps.countries(code),
 	phone varchar(18),
 	notes text,
