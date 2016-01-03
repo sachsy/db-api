@@ -93,8 +93,7 @@ DECLARE
 	pid integer;
 m4_ERRVARS
 BEGIN
-	SELECT id INTO pid FROM peeps.create_person($1, $2);
-	PERFORM peeps.set_password(pid, $3);
+	SELECT id INTO pid FROM peeps.person_create_pass($1, $2, $3);
 	INSERT INTO peeps.stats(person_id, statkey, statvalue)
 		VALUES (pid, 'proof-we14asia', $4);
 	status := 200;
