@@ -27,14 +27,14 @@ CREATE TABLE peeps.people (
 	company varchar(127),
 	city varchar(32),
 	state varchar(16),
-	postalcode varchar(12),
 	country char(2) REFERENCES peeps.countries(code),
 	phone varchar(18),
 	notes text,
 	email_count integer not null default 0,
 	listype varchar(4),
 	categorize_as varchar(16), -- if not null, incoming emails.category set to this
-	created_at date not null default CURRENT_DATE
+	created_at date not null default CURRENT_DATE,
+	confirmed boolean default false
 );
 CREATE INDEX person_name ON peeps.people(name);
 CREATE INDEX person_pid ON peeps.people(public_id);

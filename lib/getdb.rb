@@ -11,17 +11,29 @@
 require 'pg'
 require 'json'
 
+def getcon(server)
+
+end
+
 # ONLY USE THIS: Curry calldb with a DB connection & schema
 def getdb(schema, server='live')
+	dbname = ('test' == server) ? 'd50b_test' : 'd50b'
+	unless Object.const_defined?(:DB)
+		Object.const_set(:DB, PG::Connection.new(dbname: dbname, user: 'd50b'))
+	end
 	Proc.new do |func, *params|
-		okres(calldb(PGPool.get(server), schema, func, params))
+		okres(calldb(DB, schema, func, params))
 	end
 end
 
 # ALTERNATE: when I don't want to auto-prefix a schema
 def getdb_noschema(server='live')
+	dbname = ('test' == server) ? 'd50b_test' : 'd50b'
+	unless Object.const_defined?(:DB)
+		Object.const_set(:DB, PG::Connection.new(dbname: dbname, user: 'd50b'))
+	end
 	Proc.new do |fullfunc, *params|
-		okres(calldb_noschema(PGPool.get(server), fullfunc, params))
+		okres(calldb_noschema(DB, fullfunc, params))
 	end
 end
 
@@ -52,22 +64,5 @@ end
 def calldb_noschema(pg, fullfunc, params)
 	pg.exec_params('SELECT status, js FROM %s%s' %
 		[fullfunc, paramstring(params)], params)
-end
-
-# PG Pool of connections. Simple as can be. Bypassed if test database.
-class PGPool
-	@@pool = []
-	@@counter = 0
-	class << self
-		def get(live_or_test='live')
-			if 'test' == live_or_test
-				return PG::Connection.new(dbname: 'd50b_test', user: 'd50b')
-			end
-			my_id = @@counter
-			@@counter += 1
-			@@counter = 0 if 3 == @@counter
-			@@pool[my_id] ||= PG::Connection.new(dbname: 'd50b', user: 'd50b')
-		end
-	end
 end
 

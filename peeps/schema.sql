@@ -27,14 +27,14 @@ CREATE TABLE peeps.people (
 	company varchar(127),
 	city varchar(32),
 	state varchar(16),
-	postalcode varchar(12),
 	country char(2) REFERENCES peeps.countries(code),
 	phone varchar(18),
 	notes text,
 	email_count integer not null default 0,
 	listype varchar(4),
 	categorize_as varchar(16), -- if not null, incoming emails.category set to this
-	created_at date not null default CURRENT_DATE
+	created_at date not null default CURRENT_DATE,
+	confirmed boolean default false
 );
 CREATE INDEX person_name ON peeps.people(name);
 CREATE INDEX person_pid ON peeps.people(public_id);
@@ -341,7 +341,7 @@ BEGIN
 		RAISE 'both_have_public_id';
 	END IF;
 	-- copy better(longer) data from old to new
-	-- public_id, company, city, state, postalcode, country, phone, categorize_as
+	-- public_id, company, city, state, country, phone, categorize_as
 	IF COALESCE(LENGTH(old_p.public_id), 0) > COALESCE(LENGTH(new_p.public_id), 0) THEN
 		move_public_id := old_p.public_id; -- because must be unique:
 		UPDATE peeps.people SET public_id = NULL WHERE id = old_id;
@@ -355,9 +355,6 @@ BEGIN
 	END IF;
 	IF COALESCE(LENGTH(old_p.state), 0) > COALESCE(LENGTH(new_p.state), 0) THEN
 		UPDATE peeps.people SET state = old_p.state WHERE id = new_id;
-	END IF;
-	IF COALESCE(LENGTH(old_p.postalcode), 0) > COALESCE(LENGTH(new_p.postalcode), 0) THEN
-		UPDATE peeps.people SET postalcode = old_p.postalcode WHERE id = new_id;
 	END IF;
 	IF COALESCE(LENGTH(old_p.country), 0) > COALESCE(LENGTH(new_p.country), 0) THEN
 		UPDATE peeps.people SET country = old_p.country WHERE id = new_id;
@@ -688,7 +685,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- PARAMS: twitter handle like '@whatEver'
+-- PARAMS: twitter handle like '@whatEver' (with or without @)
 CREATE OR REPLACE FUNCTION peeps.pid_for_twitter_handle(text, OUT pid integer) AS $$
 BEGIN
 	SELECT person_id INTO pid FROM peeps.urls
