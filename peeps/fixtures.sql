@@ -498,7 +498,7 @@ ALTER TABLE inkeys DISABLE TRIGGER ALL;
 
 INSERT INTO inkeys (inkey, description) VALUES ('mandarin', 'speaks/writes Mandarin Chinese');
 INSERT INTO inkeys (inkey, description) VALUES ('translation', 'does translation from English to another language');
-INSERT INTO inkeys (inkey, description) VALUES ('question', 'use for testing email body parsing');
+INSERT INTO inkeys (inkey, description) VALUES ('lanterns', 'use for testing email body parsing email 2 person 7');
 INSERT INTO inkeys (inkey, description) VALUES ('chocolate', 'some make it. many eat it.');
 
 

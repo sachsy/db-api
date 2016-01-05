@@ -925,13 +925,13 @@ class TestPeepsAPI < Minitest::Test
 		qry("add_interest_key($1)", ['chocolate'])
 		assert @j[:title].include? 'constraint'
 		qry("add_interest_key($1)", ['javascript'])
-		assert_equal(%w(chocolate javascript mandarin question translation), @j.map {|x| x[:inkey]})
+		assert_equal(%w(chocolate javascript lanterns mandarin translation), @j.map {|x| x[:inkey]})
 	end
 
 	def test_delete_interest_key
-		qry("delete_interest_key($1)", ['question'])
+		qry("delete_interest_key($1)", ['lanterns'])
 		assert_equal(%w(chocolate mandarin translation), @j.map {|x| x[:inkey]})
-		qry("delete_interest_key($1)", ['question'])
+		qry("delete_interest_key($1)", ['lanterns'])
 		assert_equal(%w(chocolate mandarin translation), @j.map {|x| x[:inkey]})
 		qry("delete_interest_key($1)", ['chocolate'])
 		assert @j[:title].include? 'constraint'
