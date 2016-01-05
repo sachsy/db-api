@@ -271,14 +271,14 @@ ALTER TABLE countries ENABLE TRIGGER ALL;
 
 ALTER TABLE people DISABLE TRIGGER ALL;
 
-INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (6, 'augustus@gloop.de', 'Augustus Gloop', 'Master Gloop', NULL, '$2a$08$JmphXF9YeW7Fi2IQVUnZtenBU2Ftacz454V1B1Ort4/VZhFgpMzWO', 'AKyv', NULL, NULL, 'Munich', NULL, 'DE', NULL, NULL, 0, 'some', NULL, '2010-11-01');
-INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (7, 'gong@li.cn', '巩俐', '巩俐', NULL, '$2a$08$x/C0JU7r7Obp2Ar/1G0kz.t.mrW/r0Nan0sDggw3wjjBdr6jvcpge', 'FBvY', NULL, 'Gong Li', 'Shanghai', NULL, 'CN', NULL, NULL, 2, NULL, 'translator', '2010-12-12');
-INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (8, 'yoko@ono.com', 'Yoko Ono', 'Ono-San', NULL, '$2a$08$3yMZNGqUsUH3bQaCE7Rmbeay6FHW/Us2axycwUMDsvGKSDGlVfZPS', 'uUyS', NULL, 'yoko@lennon.com', 'Tokyo', NULL, 'JP', NULL, NULL, 0, NULL, 'translator', '2010-12-12');
-INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (1, 'derek@sivers.org', 'Derek Sivers', 'Derek', 'abcd', '$2a$08$0yI7Vpn3UNEf5q.muDgLL.y5GJRM5ak2awUOnd9z9ZCBFoCz0/Rfy', 'yTAy', NULL, '50POP LLC', 'Singapore', NULL, 'SG', '+65 9763 3568', 'This is me.', 0, 'all', 'derek', '1994-11-01');
-INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (2, 'willy@wonka.com', 'Willy Wonka', 'Mr. Wonka', 'efgh', '$2a$08$3UjNlK6PbXMXC7Rh.EVIFeRcvmij/b8bSfNZ.MwwmD8QtQ0sy2zje', 'R5Gf', NULL, 'Wonka Chocolate Inc', 'Hershey', 'PA', 'US', '+1 215 555 1034', NULL, 2, 'some', NULL, '2000-01-01');
-INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (3, 'veruca@salt.com', 'Veruca Salt', 'Veruca', 'ijkl', '$2a$08$GcHJDheKQR7zu8qTr1anz.WpLoVPbZG6dA/9zaUkowcypCczUYozy', '8gcr', NULL, 'Daddy Empires Ltd', 'London', 'England', 'GB', '+44 9273 7231', NULL, 4, NULL, NULL, '2010-01-01');
-INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (4, 'charlie@bucket.org', 'Charlie Buckets', 'Charlie', 'mnop', '$2a$08$Nf7VymjLuGGUhMl9lGTPAO0GrNq0bE5yTVMyimlFR2f7SmTMNxN46', 'AgA2', NULL, NULL, 'Hershey', 'PA', 'US', NULL, NULL, 0, 'all', NULL, '2010-09-01');
-INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at) VALUES (5, 'oompa@loompa.mm', 'Oompa Loompa', 'Oompa Loompa', 'qrst', '$2a$08$vr40BeQAbNFkKaes4WPPw.lCQKPsyzAsNPRVQ2bPgVVatyvtwSKSO', 'LYtp', NULL, NULL, 'Hershey', 'PA', 'US', NULL, NULL, 0, NULL, NULL, '2010-10-01');
+INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at, confirmed) VALUES (6, 'augustus@gloop.de', 'Augustus Gloop', 'Master Gloop', NULL, '$2a$08$JmphXF9YeW7Fi2IQVUnZtenBU2Ftacz454V1B1Ort4/VZhFgpMzWO', 'AKyv', NULL, NULL, 'Munich', NULL, 'DE', NULL, NULL, 0, 'some', NULL, '2010-11-01', false);
+INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at, confirmed) VALUES (7, 'gong@li.cn', '巩俐', '巩俐', NULL, '$2a$08$x/C0JU7r7Obp2Ar/1G0kz.t.mrW/r0Nan0sDggw3wjjBdr6jvcpge', 'FBvY', NULL, 'Gong Li', 'Shanghai', NULL, 'CN', NULL, NULL, 2, NULL, 'translator', '2010-12-12', false);
+INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at, confirmed) VALUES (8, 'yoko@ono.com', 'Yoko Ono', 'Ono-San', NULL, '$2a$08$3yMZNGqUsUH3bQaCE7Rmbeay6FHW/Us2axycwUMDsvGKSDGlVfZPS', 'uUyS', NULL, 'yoko@lennon.com', 'Tokyo', NULL, 'JP', NULL, NULL, 0, NULL, 'translator', '2010-12-12', false);
+INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at, confirmed) VALUES (1, 'derek@sivers.org', 'Derek Sivers', 'Derek', 'abcd', '$2a$08$0yI7Vpn3UNEf5q.muDgLL.y5GJRM5ak2awUOnd9z9ZCBFoCz0/Rfy', 'yTAy', NULL, '50POP LLC', 'Singapore', NULL, 'SG', '+65 9763 3568', 'This is me.', 0, 'all', 'derek', '1994-11-01', false);
+INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at, confirmed) VALUES (2, 'willy@wonka.com', 'Willy Wonka', 'Mr. Wonka', 'efgh', '$2a$08$3UjNlK6PbXMXC7Rh.EVIFeRcvmij/b8bSfNZ.MwwmD8QtQ0sy2zje', 'R5Gf', NULL, 'Wonka Chocolate Inc', 'Hershey', 'PA', 'US', '+1 215 555 1034', NULL, 2, 'some', NULL, '2000-01-01', false);
+INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at, confirmed) VALUES (3, 'veruca@salt.com', 'Veruca Salt', 'Veruca', 'ijkl', '$2a$08$GcHJDheKQR7zu8qTr1anz.WpLoVPbZG6dA/9zaUkowcypCczUYozy', '8gcr', NULL, 'Daddy Empires Ltd', 'London', 'England', 'GB', '+44 9273 7231', NULL, 4, NULL, NULL, '2010-01-01', false);
+INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at, confirmed) VALUES (4, 'charlie@bucket.org', 'Charlie Buckets', 'Charlie', 'mnop', '$2a$08$Nf7VymjLuGGUhMl9lGTPAO0GrNq0bE5yTVMyimlFR2f7SmTMNxN46', 'AgA2', NULL, NULL, 'Hershey', 'PA', 'US', NULL, NULL, 0, 'all', NULL, '2010-09-01', false);
+INSERT INTO people (id, email, name, address, public_id, hashpass, lopass, newpass, company, city, state, country, phone, notes, email_count, listype, categorize_as, created_at, confirmed) VALUES (5, 'oompa@loompa.mm', 'Oompa Loompa', 'Oompa Loompa', 'qrst', '$2a$08$vr40BeQAbNFkKaes4WPPw.lCQKPsyzAsNPRVQ2bPgVVatyvtwSKSO', 'LYtp', NULL, NULL, 'Hershey', 'PA', 'US', NULL, NULL, 0, NULL, NULL, '2010-10-01', false);
 
 
 ALTER TABLE people ENABLE TRIGGER ALL;
@@ -299,6 +299,34 @@ INSERT INTO api_keys (person_id, akey, apass, apis) VALUES (7, 'mmmmmmmm', 'nnnn
 
 
 ALTER TABLE api_keys ENABLE TRIGGER ALL;
+
+--
+-- Data for Name: atkeys; Type: TABLE DATA; Schema: peeps; Owner: d50b
+--
+
+ALTER TABLE atkeys DISABLE TRIGGER ALL;
+
+INSERT INTO atkeys (atkey, description) VALUES ('patient', 'does not need it now');
+INSERT INTO atkeys (atkey, description) VALUES ('verbose', 'uses lots of words to communicate');
+INSERT INTO atkeys (atkey, description) VALUES ('available', 'free to work or do new things');
+
+
+ALTER TABLE atkeys ENABLE TRIGGER ALL;
+
+--
+-- Data for Name: attributes; Type: TABLE DATA; Schema: peeps; Owner: d50b
+--
+
+ALTER TABLE attributes DISABLE TRIGGER ALL;
+
+INSERT INTO attributes (person_id, attribute, plusminus) VALUES (3, 'patient', false);
+INSERT INTO attributes (person_id, attribute, plusminus) VALUES (3, 'verbose', false);
+INSERT INTO attributes (person_id, attribute, plusminus) VALUES (4, 'patient', true);
+INSERT INTO attributes (person_id, attribute, plusminus) VALUES (6, 'available', true);
+INSERT INTO attributes (person_id, attribute, plusminus) VALUES (6, 'verbose', false);
+
+
+ALTER TABLE attributes ENABLE TRIGGER ALL;
 
 --
 -- Data for Name: emailers; Type: TABLE DATA; Schema: peeps; Owner: d50b
@@ -461,6 +489,38 @@ ALTER TABLE formletters ENABLE TRIGGER ALL;
 
 SELECT pg_catalog.setval('formletters_id_seq', 6, true);
 
+
+--
+-- Data for Name: inkeys; Type: TABLE DATA; Schema: peeps; Owner: d50b
+--
+
+ALTER TABLE inkeys DISABLE TRIGGER ALL;
+
+INSERT INTO inkeys (inkey, description) VALUES ('mandarin', 'speaks/writes Mandarin Chinese');
+INSERT INTO inkeys (inkey, description) VALUES ('translation', 'does translation from English to another language');
+INSERT INTO inkeys (inkey, description) VALUES ('question', 'use for testing email body parsing');
+INSERT INTO inkeys (inkey, description) VALUES ('chocolate', 'some make it. many eat it.');
+
+
+ALTER TABLE inkeys ENABLE TRIGGER ALL;
+
+--
+-- Data for Name: interests; Type: TABLE DATA; Schema: peeps; Owner: d50b
+--
+
+ALTER TABLE interests DISABLE TRIGGER ALL;
+
+INSERT INTO interests (person_id, interest, expert) VALUES (2, 'chocolate', true);
+INSERT INTO interests (person_id, interest, expert) VALUES (1, 'mandarin', false);
+INSERT INTO interests (person_id, interest, expert) VALUES (1, 'translation', false);
+INSERT INTO interests (person_id, interest, expert) VALUES (5, 'chocolate', true);
+INSERT INTO interests (person_id, interest, expert) VALUES (6, 'chocolate', false);
+INSERT INTO interests (person_id, interest, expert) VALUES (3, 'chocolate', false);
+INSERT INTO interests (person_id, interest, expert) VALUES (7, 'mandarin', true);
+INSERT INTO interests (person_id, interest, expert) VALUES (7, 'translation', true);
+
+
+ALTER TABLE interests ENABLE TRIGGER ALL;
 
 --
 -- Data for Name: logins; Type: TABLE DATA; Schema: peeps; Owner: d50b

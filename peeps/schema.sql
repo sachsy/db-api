@@ -140,9 +140,37 @@ CREATE TABLE peeps.api_keys (
 	PRIMARY KEY (akey, apass)
 );
 
+-- exists only for validiation of peeps.attributes.attribute
+CREATE TABLE peeps.atkeys (
+	atkey varchar(16) primary key CHECK (atkey ~ '\A[a-z-]+\Z'),
+	description text
+);
+
+-- attributes like enthusiastic, connected, available
+CREATE TABLE peeps.attributes (
+	person_id integer NOT NULL REFERENCES peeps.people(id) ON DELETE CASCADE,
+	attribute varchar(16) NOT NULL REFERENCES peeps.atkeys(atkey),
+	plusminus boolean NOT NULL,  -- true if yes, false if no
+	PRIMARY KEY (person_id, attribute)
+);
+CREATE INDEX peepsatts ON peeps.attributes(person_id);
+
+-- exists only for validiation of peeps.interests.interest
+CREATE TABLE peeps.inkeys (
+	inkey varchar(32) primary key CHECK (inkey ~ '\A[a-z]+\Z'),
+	description text
+);
+
+-- interests like ruby, spanish, china, marketing
+CREATE TABLE peeps.interests (
+	person_id integer NOT NULL REFERENCES peeps.people(id) ON DELETE CASCADE,
+	interest varchar(32) NOT NULL REFERENCES peeps.inkeys(inkey),
+	expert boolean DEFAULT NULL, -- true if expert, false if searching-for
+	PRIMARY KEY (person_id, interest)
+);
+CREATE INDEX peepsints ON peeps.interests(person_id);
+
 COMMIT;
-
-
 ----------------------------------------
 --------------- VIEWS FOR JSON RESPONSES:
 ----------------------------------------
