@@ -363,7 +363,7 @@ Message-ID: <CABk7SeW6+FaqxOUwHNdiaR2AdxQBTY1275uC0hdkA0kLPpKPVg@mail.li.cn>
 Subject: translations almost done
 Date: Thu, 18 Jul 2013 10:42:59 -0400', 'Hello Mr. Sivers -
 
-Busy raising these red lanterns, but I''m almost done with the translations.
+Busy raising these red lanterns, but I''m almost done with the translation.
 
 巩俐', 'CABk7SeW6+FaqxOUwHNdiaR2AdxQBTY1275uC0hdkA0kLPpKPVg@mail.li.cn', false, NULL);
 INSERT INTO emails (id, person_id, profile, category, created_at, created_by, opened_at, opened_by, closed_at, closed_by, reference_id, answer_id, their_email, their_name, subject, headers, body, message_id, outgoing, flag) VALUES (3, 2, 'derek@sivers', 'derek@sivers', '2013-07-20 03:47:01', 1, '2013-07-20 03:47:01', 1, '2013-07-20 03:47:01', 1, 1, NULL, 'willy@wonka.com', 'Will Wonka', 're: you coming by?', 'References: <8w2mb4flbgdd0d95x35tk4ln.1374118952478@email.android.com>
@@ -386,7 +386,7 @@ Thank you for the update.
 Derek Sivers  derek@sivers.org  http://sivers.org/
 
 > Hello Mr. Sivers -
-> Busy raising these red lanterns, but I''m almost done with the translations.
+> Busy raising these red lanterns, but I''m almost done with the translation.
 > 巩俐', '20130719235701.7@sivers.org', NULL, NULL);
 INSERT INTO emails (id, person_id, profile, category, created_at, created_by, opened_at, opened_by, closed_at, closed_by, reference_id, answer_id, their_email, their_name, subject, headers, body, message_id, outgoing, flag) VALUES (5, NULL, 'derek@sivers', 'fix-client', '2013-07-20 15:42:03', 2, NULL, NULL, NULL, NULL, NULL, NULL, 'new@stranger.com', 'New Stranger', 'random question', 'To: Derek Sivers <derek@sivers.org>
 From: New Stranger <new@stranger.com>

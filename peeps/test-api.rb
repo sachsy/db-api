@@ -937,4 +937,15 @@ class TestPeepsAPI < Minitest::Test
 		assert @j[:title].include? 'constraint'
 	end
 
+	def test_interests_in_email
+		qry("interests_in_email(2)")
+		assert_equal(%w(lanterns), @j)
+		qry("person_delete_interest($1, $2)", [7, 'translation'])
+		qry("interests_in_email(2)")
+		assert_equal(%w(lanterns translation), @j)
+		qry("interests_in_email(1)")
+		assert_equal([], @j)
+		qry("interests_in_email(99)")
+		assert_equal([], @j)
+	end
 end

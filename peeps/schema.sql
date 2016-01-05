@@ -3202,3 +3202,21 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- Finds interest words in email body that are not yet in person's interests
+-- PARAMS: email_id
+CREATE OR REPLACE FUNCTION peeps.interests_in_email(integer,
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := to_json(ARRAY(SELECT inkey FROM peeps.inkeys
+		WHERE inkey IN (SELECT regexp_split_to_table(lower(body), '[^a-z]+')
+			FROM peeps.emails WHERE id = $1)
+		AND inkey NOT IN (SELECT interest FROM peeps.interests
+			JOIN peeps.emails ON peeps.emails.person_id=peeps.interests.person_id
+			WHERE peeps.emails.id = $1
+		ORDER BY inkey)));
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
