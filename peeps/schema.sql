@@ -2917,7 +2917,7 @@ $$ LANGUAGE plpgsql;
 
 -- TODO: cast JSON array elements as ::integer instead of casting id::text
 -- PARAMS: JSON array of integer ids: core.changelog.id
-CREATE OR  REPLACE FUNCTION peeps.log_approve(json,
+CREATE OR REPLACE FUNCTION peeps.log_approve(json,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
 	UPDATE core.changelog SET approved=TRUE WHERE id::text IN
@@ -2930,6 +2930,7 @@ $$ LANGUAGE plpgsql;
 
 -- *all* attribute keys, sorted, and if we have attributes for this person,
 -- then those values are here, but returns null values for any not found
+-- PARAMS: person_id
 CREATE OR REPLACE FUNCTION peeps.person_attributes(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2945,6 +2946,7 @@ $$ LANGUAGE plpgsql;
 
 -- list of interests and boolean expert flag (not null) for person_id
 -- expertises first, wantings last
+-- PARAMS: person_id
 CREATE OR REPLACE FUNCTION peeps.person_interests(integer,
 	OUT status smallint, OUT js json) AS $$
 BEGIN
@@ -2953,6 +2955,250 @@ BEGIN
 		FROM peeps.interests WHERE person_id=$1
 		ORDER BY expert DESC, interest ASC) r;
 	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: person_id, attribute, plusminus
+CREATE OR REPLACE FUNCTION peeps.person_set_attribute(integer, text, boolean,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
+BEGIN
+	UPDATE peeps.attributes SET plusminus=$3 WHERE person_id=$1 AND attribute=$2;
+	IF NOT FOUND THEN
+		INSERT INTO peeps.attributes VALUES ($1, $2, $3);
+	END IF;
+	SELECT x.status, x.js INTO status, js FROM peeps.person_attributes($1) x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	status := 500;
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: person_id, attribute
+CREATE OR REPLACE FUNCTION peeps.person_delete_attribute(integer, text,
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	DELETE FROM peeps.attributes WHERE person_id=$1 AND attribute=$2;
+	SELECT x.status, x.js INTO status, js FROM peeps.person_attributes($1) x;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: person_id, interest
+CREATE OR REPLACE FUNCTION peeps.person_add_interest(integer, text,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
+BEGIN
+	PERFORM 1 FROM peeps.interests WHERE person_id=$1 AND interest=$2;
+	IF NOT FOUND THEN
+		INSERT INTO peeps.interests(person_id, interest) VALUES ($1, $2);
+	END IF;
+	SELECT x.status, x.js INTO status, js FROM peeps.person_interests($1) x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	status := 500;
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: person_id, interest, expert (set expert flag to existing)
+CREATE OR REPLACE FUNCTION peeps.person_update_interest(integer, text, boolean,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
+BEGIN
+	UPDATE peeps.interests SET expert=$3 WHERE person_id=$1 AND interest=$2;
+	SELECT x.status, x.js INTO status, js FROM peeps.person_interests($1) x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	status := 500;
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: person_id, interest
+CREATE OR REPLACE FUNCTION peeps.person_delete_interest(integer, text,
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	DELETE FROM peeps.interests WHERE person_id=$1 AND interest=$2;
+	SELECT x.status, x.js INTO status, js FROM peeps.person_interests($1) x;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: atkey
+CREATE OR REPLACE FUNCTION peeps.add_attribute_key(text,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
+BEGIN
+	INSERT INTO peeps.atkeys(atkey) VALUES ($1);
+	status := 200;
+	js := json_agg(r) FROM (SELECT atkey, description
+		FROM peeps.atkeys ORDER BY atkey) r;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	status := 500;
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: atkey
+CREATE OR REPLACE FUNCTION peeps.delete_attribute_key(text,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
+BEGIN
+	DELETE FROM peeps.atkeys WHERE atkey=$1;
+	status := 200;
+	js := json_agg(r) FROM (SELECT atkey, description
+		FROM peeps.atkeys ORDER BY atkey) r;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	status := 500;
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: inkey
+CREATE OR REPLACE FUNCTION peeps.add_interest_key(text,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
+BEGIN
+	INSERT INTO peeps.inkeys(inkey) VALUES ($1);
+	status := 200;
+	js := json_agg(r) FROM (SELECT inkey, description
+		FROM peeps.inkeys ORDER BY inkey) r;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	status := 500;
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: inkey
+CREATE OR REPLACE FUNCTION peeps.delete_interest_key(text,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
+BEGIN
+	DELETE FROM peeps.inkeys WHERE inkey=$1;
+	status := 200;
+	js := json_agg(r) FROM (SELECT inkey, description
+		FROM peeps.inkeys ORDER BY inkey) r;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	status := 500;
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
 END;
 $$ LANGUAGE plpgsql;
 

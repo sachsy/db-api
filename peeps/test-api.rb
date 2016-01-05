@@ -803,4 +803,138 @@ class TestPeepsAPI < Minitest::Test
 		qry("person_interests(99)")
 		assert_equal([], @j)
 	end
+
+	def test_person_set_attribute
+		qry("person_set_attribute($1,$2,$3)", [1, 'patient', true])
+		assert_equal([
+			{atkey: 'available', plusminus: nil},
+			{atkey: 'patient', plusminus: true},
+			{atkey: 'verbose', plusminus: nil}], @j)
+		qry("person_set_attribute($1,$2,$3)", [1, 'available', true])
+		assert_equal([
+			{atkey: 'available', plusminus: true},
+			{atkey: 'patient', plusminus: true},
+			{atkey: 'verbose', plusminus: nil}], @j)
+		qry("person_set_attribute($1,$2,$3)", [1, 'available', false])
+		assert_equal([
+			{atkey: 'available', plusminus: false},
+			{atkey: 'patient', plusminus: true},
+			{atkey: 'verbose', plusminus: nil}], @j)
+		qry("person_set_attribute($1,$2,$3)", [1, 'wrong', false])
+		assert @j[:title].include? 'constraint'
+		qry("person_set_attribute($1,$2,$3)", [99, 'patient', false])
+		assert @j[:title].include? 'constraint'
+		qry("person_set_attribute($1,$2,$3)", [1, 'patient', nil])
+		assert @j[:title].include? 'constraint'
+	end
+
+	def test_person_delete_attribute
+		qry("person_delete_attribute($1,$2)", [6, 'patient'])
+		assert_equal([
+			{atkey: 'available', plusminus: true},
+			{atkey: 'patient', plusminus: nil},
+			{atkey: 'verbose', plusminus: false}], @j)
+		qry("person_delete_attribute($1,$2)", [6, 'available'])
+		assert_equal([
+			{atkey: 'available', plusminus: nil},
+			{atkey: 'patient', plusminus: nil},
+			{atkey: 'verbose', plusminus: false}], @j)
+		qry("person_delete_attribute($1,$2)", [6, 'wrong'])
+		assert_equal([
+			{atkey: 'available', plusminus: nil},
+			{atkey: 'patient', plusminus: nil},
+			{atkey: 'verbose', plusminus: false}], @j)
+		qry("person_delete_attribute($1,$2)", [99, 'wrong'])
+		assert_equal([
+			{atkey: 'available', plusminus: nil},
+			{atkey: 'patient', plusminus: nil},
+			{atkey: 'verbose', plusminus: nil}], @j)
+	end
+
+	def test_person_add_interest
+		qry("person_add_interest($1, $2)", [4, 'mandarin'])
+		assert_equal([
+			{interest: 'mandarin', expert: nil}], @j)
+		qry("person_add_interest($1, $2)", [4, 'mandarin'])
+		assert_equal([
+			{interest: 'mandarin', expert: nil}], @j)
+		qry("person_add_interest($1, $2)", [4, 'chocolate'])
+		assert_equal([
+			{interest: 'chocolate', expert: nil},
+			{interest: 'mandarin', expert: nil}], @j)
+		qry("person_add_interest($1, $2)", [4, 'wrong'])
+		assert @j[:title].include? 'constraint'
+		qry("person_add_interest($1, $2)", [99, 'chocolate'])
+		assert @j[:title].include? 'constraint'
+	end
+
+	def test_person_update_interest
+		qry("person_update_interest($1,$2,$3)", [7, 'chocolate', true])
+		assert_equal([
+			{interest: 'mandarin', expert: true},
+			{interest: 'translation', expert: true}], @j)
+		qry("person_update_interest($1,$2,$3)", [7, 'mandarin', false])
+		assert_equal([
+			{interest: 'translation', expert: true},
+			{interest: 'mandarin', expert: false}], @j)
+		qry("person_update_interest($1,$2,$3)", [7, 'wrong', true])
+		assert_equal([
+			{interest: 'translation', expert: true},
+			{interest: 'mandarin', expert: false}], @j)
+		qry("person_update_interest($1,$2,$3)", [99, 'mandarin', false])
+		assert_equal([], @j)
+	end
+
+	def test_person_delete_interest
+		qry("person_delete_interest($1, $2)", [7, 'wrong'])
+		assert_equal([
+			{interest: 'mandarin', expert: true},
+			{interest: 'translation', expert: true}], @j)
+		qry("person_delete_interest($1, $2)", [7, 'mandarin'])
+		assert_equal([
+			{interest: 'translation', expert: true}], @j)
+		qry("person_delete_interest($1, $2)", [7, 'translation'])
+		assert_equal([], @j)
+		qry("person_delete_interest($1, $2)", [99, 'translation'])
+		assert_equal([], @j)
+	end
+
+	def test_add_attribute_key
+		qry("add_attribute_key($1)", [''])
+		assert @j[:title].include? 'constraint'
+		qry("add_attribute_key($1)", ['patient'])
+		assert @j[:title].include? 'constraint'
+		qry("add_attribute_key($1)", ['wrong'])
+		assert_equal(%w(available patient verbose wrong), @j.map {|x| x[:atkey]})
+	end
+
+	def test_delete_attribute_key
+		qry("delete_attribute_key($1)", ['whatever'])
+		assert_equal(%w(available patient verbose), @j.map {|x| x[:atkey]})
+		qry("add_attribute_key($1)", ['wrong'])
+		assert_equal(%w(available patient verbose wrong), @j.map {|x| x[:atkey]})
+		qry("delete_attribute_key($1)", ['wrong'])
+		assert_equal(%w(available patient verbose), @j.map {|x| x[:atkey]})
+		qry("delete_attribute_key($1)", ['patient'])
+		assert @j[:title].include? 'constraint'
+	end
+
+	def test_add_interest_key
+		qry("add_interest_key($1)", ['JavaScript'])
+		assert @j[:title].include? 'constraint'
+		qry("add_interest_key($1)", ['chocolate'])
+		assert @j[:title].include? 'constraint'
+		qry("add_interest_key($1)", ['javascript'])
+		assert_equal(%w(chocolate javascript mandarin question translation), @j.map {|x| x[:inkey]})
+	end
+
+	def test_delete_interest_key
+		qry("delete_interest_key($1)", ['question'])
+		assert_equal(%w(chocolate mandarin translation), @j.map {|x| x[:inkey]})
+		qry("delete_interest_key($1)", ['question'])
+		assert_equal(%w(chocolate mandarin translation), @j.map {|x| x[:inkey]})
+		qry("delete_interest_key($1)", ['chocolate'])
+		assert @j[:title].include? 'constraint'
+	end
+
 end
