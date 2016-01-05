@@ -781,4 +781,26 @@ class TestPeepsAPI < Minitest::Test
 		assert @j[:body].include? 'Your email is yoko@ono.com'
 		assert_match %r{data.sivers.org/newpass/8/[a-zA-Z0-9]{8}\s}, @j[:body]
 	end
+
+	def test_person_attributes
+		qry("person_attributes(6)")
+		assert_equal([
+			{atkey: 'available', plusminus: true},
+			{atkey: 'patient', plusminus: nil},
+			{atkey: 'verbose', plusminus: false}], @j)
+		qry("person_attributes(999)")
+		assert_equal([
+			{atkey: 'available', plusminus: nil},
+			{atkey: 'patient', plusminus: nil},
+			{atkey: 'verbose', plusminus: nil}], @j)
+	end
+
+	def test_person_interests
+		qry("person_interests(7)")
+		assert_equal([
+			{interest: 'mandarin', expert: true},
+			{interest: 'translation', expert: true}], @j)
+		qry("person_interests(99)")
+		assert_equal([], @j)
+	end
 end

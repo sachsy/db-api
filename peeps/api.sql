@@ -1463,3 +1463,31 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- *all* attribute keys, sorted, and if we have attributes for this person,
+-- then those values are here, but returns null values for any not found
+CREATE OR REPLACE FUNCTION peeps.person_attributes(integer,
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := json_agg(r) FROM (SELECT atkey, plusminus FROM peeps.atkeys
+		LEFT JOIN peeps.attributes ON
+			(peeps.atkeys.atkey=peeps.attributes.attribute
+				AND peeps.attributes.person_id=$1)
+		ORDER BY peeps.atkeys.atkey) r;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- list of interests and boolean expert flag (not null) for person_id
+-- expertises first, wantings last
+CREATE OR REPLACE FUNCTION peeps.person_interests(integer,
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := json_agg(r) FROM (SELECT interest, expert
+		FROM peeps.interests WHERE person_id=$1
+		ORDER BY expert DESC, interest ASC) r;
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+

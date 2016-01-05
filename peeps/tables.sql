@@ -153,7 +153,6 @@ CREATE TABLE peeps.attributes (
 	plusminus boolean NOT NULL,  -- true if yes, false if no
 	PRIMARY KEY (person_id, attribute)
 );
-CREATE INDEX peepsatts ON peeps.attributes(person_id);
 
 -- exists only for validiation of peeps.interests.interest
 CREATE TABLE peeps.inkeys (
