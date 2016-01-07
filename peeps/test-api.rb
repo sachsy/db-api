@@ -906,23 +906,34 @@ class TestPeepsAPI < Minitest::Test
 	end
 
 	def test_add_attribute_key
-		qry("add_attribute_key($1)", [''])
-		assert @j[:title].include? 'constraint'
+		qry("add_attribute_key($1)", [' . ? ! '])
+		assert @j[:title].include? 'empty'
 		qry("add_attribute_key($1)", ['patient'])
 		assert @j[:title].include? 'constraint'
-		qry("add_attribute_key($1)", ['wrong'])
-		assert_equal(%w(available patient verbose wrong), @j.map {|x| x[:atkey]})
+		qry("add_attribute_key($1)", [" \r GORGEOUS! \n"])
+		k = [{atkey: 'available', description: 'free to work or do new things'}, {atkey: 'gorgeous', description: nil}, {atkey: 'patient', description: 'does not need it now'}, {atkey: 'verbose', description: 'uses lots of words to communicate'}]
+		assert_equal k, @j
 	end
 
 	def test_delete_attribute_key
+		k1 = [{atkey: 'available', description: 'free to work or do new things'}, {atkey: 'patient', description: 'does not need it now'}, {atkey: 'verbose', description: 'uses lots of words to communicate'}]
+		k2 = [{atkey: 'available', description: 'free to work or do new things'}, {atkey: 'patient', description: 'does not need it now'}, {atkey: 'verbose', description: 'uses lots of words to communicate'}, {atkey: 'wrong', description: nil}]
 		qry("delete_attribute_key($1)", ['whatever'])
-		assert_equal(%w(available patient verbose), @j.map {|x| x[:atkey]})
+		assert_equal k1, @j
 		qry("add_attribute_key($1)", ['wrong'])
-		assert_equal(%w(available patient verbose wrong), @j.map {|x| x[:atkey]})
+		assert_equal k2, @j
 		qry("delete_attribute_key($1)", ['wrong'])
-		assert_equal(%w(available patient verbose), @j.map {|x| x[:atkey]})
+		assert_equal k1, @j
 		qry("delete_attribute_key($1)", ['patient'])
 		assert @j[:title].include? 'constraint'
+	end
+
+	def test_update_attribute_key
+		qry("update_attribute_key($1, $2)", ['patient', 'can wait'])
+		k = [{atkey: 'available', description: 'free to work or do new things'}, {atkey: 'patient', description: 'can wait'}, {atkey: 'verbose', description: 'uses lots of words to communicate'}]
+		assert_equal k, @j
+		qry("update_attribute_key($1, $2)", ['dogfood', 'can eat'])
+		assert_equal k, @j
 	end
 
 	def test_interest_keys
@@ -932,21 +943,32 @@ class TestPeepsAPI < Minitest::Test
 	end
 
 	def test_add_interest_key
-		qry("add_interest_key($1)", ['JavaScript'])
-		assert @j[:title].include? 'constraint'
+		qry("add_interest_key($1)", [' . ? ! '])
+		assert @j[:title].include? 'empty'
 		qry("add_interest_key($1)", ['chocolate'])
 		assert @j[:title].include? 'constraint'
-		qry("add_interest_key($1)", ['javascript'])
-		assert_equal(%w(chocolate javascript lanterns mandarin translation), @j.map {|x| x[:inkey]})
+		qry("add_interest_key($1)", ['Java? Script!'])
+		k = [{inkey: 'chocolate', description: 'some make it. many eat it.'}, {inkey: 'javascript', description: nil}, {inkey: 'lanterns', description: 'use for testing email body parsing email 2 person 7'}, {inkey: 'mandarin', description: 'speaks/writes Mandarin Chinese'}, {inkey: 'translation', description: 'does translation from English to another language'}]
+		assert_equal k, @j
 	end
 
 	def test_delete_interest_key
 		qry("delete_interest_key($1)", ['lanterns'])
-		assert_equal(%w(chocolate mandarin translation), @j.map {|x| x[:inkey]})
+		k = [{inkey: 'chocolate', description: 'some make it. many eat it.'}, {inkey: 'mandarin', description: 'speaks/writes Mandarin Chinese'}, {inkey: 'translation', description: 'does translation from English to another language'}]
+		assert_equal k, @j
 		qry("delete_interest_key($1)", ['lanterns'])
-		assert_equal(%w(chocolate mandarin translation), @j.map {|x| x[:inkey]})
+		assert_equal k, @j
 		qry("delete_interest_key($1)", ['chocolate'])
 		assert @j[:title].include? 'constraint'
+	end
+
+	def test_update_interest_key
+		qry("update_interest_key($1, $2)", ['translation', 'wow'])
+		k = [{inkey: 'chocolate', description: 'some make it. many eat it.'}, {inkey: 'lanterns', description: 'use for testing email body parsing email 2 person 7'}, {inkey: 'mandarin', description: 'speaks/writes Mandarin Chinese'}, {inkey: 'translation', description: 'wow'}]
+		assert_equal k, @j
+		qry("update_interest_key($1, $2)", ['chocolate', 'yum'])
+		k = [{inkey: 'chocolate', description: 'yum'}, {inkey: 'lanterns', description: 'use for testing email body parsing email 2 person 7'}, {inkey: 'mandarin', description: 'speaks/writes Mandarin Chinese'}, {inkey: 'translation', description: 'wow'}]
+		assert_equal k, @j
 	end
 
 	def test_interests_in_email

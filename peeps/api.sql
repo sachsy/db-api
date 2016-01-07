@@ -1596,6 +1596,19 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- PARAMS: atkey, description
+CREATE OR REPLACE FUNCTION peeps.update_attribute_key(text, text,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+m4_ERRVARS
+BEGIN
+	UPDATE peeps.atkeys SET description=$2 WHERE atkey=$1;
+	SELECT x.status, x.js INTO status, js FROM peeps.attribute_keys() x;
+m4_ERRCATCH
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- PARAMS: -none-
 CREATE OR REPLACE FUNCTION peeps.interest_keys(
 	OUT status smallint, OUT js json) AS $$
@@ -1627,6 +1640,19 @@ DECLARE
 m4_ERRVARS
 BEGIN
 	DELETE FROM peeps.inkeys WHERE inkey=$1;
+	SELECT x.status, x.js INTO status, js FROM peeps.interest_keys() x;
+m4_ERRCATCH
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: inkey, description
+CREATE OR REPLACE FUNCTION peeps.update_interest_key(text, text,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+m4_ERRVARS
+BEGIN
+	UPDATE peeps.inkeys SET description=$2 WHERE inkey=$1;
 	SELECT x.status, x.js INTO status, js FROM peeps.interest_keys() x;
 m4_ERRCATCH
 END;

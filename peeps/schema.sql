@@ -937,6 +937,39 @@ CREATE TRIGGER null_categorize_as
 	BEFORE INSERT OR UPDATE ON peeps.people
 	FOR EACH ROW EXECUTE PROCEDURE peeps.null_categorize_as();
 
+
+-- atkey lower a-z or -
+CREATE OR REPLACE FUNCTION peeps.clean_atkey() RETURNS TRIGGER AS $$
+BEGIN
+	NEW.atkey = regexp_replace(lower(NEW.atkey), '[^a-z-]', '', 'g');
+	IF NEW.atkey = '' THEN
+		RAISE 'atkeys.atkey must not be empty';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS clean_atkey ON peeps.atkey CASCADE;
+CREATE TRIGGER clean_atkey
+	BEFORE INSERT OR UPDATE OF atkey ON peeps.atkeys
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_atkey();
+
+
+-- inkey lower a-z or -
+CREATE OR REPLACE FUNCTION peeps.clean_inkey() RETURNS TRIGGER AS $$
+BEGIN
+	NEW.inkey = regexp_replace(lower(NEW.inkey), '[^a-z-]', '', 'g');
+	IF NEW.inkey = '' THEN
+		RAISE 'inkeys.inkey must not be empty';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS clean_inkey ON peeps.inkey CASCADE;
+CREATE TRIGGER clean_inkey
+	BEFORE INSERT OR UPDATE OF inkey ON peeps.inkeys
+	FOR EACH ROW EXECUTE PROCEDURE peeps.clean_inkey();
+
+
 ----------------------------------------
 ------------------------- API FUNCTIONS:
 ----------------------------------------
@@ -3146,6 +3179,36 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- PARAMS: atkey, description
+CREATE OR REPLACE FUNCTION peeps.update_attribute_key(text, text,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
+BEGIN
+	UPDATE peeps.atkeys SET description=$2 WHERE atkey=$1;
+	SELECT x.status, x.js INTO status, js FROM peeps.attribute_keys() x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	status := 500;
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- PARAMS: -none-
 CREATE OR REPLACE FUNCTION peeps.interest_keys(
 	OUT status smallint, OUT js json) AS $$
@@ -3199,6 +3262,36 @@ DECLARE
 
 BEGIN
 	DELETE FROM peeps.inkeys WHERE inkey=$1;
+	SELECT x.status, x.js INTO status, js FROM peeps.interest_keys() x;
+
+EXCEPTION
+	WHEN OTHERS THEN GET STACKED DIAGNOSTICS
+		err_code = RETURNED_SQLSTATE,
+		err_msg = MESSAGE_TEXT,
+		err_detail = PG_EXCEPTION_DETAIL,
+		err_context = PG_EXCEPTION_CONTEXT;
+	status := 500;
+	js := json_build_object(
+		'type', 'http://www.postgresql.org/docs/9.4/static/errcodes-appendix.html#' || err_code,
+		'title', err_msg,
+		'detail', err_detail || err_context);
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: inkey, description
+CREATE OR REPLACE FUNCTION peeps.update_interest_key(text, text,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+
+	err_code text;
+	err_msg text;
+	err_detail text;
+	err_context text;
+
+BEGIN
+	UPDATE peeps.inkeys SET description=$2 WHERE inkey=$1;
 	SELECT x.status, x.js INTO status, js FROM peeps.interest_keys() x;
 
 EXCEPTION
