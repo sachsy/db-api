@@ -1559,6 +1559,17 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- PARAMS: -none-
+CREATE OR REPLACE FUNCTION peeps.attribute_keys(
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := json_agg(r) FROM (SELECT atkey, description
+		FROM peeps.atkeys ORDER BY atkey) r;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- PARAMS: atkey
 CREATE OR REPLACE FUNCTION peeps.add_attribute_key(text,
 	OUT status smallint, OUT js json) AS $$
@@ -1566,9 +1577,7 @@ DECLARE
 m4_ERRVARS
 BEGIN
 	INSERT INTO peeps.atkeys(atkey) VALUES ($1);
-	status := 200;
-	js := json_agg(r) FROM (SELECT atkey, description
-		FROM peeps.atkeys ORDER BY atkey) r;
+	SELECT x.status, x.js INTO status, js FROM peeps.attribute_keys() x;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
@@ -1581,10 +1590,19 @@ DECLARE
 m4_ERRVARS
 BEGIN
 	DELETE FROM peeps.atkeys WHERE atkey=$1;
-	status := 200;
-	js := json_agg(r) FROM (SELECT atkey, description
-		FROM peeps.atkeys ORDER BY atkey) r;
+	SELECT x.status, x.js INTO status, js FROM peeps.attribute_keys() x;
 m4_ERRCATCH
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- PARAMS: -none-
+CREATE OR REPLACE FUNCTION peeps.interest_keys(
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := json_agg(r) FROM (SELECT inkey, description
+		FROM peeps.inkeys ORDER BY inkey) r;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1596,9 +1614,7 @@ DECLARE
 m4_ERRVARS
 BEGIN
 	INSERT INTO peeps.inkeys(inkey) VALUES ($1);
-	status := 200;
-	js := json_agg(r) FROM (SELECT inkey, description
-		FROM peeps.inkeys ORDER BY inkey) r;
+	SELECT x.status, x.js INTO status, js FROM peeps.interest_keys() x;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;
@@ -1611,9 +1627,7 @@ DECLARE
 m4_ERRVARS
 BEGIN
 	DELETE FROM peeps.inkeys WHERE inkey=$1;
-	status := 200;
-	js := json_agg(r) FROM (SELECT inkey, description
-		FROM peeps.inkeys ORDER BY inkey) r;
+	SELECT x.status, x.js INTO status, js FROM peeps.interest_keys() x;
 m4_ERRCATCH
 END;
 $$ LANGUAGE plpgsql;

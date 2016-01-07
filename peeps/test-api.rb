@@ -899,6 +899,12 @@ class TestPeepsAPI < Minitest::Test
 		assert_equal([], @j)
 	end
 
+	def test_attribute_keys
+		qry("attribute_keys()")
+		k = [{atkey: 'available', description: 'free to work or do new things'}, {atkey: 'patient', description: 'does not need it now'}, {atkey: 'verbose', description: 'uses lots of words to communicate'}]
+		assert_equal k, @j
+	end
+
 	def test_add_attribute_key
 		qry("add_attribute_key($1)", [''])
 		assert @j[:title].include? 'constraint'
@@ -917,6 +923,12 @@ class TestPeepsAPI < Minitest::Test
 		assert_equal(%w(available patient verbose), @j.map {|x| x[:atkey]})
 		qry("delete_attribute_key($1)", ['patient'])
 		assert @j[:title].include? 'constraint'
+	end
+
+	def test_interest_keys
+		qry("interest_keys()")
+		k = [{inkey: 'chocolate', description: 'some make it. many eat it.'}, {inkey: 'lanterns', description: 'use for testing email body parsing email 2 person 7'}, {inkey: 'mandarin', description: 'speaks/writes Mandarin Chinese'}, {inkey: 'translation', description: 'does translation from English to another language'}]
+		assert_equal k, @j
 	end
 
 	def test_add_interest_key
