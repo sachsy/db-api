@@ -152,6 +152,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 -- PARAMS:  translation_files.id
 CREATE OR REPLACE FUNCTION core.parse_translation_file(integer) RETURNS text AS $$
 DECLARE
@@ -185,6 +186,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 -- PARAMS:  translation_files.id
 CREATE OR REPLACE FUNCTION core.text_for_translator(integer, OUT text text) AS $$
 BEGIN
@@ -192,6 +194,7 @@ BEGIN
 		(SELECT en FROM core.translations WHERE file_id = $1 ORDER BY sortid) s;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -- PARAMS:  translation_files.id, translation file from translator
 CREATE OR REPLACE FUNCTION core.txn_compare(integer, text)
@@ -209,6 +212,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 -- PARAMS:  translation_files.id, 2-char lang code, translation file from translator
 CREATE OR REPLACE FUNCTION core.txn_update(integer, text, text) RETURNS boolean AS $$
 DECLARE
@@ -221,6 +225,7 @@ BEGIN
 	RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -- PARAMS:  translation_files.id, 2-char lang code
 CREATE OR REPLACE FUNCTION core.merge_translation_file(integer, text) RETURNS text AS $$
