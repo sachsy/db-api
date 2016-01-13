@@ -171,6 +171,18 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- PARAMS: any text that might have URLs
+-- returns all words with dot between not-whitespace chars (very liberal)
+-- normalized without https?:// and trailing dot
+CREATE OR REPLACE FUNCTION core.urls_in_text(text) RETURNS SETOF text AS $$
+BEGIN
+	RETURN QUERY SELECT regexp_replace(
+		(regexp_matches($1, '\S+\.\S+', 'g'))[1],
+		'^https?://|\.$', '');  
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- PARAMS: JSON of currency rates https://openexchangerates.org/documentation
 CREATE OR REPLACE FUNCTION core.update_currency_rates(jsonb) RETURNS void AS $$
 DECLARE
@@ -212,6 +224,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 -- PARAMS:  translation_files.id
 CREATE OR REPLACE FUNCTION core.parse_translation_file(integer) RETURNS text AS $$
 DECLARE
@@ -245,6 +258,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 -- PARAMS:  translation_files.id
 CREATE OR REPLACE FUNCTION core.text_for_translator(integer, OUT text text) AS $$
 BEGIN
@@ -252,6 +266,7 @@ BEGIN
 		(SELECT en FROM core.translations WHERE file_id = $1 ORDER BY sortid) s;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -- PARAMS:  translation_files.id, translation file from translator
 CREATE OR REPLACE FUNCTION core.txn_compare(integer, text)
@@ -269,6 +284,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 -- PARAMS:  translation_files.id, 2-char lang code, translation file from translator
 CREATE OR REPLACE FUNCTION core.txn_update(integer, text, text) RETURNS boolean AS $$
 DECLARE
@@ -281,6 +297,7 @@ BEGIN
 	RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -- PARAMS:  translation_files.id, 2-char lang code
 CREATE OR REPLACE FUNCTION core.merge_translation_file(integer, text) RETURNS text AS $$

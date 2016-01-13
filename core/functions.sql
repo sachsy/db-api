@@ -111,6 +111,18 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- PARAMS: any text that might have URLs
+-- returns all words with dot between not-whitespace chars (very liberal)
+-- normalized without https?:// and trailing dot
+CREATE OR REPLACE FUNCTION core.urls_in_text(text) RETURNS SETOF text AS $$
+BEGIN
+	RETURN QUERY SELECT regexp_replace(
+		(regexp_matches($1, '\S+\.\S+', 'g'))[1],
+		'^https?://|\.$', '');  
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- PARAMS: JSON of currency rates https://openexchangerates.org/documentation
 CREATE OR REPLACE FUNCTION core.update_currency_rates(jsonb) RETURNS void AS $$
 DECLARE
