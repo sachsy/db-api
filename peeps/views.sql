@@ -48,6 +48,7 @@ CREATE VIEW peeps.email_view AS
 				WHERE peeps.emailers.id = closed_by) p3),
 		message_id, outgoing, reference_id, answer_id,
 		their_email, their_name, headers, subject, body,
+		to_json(ARRAY(SELECT core.urls_in_text(body))) AS urls,
 		(SELECT json_agg(a) AS attachments FROM
 			(SELECT id, filename FROM peeps.email_attachments WHERE email_id=peeps.emails.id) a),
 		(SELECT row_to_json(p) AS person FROM
