@@ -135,7 +135,9 @@ BEGIN
 	status := 200;
 	EXECUTE 'SELECT row_to_json(r) FROM ('
 		|| thought_view($1, (SELECT id FROM thoughts WHERE as_rand IS TRUE
-			ORDER BY RANDOM() LIMIT 1), NULL, NULL)
+			LIMIT 1 OFFSET (SELECT floor(random() *
+					(SELECT COUNT(*) FROM thoughts WHERE as_rand IS TRUE)))),
+			NULL, NULL)
 		|| ') r' INTO js;
 END;
 $$ LANGUAGE plpgsql;
