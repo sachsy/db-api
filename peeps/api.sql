@@ -1701,3 +1701,21 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- array of emailer_id and name of active emailers in last 3 months
+-- JSON format: [{'id':1, 'name':'Derek Sivers'}]
+-- PARAMS: -none-
+CREATE OR REPLACE FUNCTION peeps.active_emailers(
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := json_agg(r) FROM (SELECT DISTINCT(emails.closed_by) AS id, people.name
+		FROM peeps.emails
+		JOIN peeps.emailers ON peeps.emails.closed_by=peeps.emailers.id
+		JOIN peeps.people ON peeps.emailers.person_id=peeps.people.id
+		WHERE emails.closed_at > (NOW() - interval '3 months')
+		AND emails.closed_by != 2
+		ORDER BY emails.closed_by) r;
+END;
+$$ LANGUAGE plpgsql;
+
