@@ -87,11 +87,11 @@ CREATE TABLE peeps.emails (
 	person_id integer REFERENCES peeps.people(id),
 	profile varchar(18) not null CHECK (length(profile) > 0),  -- which email address sent to/from
 	category varchar(16) not null CHECK (length(category) > 0),  -- like gmail's labels, but 1-to-1
-	created_at timestamp without time zone not null DEFAULT current_timestamp,
+	created_at timestamp(0) not null DEFAULT current_timestamp,
 	created_by integer REFERENCES peeps.emailers(id),
-	opened_at timestamp without time zone,
+	opened_at timestamp(0),
 	opened_by integer REFERENCES peeps.emailers(id),
-	closed_at timestamp without time zone,
+	closed_at timestamp(0),
 	closed_by integer REFERENCES peeps.emailers(id),
 	reference_id integer REFERENCES peeps.emails(id) DEFERRABLE, -- email this is replying to
 	answer_id integer REFERENCES peeps.emails(id) DEFERRABLE, -- email replying to this one
@@ -220,6 +220,7 @@ CREATE VIEW peeps.email_view AS
 				WHERE peeps.emailers.id = closed_by) p3),
 		message_id, outgoing, reference_id, answer_id,
 		their_email, their_name, headers, subject, body,
+		to_json(ARRAY(SELECT core.urls_in_text(body))) AS urls,
 		(SELECT json_agg(a) AS attachments FROM
 			(SELECT id, filename FROM peeps.email_attachments WHERE email_id=peeps.emails.id) a),
 		(SELECT row_to_json(p) AS person FROM
@@ -719,6 +720,18 @@ BEGIN
 		WHERE url LIKE '%/twitter.com/%'
 		AND lower(regexp_replace(url, '^.*/', '')) = lower(replace($1, '@', ''))
 		ORDER BY id ASC LIMIT 1;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Time this emailer spent on open emails in this month
+-- PARAMS: emailer_id, month string like '2016-08-01' (always '-01' at end)
+CREATE OR REPLACE FUNCTION peeps.etimes_in_month(integer, text, OUT total text) AS $$
+BEGIN
+	SELECT SUM(closed_at - opened_at)::text INTO total FROM emails
+		WHERE outgoing IS FALSE
+		AND closed_by=$1
+		AND date_trunc('month', closed_at) = $2::date;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -3324,6 +3337,31 @@ BEGIN
 			WHERE peeps.emails.id = $1
 		ORDER BY inkey)));
 	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Total time in the last 3 months this emailer spent on open emails
+-- JSON format: {'2016-02': '06:20:29'
+-- PARAMS: emailer_id
+CREATE OR REPLACE FUNCTION peeps.emailer_times(integer,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+	month1 text;
+	month2 text;
+	month3 text;
+BEGIN
+	SELECT SUBSTRING(date_trunc('month', now())::text from 1 for 7) INTO month1;
+	SELECT SUBSTRING(date_trunc('month', (now() - interval '1 month'))::text from 1 for 7) INTO month2;
+	SELECT SUBSTRING(date_trunc('month', (now() - interval '2 month'))::text from 1 for 7) INTO month3;
+	status := 200;
+	js := json_build_object(
+		month1,
+		peeps.etimes_in_month($1, month1 || '-01'),
+		month2,
+		peeps.etimes_in_month($1, month2 || '-01'),
+		month3,
+		peeps.etimes_in_month($1, month3 || '-01'));
 END;
 $$ LANGUAGE plpgsql;
 

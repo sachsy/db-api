@@ -1676,3 +1676,28 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- Total time in the last 3 months this emailer spent on open emails
+-- JSON format: {'2016-02': '06:20:29'
+-- PARAMS: emailer_id
+CREATE OR REPLACE FUNCTION peeps.emailer_times(integer,
+	OUT status smallint, OUT js json) AS $$
+DECLARE
+	month1 text;
+	month2 text;
+	month3 text;
+BEGIN
+	SELECT SUBSTRING(date_trunc('month', now())::text from 1 for 7) INTO month1;
+	SELECT SUBSTRING(date_trunc('month', (now() - interval '1 month'))::text from 1 for 7) INTO month2;
+	SELECT SUBSTRING(date_trunc('month', (now() - interval '2 month'))::text from 1 for 7) INTO month3;
+	status := 200;
+	js := json_build_object(
+		month1,
+		peeps.etimes_in_month($1, month1 || '-01'),
+		month2,
+		peeps.etimes_in_month($1, month2 || '-01'),
+		month3,
+		peeps.etimes_in_month($1, month3 || '-01'));
+END;
+$$ LANGUAGE plpgsql;
+

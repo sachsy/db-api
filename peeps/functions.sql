@@ -474,3 +474,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- Time this emailer spent on open emails in this month
+-- PARAMS: emailer_id, month string like '2016-08-01' (always '-01' at end)
+CREATE OR REPLACE FUNCTION peeps.etimes_in_month(integer, text, OUT total text) AS $$
+BEGIN
+	SELECT SUM(closed_at - opened_at)::text INTO total FROM emails
+		WHERE outgoing IS FALSE
+		AND closed_by=$1
+		AND date_trunc('month', closed_at) = $2::date;
+END;
+$$ LANGUAGE plpgsql;
+
