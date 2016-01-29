@@ -87,11 +87,11 @@ CREATE TABLE peeps.emails (
 	person_id integer REFERENCES peeps.people(id),
 	profile varchar(18) not null CHECK (length(profile) > 0),  -- which email address sent to/from
 	category varchar(16) not null CHECK (length(category) > 0),  -- like gmail's labels, but 1-to-1
-	created_at timestamp without time zone not null DEFAULT current_timestamp,
+	created_at timestamp(0) not null DEFAULT current_timestamp,
 	created_by integer REFERENCES peeps.emailers(id),
-	opened_at timestamp without time zone,
+	opened_at timestamp(0),
 	opened_by integer REFERENCES peeps.emailers(id),
-	closed_at timestamp without time zone,
+	closed_at timestamp(0),
 	closed_by integer REFERENCES peeps.emailers(id),
 	reference_id integer REFERENCES peeps.emails(id) DEFERRABLE, -- email this is replying to
 	answer_id integer REFERENCES peeps.emails(id) DEFERRABLE, -- email replying to this one
