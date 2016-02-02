@@ -3366,6 +3366,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- Total time per day this emailer spent on open emails per-day in this month
+-- JSON format: [{"day":"2015-12-23","hhmm":"02:42"},...]
+-- PARAMS: emailer_id, month in format '2015-12' 
+CREATE OR REPLACE FUNCTION peeps.emailer_times_per_day(integer, text,
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	js := json_agg(r) FROM (SELECT
+		substring(date_trunc('day', closed_at)::text from 1 for 10) AS day,
+		substring(SUM(closed_at - opened_at)::text from 1 for 5) AS hhmm
+		FROM emails WHERE outgoing IS FALSE
+		AND closed_by = $1
+		AND date_trunc('month', closed_at) = ($2 || '-01')::date
+		GROUP BY day ORDER BY day) r;
+	IF js IS NULL THEN js := '[]'; END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- array of emailer_id and name of active emailers in last 3 months
 -- JSON format: [{'id':1, 'name':'Derek Sivers'}]
 -- PARAMS: -none-
