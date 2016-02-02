@@ -728,7 +728,8 @@ $$ LANGUAGE plpgsql;
 -- PARAMS: emailer_id, month string like '2016-08-01' (always '-01' at end)
 CREATE OR REPLACE FUNCTION peeps.etimes_in_month(integer, text, OUT total text) AS $$
 BEGIN
-	SELECT SUM(closed_at - opened_at)::text INTO total FROM emails
+	SELECT substring(SUM(closed_at - opened_at)::text from 1 for 5) INTO total
+		FROM peeps.emails
 		WHERE outgoing IS FALSE
 		AND closed_by=$1
 		AND date_trunc('month', closed_at) = $2::date;
@@ -3376,7 +3377,7 @@ BEGIN
 	js := json_agg(r) FROM (SELECT
 		substring(date_trunc('day', closed_at)::text from 1 for 10) AS day,
 		substring(SUM(closed_at - opened_at)::text from 1 for 5) AS hhmm
-		FROM emails WHERE outgoing IS FALSE
+		FROM peeps.emails WHERE outgoing IS FALSE
 		AND closed_by = $1
 		AND date_trunc('month', closed_at) = ($2 || '-01')::date
 		GROUP BY day ORDER BY day) r;
