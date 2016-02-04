@@ -48,6 +48,12 @@ CREATE TABLE peeps.emailers (
 	categories text[] NOT NULL DEFAULT '{}' -- only allowed to view these emails.category
 );
 
+CREATE TABLE peeps.emailer_times (
+	emailer_id integer REFERENCES peeps.emailers(id),
+	completed_at timestamp(0) no time zone,
+	duration interval minute to second (0)
+);
+
 -- Catch-all for any random facts about this person
 CREATE TABLE peeps.stats (
 	id serial primary key,
