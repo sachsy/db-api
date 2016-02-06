@@ -11,10 +11,6 @@
 require 'pg'
 require 'json'
 
-def getcon(server)
-
-end
-
 # ONLY USE THIS: Curry calldb with a DB connection & schema
 def getdb(schema, server='live')
 	dbname = ('test' == server) ? 'd50b_test' : 'd50b'
@@ -23,17 +19,6 @@ def getdb(schema, server='live')
 	end
 	Proc.new do |func, *params|
 		okres(calldb(DB, schema, func, params))
-	end
-end
-
-# ALTERNATE: when I don't want to auto-prefix a schema
-def getdb_noschema(server='live')
-	dbname = ('test' == server) ? 'd50b_test' : 'd50b'
-	unless Object.const_defined?(:DB)
-		Object.const_set(:DB, PG::Connection.new(dbname: dbname, user: 'd50b'))
-	end
-	Proc.new do |fullfunc, *params|
-		okres(calldb_noschema(DB, fullfunc, params))
 	end
 end
 
@@ -59,6 +44,18 @@ end
 def calldb(pg, schema, func, params)
 	pg.exec_params('SELECT status, js FROM %s.%s%s' %
 		[schema, func, paramstring(params)], params)
+end
+
+#### ALTERNATE: when I don't want to auto-prefix a schema. (Shame this exists.)
+
+def getdb_noschema(server='live')
+	dbname = ('test' == server) ? 'd50b_test' : 'd50b'
+	unless Object.const_defined?(:DB)
+		Object.const_set(:DB, PG::Connection.new(dbname: dbname, user: 'd50b'))
+	end
+	Proc.new do |fullfunc, *params|
+		okres(calldb_noschema(DB, fullfunc, params))
+	end
 end
 
 def calldb_noschema(pg, fullfunc, params)

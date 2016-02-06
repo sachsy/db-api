@@ -1,19 +1,9 @@
 # TODO:
 
-## Tweets:
+## Emailer Times
 
-```sql
-CREATE TABLE peeps.tweets (
-	id bigint primary key,
-	person_id integer REFERENCES peeps.people(id),
-	created_at timestamp(0),
-	outgoing boolean default 'f',
-	reference_id integer REFERENCES peeps.tweets(id),
-	answer_id integer REFERENCES peeps.tweets(id),
-	dump jsonb,
-	body text
-);
-```
+* function to create log from starting time until now
+* description? email_id for ref? not sure.
 
 
 ## Protected file downloads
