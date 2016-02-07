@@ -872,7 +872,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- PUT /formletters/:id
--- PARAMS: formletters.id, JSON keys: title, explanation, body
+-- PARAMS: formletters.id, JSON keys: accesskey, title, explanation, body, subject
 CREATE OR REPLACE FUNCTION peeps.update_formletter(integer, json,
 	OUT status smallint, OUT js json) AS $$
 DECLARE
