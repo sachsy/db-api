@@ -50,7 +50,7 @@ CREATE TABLE peeps.emailers (
 
 CREATE TABLE peeps.emailer_times (
 	emailer_id integer REFERENCES peeps.emailers(id),
-	completed_at timestamp(0) no time zone,
+	completed_at timestamp(0),
 	duration interval minute to second (0)
 );
 
@@ -130,6 +130,7 @@ CREATE INDEX email_attachments_email_id ON peeps.email_attachments(email_id);
 -- Commonly used emails.body templates
 CREATE TABLE peeps.formletters (
 	id serial primary key,
+	accesskey char(1) UNIQUE CHECK (accesskey ~ '[a-z0-9]'),
 	title varchar(64) UNIQUE,
 	explanation varchar(255),
 	subject varchar(64),

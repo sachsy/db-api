@@ -836,7 +836,7 @@ CREATE OR REPLACE FUNCTION peeps.get_formletters(
 BEGIN
 	status := 200;
 	js := json_agg(r) FROM
-		(SELECT * FROM peeps.formletters_view ORDER BY title) r;
+		(SELECT * FROM peeps.formletters_view ORDER BY accesskey, title) r;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -48,6 +48,12 @@ CREATE TABLE peeps.emailers (
 	categories text[] NOT NULL DEFAULT '{}' -- only allowed to view these emails.category
 );
 
+CREATE TABLE peeps.emailer_times (
+	emailer_id integer REFERENCES peeps.emailers(id),
+	completed_at timestamp(0),
+	duration interval minute to second (0)
+);
+
 -- Catch-all for any random facts about this person
 CREATE TABLE peeps.stats (
 	id serial primary key,
@@ -124,6 +130,7 @@ CREATE INDEX email_attachments_email_id ON peeps.email_attachments(email_id);
 -- Commonly used emails.body templates
 CREATE TABLE peeps.formletters (
 	id serial primary key,
+	accesskey char(1) UNIQUE CHECK (accesskey ~ '[a-z0-9]'),
 	title varchar(64) UNIQUE,
 	explanation varchar(255),
 	subject varchar(64),
@@ -233,11 +240,11 @@ CREATE VIEW peeps.unknown_view AS
 
 DROP VIEW IF EXISTS peeps.formletters_view CASCADE;
 CREATE VIEW peeps.formletters_view AS
-	SELECT id, title, explanation, created_at FROM peeps.formletters;
+	SELECT id, accesskey, title, explanation, created_at FROM peeps.formletters;
 
 DROP VIEW IF EXISTS peeps.formletter_view CASCADE;
 CREATE VIEW peeps.formletter_view AS
-	SELECT id, title, explanation, body, created_at FROM peeps.formletters;
+	SELECT id, accesskey, title, explanation, body, subject, created_at FROM peeps.formletters;
 
 DROP VIEW IF EXISTS peeps.stats_view CASCADE;
 CREATE VIEW peeps.stats_view AS
@@ -2224,7 +2231,7 @@ CREATE OR REPLACE FUNCTION peeps.get_formletters(
 BEGIN
 	status := 200;
 	js := json_agg(r) FROM
-		(SELECT * FROM peeps.formletters_view ORDER BY title) r;
+		(SELECT * FROM peeps.formletters_view ORDER BY accesskey, title) r;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -473,12 +473,12 @@ SELECT pg_catalog.setval('emails_id_seq', 10, true);
 
 ALTER TABLE formletters DISABLE TRIGGER ALL;
 
-INSERT INTO formletters (id, title, explanation, subject, body, created_at) VALUES (3, 'three', 'blah', NULL, 'meh', '2014-12-22');
-INSERT INTO formletters (id, title, explanation, subject, body, created_at) VALUES (4, 'four', 'blah', NULL, 'meh', '2014-12-22');
-INSERT INTO formletters (id, title, explanation, subject, body, created_at) VALUES (5, 'five', 'blah', NULL, 'meh', '2014-12-22');
-INSERT INTO formletters (id, title, explanation, subject, body, created_at) VALUES (6, 'six', 'blah', NULL, 'meh', '2014-12-22');
-INSERT INTO formletters (id, title, explanation, subject, body, created_at) VALUES (2, 'two', 'replace braces only', '{address} thanks address', 'Hi {address}. Thank you for buying something on somedate. We will ship it to your address.', '2014-12-22');
-INSERT INTO formletters (id, title, explanation, subject, body, created_at) VALUES (1, 'one', 'use for one', '{address} your email', 'Your email is {email}. Here is your URL: https://data.sivers.org/newpass/{id}/{newpass} OK?', '2014-12-22');
+INSERT INTO formletters (id, accesskey, title, explanation, subject, body, created_at) VALUES (3, NULL, 'three', 'blah', NULL, 'meh', '2014-12-22');
+INSERT INTO formletters (id, accesskey, title, explanation, subject, body, created_at) VALUES (4, NULL, 'four', 'blah', NULL, 'meh', '2014-12-22');
+INSERT INTO formletters (id, accesskey, title, explanation, subject, body, created_at) VALUES (5, 'f', 'five', 'blah', NULL, 'meh', '2014-12-22');
+INSERT INTO formletters (id, accesskey, title, explanation, subject, body, created_at) VALUES (6, 's', 'six', 'blah', NULL, 'meh', '2014-12-22');
+INSERT INTO formletters (id, accesskey, title, explanation, subject, body, created_at) VALUES (2, 't', 'two', 'replace braces only', '{address} thanks address', 'Hi {address}. Thank you for buying something on somedate. We will ship it to your address.', '2014-12-22');
+INSERT INTO formletters (id, accesskey, title, explanation, subject, body, created_at) VALUES (1, '1', 'one', 'use for one', '{address} your email', 'Your email is {email}. Here is your URL: https://data.sivers.org/newpass/{id}/{newpass} OK?', '2014-12-22');
 
 
 ALTER TABLE formletters ENABLE TRIGGER ALL;

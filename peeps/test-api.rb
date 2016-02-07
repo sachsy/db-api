@@ -522,21 +522,24 @@ class TestPeepsAPI < Minitest::Test
 
 	def test_get_formletters
 		qry("get_formletters()")
-		assert_equal %w(five four one six three two), @j.map {|x| x[:title]} # alphabetized
+		assert_equal %w(one five six two four three), @j.map {|x| x[:title]} # alphabetized
 	end
 
 	def test_create_formletter
 		qry("create_formletter('new title')")
 		assert_equal 7, @j[:id]
+		assert_equal nil, @j[:accesskey]
 		assert_equal nil, @j[:body]
 		assert_equal nil, @j[:explanation]
+		assert_equal nil, @j[:subject]
 		assert_equal 'new title', @j[:title]
 	end
 
 	def test_update_formletter
-		qry("update_formletter(6, $1)", ['{"title":"nu title", "body":"a body", "explanation":"weak", "ignore":"this"}'])
+		qry("update_formletter(6, $1)", ['{"title":"nu title", "accesskey":"x", "body":"a body", "explanation":"weak", "ignore":"this"}'])
 		assert_equal 'nu title', @j[:title]
 		assert_equal 'a body', @j[:body]
+		assert_equal 'x', @j[:accesskey]
 		assert_equal 'weak', @j[:explanation]
 		qry("update_formletter(6, $1)", ['{"title":"one"}'])
 		assert_equal '500', @res[0]['status']

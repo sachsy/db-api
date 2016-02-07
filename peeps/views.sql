@@ -61,11 +61,11 @@ CREATE VIEW peeps.unknown_view AS
 
 DROP VIEW IF EXISTS peeps.formletters_view CASCADE;
 CREATE VIEW peeps.formletters_view AS
-	SELECT id, title, explanation, created_at FROM peeps.formletters;
+	SELECT id, accesskey, title, explanation, created_at FROM peeps.formletters;
 
 DROP VIEW IF EXISTS peeps.formletter_view CASCADE;
 CREATE VIEW peeps.formletter_view AS
-	SELECT id, title, explanation, body, created_at FROM peeps.formletters;
+	SELECT id, accesskey, title, explanation, body, subject, created_at FROM peeps.formletters;
 
 DROP VIEW IF EXISTS peeps.stats_view CASCADE;
 CREATE VIEW peeps.stats_view AS
