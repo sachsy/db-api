@@ -5,7 +5,6 @@
 -- NOTE: all queries only show where thoughts.approved IS TRUE
 -- When building manager API, I will add unapproved thoughts function
 
--- get '/languages'
 -- PARAMS: -none-
 CREATE OR REPLACE FUNCTION musicthoughts.languages(
 	OUT status smallint, OUT js json) AS $$
@@ -16,7 +15,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- get '/categories'
 -- PARAMS: lang
 CREATE OR REPLACE FUNCTION musicthoughts.all_categories(char(2),
 	OUT status smallint, OUT js json) AS $$
@@ -31,7 +29,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- get %r{^/categories/([0-9]+)$}
 -- PARAMS: lang, category_id
 CREATE OR REPLACE FUNCTION musicthoughts.category(char(2), integer,
 	OUT status smallint, OUT js json) AS $$
@@ -54,8 +51,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- get '/authors'
--- get '/authors/top'
 -- PARAMS: top limit  (NULL for all)
 CREATE OR REPLACE FUNCTION musicthoughts.top_authors(integer,
 	OUT status smallint, OUT js json) AS $$
@@ -66,7 +61,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- get %r{^/authors/([0-9]+)$}
 -- PARAMS: lang, author id
 CREATE OR REPLACE FUNCTION musicthoughts.get_author(char(2), integer,
 	OUT status smallint, OUT js json) AS $$
@@ -91,8 +85,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- get '/contributors'
--- get '/contributors/top'
 -- PARAMS: top limit  (NULL for all)
 CREATE OR REPLACE FUNCTION musicthoughts.top_contributors(integer,
 	OUT status smallint, OUT js json) AS $$
@@ -103,7 +95,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- get %r{^/contributors/([0-9]+)$}
 -- PARAMS: lang, contributor id
 CREATE OR REPLACE FUNCTION musicthoughts.get_contributor(char(2), integer,
 	OUT status smallint, OUT js json) AS $$
@@ -127,7 +118,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- get '/thoughts/random'
 -- PARAMS: lang
 CREATE OR REPLACE FUNCTION musicthoughts.random_thought(char(2),
 	OUT status smallint, OUT js json) AS $$
@@ -143,7 +133,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- get %r{^/thoughts/([0-9]+)$}
 -- PARAMS: lang, thought id
 CREATE OR REPLACE FUNCTION musicthoughts.get_thought(char(2), integer,
 	OUT status smallint, OUT js json) AS $$
@@ -157,8 +146,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- get '/thoughts'
--- get '/thoughts/new'
 -- PARAMS: lang, newest limit (NULL for all)
 CREATE OR REPLACE FUNCTION musicthoughts.new_thoughts(char(2), integer,
 	OUT status smallint, OUT js json) AS $$
@@ -168,7 +155,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- get '/search/:q'
 -- PARAMS: lang, search term
 CREATE OR REPLACE FUNCTION musicthoughts.search(char(2), text,
 	OUT status smallint, OUT js json) AS $$
@@ -204,7 +190,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- post '/thoughts'
 -- PARAMS:
 -- $1 = lang code
 -- $2 = thought
