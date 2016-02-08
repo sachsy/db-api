@@ -118,6 +118,40 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- ALL APPROVED thoughts, in this language: (just id, thought, author)
+-- PARAMS: lang
+CREATE OR REPLACE FUNCTION musicthoughts.approved_thoughts(char(2),
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	EXECUTE format ('SELECT json_agg(r) FROM (SELECT
+		thoughts.id, thoughts.%I AS thought, authors.name AS author
+		FROM musicthoughts.thoughts
+		JOIN musicthoughts.authors
+		ON musicthoughts.thoughts.author_id=musicthoughts.authors.id
+		WHERE approved IS TRUE
+		ORDER BY thoughts.id) r', $1) INTO js;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- ALL RANDOM thoughts, in this language: (just id, thought, author)
+-- PARAMS: lang
+CREATE OR REPLACE FUNCTION musicthoughts.random_thoughts(char(2),
+	OUT status smallint, OUT js json) AS $$
+BEGIN
+	status := 200;
+	EXECUTE format ('SELECT json_agg(r) FROM (SELECT
+		thoughts.id, thoughts.%I AS thought, authors.name AS author
+		FROM musicthoughts.thoughts
+		JOIN musicthoughts.authors
+		ON musicthoughts.thoughts.author_id=musicthoughts.authors.id
+		WHERE as_rand IS TRUE
+		ORDER BY thoughts.id) r', $1) INTO js;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- PARAMS: lang
 CREATE OR REPLACE FUNCTION musicthoughts.random_thought(char(2),
 	OUT status smallint, OUT js json) AS $$
@@ -154,6 +188,7 @@ BEGIN
 	EXECUTE 'SELECT json_agg(r) FROM (' || thought_view($1, NULL, NULL, $2) || ') r' INTO js;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -- PARAMS: lang, search term
 CREATE OR REPLACE FUNCTION musicthoughts.search(char(2), text,
