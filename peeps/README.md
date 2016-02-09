@@ -5,6 +5,10 @@
 * function to create log from starting time until now
 * description? email_id for ref? not sure.
 
+```sql
+UPDATE emails SET closed_at = (opened_at + interval '10 minutes') WHERE (closed_at - opened_at)::text > '00:20:00'; 
+```
+
 
 ## Protected file downloads
 
