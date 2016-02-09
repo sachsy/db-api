@@ -47,7 +47,7 @@ class TestMusicthoughtsClient < Minitest::Test
 		assert_instance_of Array, @j[:thoughts]
 		assert_equal 'Non aver paura degli errori. Non ce ne sono.', @j[:thoughts][0][:thought]
 		assert_equal 'Suona quello che non conosci.', @j[:thoughts][1][:thought]
-		assert_equal({id: 1, name: 'Miles Davis'} , @j[:thoughts][1][:author])
+		assert_equal('Miles Davis' , @j[:thoughts][1][:author])
 		qry("get_author('en', 55)")
 		assert_equal({}, @j)
 	end

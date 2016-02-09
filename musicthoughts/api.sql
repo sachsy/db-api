@@ -67,15 +67,14 @@ CREATE OR REPLACE FUNCTION musicthoughts.get_author(char(2), integer,
 DECLARE
 	qry text;
 BEGIN
-	-- TODO: silly that I'm re-querying for author inside thought subselect
-	-- Find way to re-use id, name from top of query, outside subselect
 	qry := FORMAT ('SELECT id, name, (SELECT json_agg(t) FROM
-		(SELECT id, %I AS thought, (SELECT row_to_json(a) FROM
-			(SELECT id, name FROM authors WHERE thoughts.author_id=authors.id) a)
-			AS author FROM thoughts
-			WHERE author_id=authors.id AND approved IS TRUE
+		(SELECT thoughts.id, thoughts.%I AS thought, authors.name AS author
+			FROM musicthoughts.thoughts
+			JOIN musicthoughts.authors ON thoughts.author_id=authors.id
+			WHERE thoughts.author_id = %s
+			AND thoughts.approved IS TRUE
 			ORDER BY id DESC) t) AS thoughts
-		FROM authors WHERE id = %s', $1, $2);
+		FROM musicthoughts.authors WHERE id = %s', $1, $2, $2);
 	status := 200;
 	EXECUTE 'SELECT row_to_json(r) FROM (' || qry || ') r' INTO js;
 	IF js IS NULL THEN
@@ -102,13 +101,14 @@ DECLARE
 	qry text;
 BEGIN
 	qry := FORMAT ('SELECT contributors.id, peeps.people.name, (SELECT json_agg(t) FROM
-		(SELECT id, %I AS thought, (SELECT row_to_json(a) FROM (SELECT id, name
-				FROM authors WHERE thoughts.author_id=authors.id) a) AS author
-			FROM thoughts
-			WHERE contributor_id=contributors.id AND approved IS TRUE
-			ORDER BY id DESC) t) AS thoughts
-		FROM contributors, peeps.people
-		WHERE contributors.person_id=peeps.people.id AND contributors.id = %s', $1, $2);
+		(SELECT thoughts.id, thoughts.%I AS thought, authors.name AS author
+			FROM musicthoughts.thoughts
+			JOIN musicthoughts.authors ON thoughts.author_id=authors.id
+			WHERE thoughts.contributor_id = %s
+			AND thoughts.approved IS TRUE
+			ORDER BY thoughts.id DESC) t) AS thoughts
+		FROM musicthoughts.contributors, peeps.people
+		WHERE contributors.person_id=peeps.people.id AND contributors.id = %s', $1, $2, $2);
 	status := 200;
 	EXECUTE 'SELECT row_to_json(r) FROM (' || qry || ') r' INTO js;
 	IF js IS NULL THEN
