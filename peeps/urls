@@ -1,0 +1,348 @@
+-- PARAMS: person_id, API_name
+PUT	~	/api/(?<person_id>[0-9]+)/(?<api>[a-zA-Z]+)
+add_api(integer, text)
+
+-- PARAMS: email, password, API_name
+GET	~	/auth/(?<api>[a-zA-Z]+)	(email,password)
+auth_api(text, text, text)
+
+-- PARAMS: akey, apass
+GET	~	/auth/(?<akey>[a-zA-Z0-9]{8})/(?<apass>[a-zA-Z0-9]{8})
+auth_emailer(text, text)
+
+-- PARAMS: emailer_id
+GET	~	/unopened/(?<emailer_id>[0-9]+)
+unopened_email_count(integer)
+
+-- PARAMS: emailer_id, profile, category
+GET	~	/unopened/(?<emailer_id>[0-9]+)/(?<profile>[a-z@]+)/(?<category>[a-zA-Z@.-]+)
+unopened_emails(integer, text, text)
+
+-- PARAMS: emailer_id, profile, category
+POST	~	/next/(?<emailer_id>[0-9]+)/(?<profile>[a-z@]+)/(?<category>[a-zA-Z@.-]+)
+open_next_email(integer, text, text)
+
+-- PARAMS: emailer_id
+GET	~	/opened/(?<emailer_id>[0-9]+)
+opened_emails(integer)
+
+-- PARAMS: emailer_id, email_id
+POST	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)
+get_email(integer, integer)
+
+-- PARAMS: emailer_id, email_id, JSON of new values
+PUT	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)	(json)
+update_email(integer, integer, json)
+
+-- PARAMS: emailer_id, email_id
+DELETE	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)
+delete_email(integer, integer)
+
+-- PARAMS: emailer_id, email_id
+PUT	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)/close
+close_email(integer, integer)
+
+-- PARAMS: emailer_id, email_id
+PUT	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)/unread
+unread_email(integer, integer)
+
+-- PARAMS: emailer_id, email_id
+PUT	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)/punt
+not_my_email(integer, integer)
+
+-- PARAMS: emailer_id, email_id, body
+PUT	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)	(body)
+reply_to_email(integer, integer, text)
+
+-- PARAMS: emailer_id
+GET	~	/unknowns/(?<emailer_id>[0-9]+)/count
+count_unknowns(integer)
+
+-- PARAMS: emailer_id
+GET	~	/unknowns/(?<emailer_id>[0-9]+)
+get_unknowns(integer)
+
+-- PARAMS: emailer_id
+GET	~	/unknowns/(?<emailer_id>[0-9]+)/next
+get_next_unknown(integer)
+
+-- PARAMS: emailer_id, email_id, person_id
+PUT	~	/unknowns/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)/(?<person_id>[0-9]+)
+set_unknown_person(integer, integer, integer)
+
+-- PARAMS: emailer_id, email_id
+DELETE	~	/unknowns/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)
+delete_unknown(integer, integer)
+
+-- PARAMS: name, email
+POST	=	/person	(name,email)
+create_person(text, text)
+
+-- PARAMS: person_id
+POST	~	/password/(?<person_id>[0-9]+)
+make_newpass(integer)
+
+-- PARAMS: person_id
+GET	~	/person/(?<person_id>[0-9]+)
+get_person(integer)
+
+-- PARAMS: email
+GET	=	/person	(email)
+get_person_email(text)
+
+-- PARAMS: person_id, lopass
+GET	~	/person/(?<person_id>[0-9]+)/(?<lopass>[a-zA-Z0-9]{4})
+get_person_lopass(integer, text)
+
+-- PARAMS: person_id, newpass
+GET	~	/person/(?<person_id>[0-9]+)/(?<newpass>[a-zA-Z0-9]{8})
+get_person_newpass(integer, text)
+
+-- PARAMS: email, password
+GET	=	/person	(email,password)
+get_person_password(text, text)
+
+-- PARAMS: cookie string
+GET	~	/person/(?<cookie>[a-zA-Z0-9]{32}:[a-zA-Z0-9]{32})
+get_person_cookie(text)
+
+-- PARAMS: person.id, domain
+POST	~	/login/(?<person_id>[0-9]+)/(?<domain>[a-z0-9.-]+)
+cookie_from_id(integer, text)
+
+-- PARAMS: email, password, domain
+POST	~	/login/(?<domain>[a-z0-9.-]+)	(email,password)
+cookie_from_login(text, text, text)
+
+-- PARAMS: person_id, password
+PUT	~	/person/(?<person_id>[0-9]+)/password	(password)
+set_password(integer, text)
+
+-- PARAMS: person_id, JSON of new values
+PUT	~	/person/(?<person_id>[0-9]+)	(json)
+update_person(integer, json)
+
+-- PARAMS: person_id
+DELETE	~	/person/(?<person_id>[0-9]+)
+delete_person(integer)
+
+-- PARAMS: person_id
+DELETE	~	/person/(?<person_id>[0-9]+)/annihilate
+annihilate_person(integer)
+
+-- PARAMS: person_id, url
+POST	~	/person/(?<person_id>[0-9]+)/urls
+add_url(integer, text)
+
+-- PARAMS: person_id, stat.name, stat.value
+POST	~	/person/(?<person_id>[0-9]+)/stats	(name,value)
+add_stat(integer, text, text)
+
+-- PARAMS: emailer_id, person_id, profile, subject, body
+POST	~	/person/(?<person_id>[0-9]+)/emails/(?<emailer_id>[0-9]+)	(profile,subject,body)
+new_email(integer, integer, text, text, text)
+
+-- PARAMS: person_id
+GET	~	/person/(?<person_id>[0-9]+)/emails
+get_person_emails(integer)
+
+-- PARAMS: person_id to KEEP, person_id to CHANGE
+merge_person(integer, integer)
+
+-- PARAMS: -none-
+people_unemailed()
+
+-- PARAMS: search term
+people_search(text)
+
+-- PARAMS: stats.id
+get_stat(integer)
+
+-- PARAMS: stats.id, json)
+update_stat(integer, json)
+
+-- PARAMS: stats.id
+delete_stat(integer)
+
+-- PARAMS: urls.id
+get_url(integer)
+
+-- PARAMS: urls.id
+delete_url(integer)
+
+-- PARAMS: urls.id, JSON with allowed: person_id::int, url::text, main::boolean
+update_url(integer, json)
+
+-- PARAMS: -none-
+get_formletters()
+
+-- PARAMS: title
+create_formletter(text)
+
+-- PARAMS: formletters.id
+get_formletter(integer)
+
+-- PARAMS: formletters.id, JSON keys: accesskey, title, explanation, body, subject
+update_formletter(integer, json)
+
+-- PARAMS: formletters.id
+delete_formletter(integer)
+
+-- PARAMS: people.id, formletters.id
+parsed_formletter(integer, integer)
+
+-- PARAMS: people.id, formletters.id, profile
+send_person_formletter(integer, integer, text)
+
+-- PARAMS: formletter.id, email address
+reset_email(integer, text)
+
+-- PARAMS: -none-
+all_countries()
+
+-- PARAMS: -none-
+country_names()
+
+-- PARAMS: -none-
+country_count()
+
+-- PARAMS: 2-letter country code
+state_count(char(2))
+
+-- PARAMS: 2-letter country code, state name
+city_count(char(2), text)
+
+-- PARAMS: 2-letter country code
+city_count(char(2))
+
+-- PARAMS: 2-letter country code
+people_from_country(char(2))
+
+-- PARAMS: 2-letter country code, state
+people_from_state(char(2), text)
+
+-- PARAMS: 2-letter country code, state
+people_from_city(char(2), text)
+
+-- PARAMS: 2-letter country code, state, city
+people_from_state_city(char(2), text, text)
+
+-- PARAMS: stats.name, stats.value
+get_stats(text, text)
+
+-- PARAMS: stats.name
+get_stats(text)
+
+-- PARAMS: stats.name
+get_stat_value_count(text)
+
+-- PARAMS: -none-
+get_stat_name_count()
+
+-- KEYS: profile category message_id their_email their_name subject headers body
+import_email(json)
+
+-- PARAMS name, email, listype ($3 should be: 'all', 'some', 'none', or 'dead')
+list_update(text, text, text)
+
+-- PARAMS: -none-
+queued_emails()
+
+-- PARAMS: emails.id
+email_is_sent(integer)
+
+-- PARAMS: howmany
+sent_emails(integer)
+
+-- PARAMS: -none-
+sent_emails_grouped()
+
+-- Array of {person_id: 1234, twitter: 'username'}
+twitter_unfollowed()
+
+-- PARAMS: person_id
+dead_email(integer)
+
+-- PARAMS: person_id
+tables_with_person(integer)
+
+-- PARAMS: key,val to be used in WHERE _key_ = _val_
+ieal_where(text, text)
+
+-- PARAMS person_id, schema, table, id
+log(integer, text, text, integer)
+
+-- awaiting changelog by group
+inspections_grouped()
+
+-- PARAMS: -none-
+inspect_peeps_people()
+
+-- PARAMS: -none-
+inspect_peeps_urls()
+
+-- PARAMS: -none-
+inspect_peeps_stats()
+
+-- PARAMS: -none-
+inspect_now_urls()
+
+-- PARAMS: JSON array of integer ids: core.changelog.id
+log_approve(json)
+
+-- PARAMS: person_id
+person_attributes(integer)
+
+-- PARAMS: person_id
+person_interests(integer)
+
+-- PARAMS: person_id, attribute, plusminus
+person_set_attribute(integer, text, boolean)
+
+-- PARAMS: person_id, attribute
+person_delete_attribute(integer, text)
+
+-- PARAMS: person_id, interest
+person_add_interest(integer, text)
+
+-- PARAMS: person_id, interest, expert (set expert flag to existing)
+person_update_interest(integer, text, boolean)
+
+-- PARAMS: person_id, interest
+person_delete_interest(integer, text)
+
+-- PARAMS: -none-
+attribute_keys()
+
+-- PARAMS: atkey
+add_attribute_key(text)
+
+-- PARAMS: atkey
+delete_attribute_key(text)
+
+-- PARAMS: atkey, description
+update_attribute_key(text, text)
+
+-- PARAMS: -none-
+interest_keys()
+
+-- PARAMS: inkey
+add_interest_key(text)
+
+-- PARAMS: inkey
+delete_interest_key(text)
+
+-- PARAMS: inkey, description
+update_interest_key(text, text)
+
+-- PARAMS: email_id
+interests_in_email(integer)
+
+-- PARAMS: emailer_id
+emailer_times(integer)
+
+-- PARAMS: emailer_id, month in format '2015-12' 
+emailer_times_per_day(integer, text)
+
+-- PARAMS: -none-
+active_emailers()
