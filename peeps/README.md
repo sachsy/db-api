@@ -1,5 +1,13 @@
 # TODO:
 
+## URLs for API:
+
+Trying this format:
+
+1. METHOD [tab] regexp (assumes wrapping in \A and \Z) with named captures [tab] named params
+2. order of named argument into function
+3. function name
+
 ## Emailer Times
 
 * function to create log from starting time until now

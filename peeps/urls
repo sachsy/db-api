@@ -1,150 +1,150 @@
--- PARAMS: person_id, API_name
-PUT	~	/api/(?<person_id>[0-9]+)/(?<api>[a-zA-Z]+)
-add_api(integer, text)
+PUT	/api/(?<person_id>[0-9]+)/(?<api>[a-zA-Z]+)
+person_id, api
+add_api
 
--- PARAMS: email, password, API_name
-GET	~	/auth/(?<api>[a-zA-Z]+)	(email,password)
+GET	/auth/(?<api>[a-zA-Z]+)	(email,password)
+email, password, api
 auth_api(text, text, text)
 
--- PARAMS: akey, apass
-GET	~	/auth/(?<akey>[a-zA-Z0-9]{8})/(?<apass>[a-zA-Z0-9]{8})
-auth_emailer(text, text)
+GET	/auth/(?<akey>[a-zA-Z0-9]{8})/(?<apass>[a-zA-Z0-9]{8})
+akey, apass
+auth_emailer
 
--- PARAMS: emailer_id
-GET	~	/unopened/(?<emailer_id>[0-9]+)
-unopened_email_count(integer)
+GET	/unopened/(?<emailer_id>[0-9]+)
+emailer_id
+unopened_email_count
 
--- PARAMS: emailer_id, profile, category
-GET	~	/unopened/(?<emailer_id>[0-9]+)/(?<profile>[a-z@]+)/(?<category>[a-zA-Z@.-]+)
-unopened_emails(integer, text, text)
+GET	/unopened/(?<emailer_id>[0-9]+)/(?<profile>[a-z@]+)/(?<category>[a-zA-Z@.-]+)
+emailer_id, profile, category
+unopened_emails
 
--- PARAMS: emailer_id, profile, category
-POST	~	/next/(?<emailer_id>[0-9]+)/(?<profile>[a-z@]+)/(?<category>[a-zA-Z@.-]+)
-open_next_email(integer, text, text)
+POST	/next/(?<emailer_id>[0-9]+)/(?<profile>[a-z@]+)/(?<category>[a-zA-Z@.-]+)
+emailer_id, profile, category
+open_next_email
 
--- PARAMS: emailer_id
-GET	~	/opened/(?<emailer_id>[0-9]+)
-opened_emails(integer)
+GET	/opened/(?<emailer_id>[0-9]+)
+emailer_id
+opened_emails
 
--- PARAMS: emailer_id, email_id
-POST	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)
-get_email(integer, integer)
+POST	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)
+emailer_id, email_id
+get_email
 
--- PARAMS: emailer_id, email_id, JSON of new values
-PUT	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)	(json)
-update_email(integer, integer, json)
+PUT	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)	(json)
+emailer_id, email_id, json
+update_email
 
--- PARAMS: emailer_id, email_id
-DELETE	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)
-delete_email(integer, integer)
+DELETE	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)
+emailer_id, email_id
+delete_email
 
--- PARAMS: emailer_id, email_id
-PUT	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)/close
-close_email(integer, integer)
+PUT	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)/close
+emailer_id, email_id
+close_email
 
--- PARAMS: emailer_id, email_id
-PUT	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)/unread
-unread_email(integer, integer)
+PUT	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)/unread
+emailer_id, email_id
+unread_email
 
--- PARAMS: emailer_id, email_id
-PUT	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)/punt
-not_my_email(integer, integer)
+PUT	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)/punt
+emailer_id, email_id
+not_my_email
 
--- PARAMS: emailer_id, email_id, body
-PUT	~	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)	(body)
-reply_to_email(integer, integer, text)
+PUT	/email/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)	(body)
+emailer_id, email_id, body
+reply_to_email
 
--- PARAMS: emailer_id
-GET	~	/unknowns/(?<emailer_id>[0-9]+)/count
-count_unknowns(integer)
+GET	/unknowns/(?<emailer_id>[0-9]+)/count
+emailer_id
+count_unknowns
 
--- PARAMS: emailer_id
-GET	~	/unknowns/(?<emailer_id>[0-9]+)
-get_unknowns(integer)
+GET	/unknowns/(?<emailer_id>[0-9]+)
+emailer_id
+get_unknowns
 
--- PARAMS: emailer_id
-GET	~	/unknowns/(?<emailer_id>[0-9]+)/next
-get_next_unknown(integer)
+GET	/unknowns/(?<emailer_id>[0-9]+)/next
+emailer_id
+get_next_unknown
 
--- PARAMS: emailer_id, email_id, person_id
-PUT	~	/unknowns/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)/(?<person_id>[0-9]+)
-set_unknown_person(integer, integer, integer)
+PUT	/unknowns/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)/(?<person_id>[0-9]+)
+emailer_id, email_id, person_id
+set_unknown_person
 
--- PARAMS: emailer_id, email_id
-DELETE	~	/unknowns/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)
-delete_unknown(integer, integer)
+DELETE	/unknowns/(?<emailer_id>[0-9]+)/(?<email_id>[0-9]+)
+emailer_id, email_id
+delete_unknown
 
--- PARAMS: name, email
-POST	=	/person	(name,email)
-create_person(text, text)
+POST	/person	(name,email)
+name, email
+create_person
 
--- PARAMS: person_id
-POST	~	/password/(?<person_id>[0-9]+)
-make_newpass(integer)
+POST	/password/(?<person_id>[0-9]+)
+person_id
+make_newpass
 
--- PARAMS: person_id
-GET	~	/person/(?<person_id>[0-9]+)
-get_person(integer)
+GET	/person/(?<person_id>[0-9]+)
+person_id
+get_person
 
--- PARAMS: email
-GET	=	/person	(email)
-get_person_email(text)
+GET	/person	(email)
+email
+get_person_email
 
--- PARAMS: person_id, lopass
-GET	~	/person/(?<person_id>[0-9]+)/(?<lopass>[a-zA-Z0-9]{4})
-get_person_lopass(integer, text)
+GET	/person/(?<person_id>[0-9]+)/(?<lopass>[a-zA-Z0-9]{4})
+person_id, lopass
+get_person_lopass
 
--- PARAMS: person_id, newpass
-GET	~	/person/(?<person_id>[0-9]+)/(?<newpass>[a-zA-Z0-9]{8})
-get_person_newpass(integer, text)
+GET	/person/(?<person_id>[0-9]+)/(?<newpass>[a-zA-Z0-9]{8})
+person_id, newpass
+get_person_newpass
 
--- PARAMS: email, password
-GET	=	/person	(email,password)
-get_person_password(text, text)
+GET	/person	(email,password)
+email, password
+get_person_password
 
--- PARAMS: cookie string
-GET	~	/person/(?<cookie>[a-zA-Z0-9]{32}:[a-zA-Z0-9]{32})
-get_person_cookie(text)
+GET	/person/(?<cookie>[a-zA-Z0-9]{32}:[a-zA-Z0-9]{32})
+cookie
+get_person_cookie
 
--- PARAMS: person.id, domain
-POST	~	/login/(?<person_id>[0-9]+)/(?<domain>[a-z0-9.-]+)
-cookie_from_id(integer, text)
+POST	/login/(?<person_id>[0-9]+)/(?<domain>[a-z0-9.-]+)
+person_id, domain
+cookie_from_id
 
--- PARAMS: email, password, domain
-POST	~	/login/(?<domain>[a-z0-9.-]+)	(email,password)
-cookie_from_login(text, text, text)
+POST	/login/(?<domain>[a-z0-9.-]+)	(email,password)
+email, password, domain
+cookie_from_login
 
--- PARAMS: person_id, password
-PUT	~	/person/(?<person_id>[0-9]+)/password	(password)
-set_password(integer, text)
+PUT	/person/(?<person_id>[0-9]+)/password	(password)
+person_id, password
+set_password
 
--- PARAMS: person_id, JSON of new values
-PUT	~	/person/(?<person_id>[0-9]+)	(json)
-update_person(integer, json)
+PUT	/person/(?<person_id>[0-9]+)	(json)
+person_id, json
+update_person
 
--- PARAMS: person_id
-DELETE	~	/person/(?<person_id>[0-9]+)
-delete_person(integer)
+DELETE	/person/(?<person_id>[0-9]+)
+person_id
+delete_person
 
--- PARAMS: person_id
-DELETE	~	/person/(?<person_id>[0-9]+)/annihilate
-annihilate_person(integer)
+DELETE	/person/(?<person_id>[0-9]+)/annihilate
+person_id
+annihilate_person
 
--- PARAMS: person_id, url
-POST	~	/person/(?<person_id>[0-9]+)/urls
-add_url(integer, text)
+POST	/person/(?<person_id>[0-9]+)/urls
+person_id, url
+add_url
 
--- PARAMS: person_id, stat.name, stat.value
-POST	~	/person/(?<person_id>[0-9]+)/stats	(name,value)
-add_stat(integer, text, text)
+POST	/person/(?<person_id>[0-9]+)/stats	(name,value)
+person_id, name, value
+add_stat
 
--- PARAMS: emailer_id, person_id, profile, subject, body
-POST	~	/person/(?<person_id>[0-9]+)/emails/(?<emailer_id>[0-9]+)	(profile,subject,body)
-new_email(integer, integer, text, text, text)
+POST	/person/(?<person_id>[0-9]+)/emails/(?<emailer_id>[0-9]+)	(profile,subject,body)
+emailer_id, person_id, profile, subject, body
+new_email
 
--- PARAMS: person_id
-GET	~	/person/(?<person_id>[0-9]+)/emails
-get_person_emails(integer)
+GET	/person/(?<person_id>[0-9]+)/emails
+person_id
+get_person_emails
 
 -- PARAMS: person_id to KEEP, person_id to CHANGE
 merge_person(integer, integer)
