@@ -146,131 +146,173 @@ GET	/person/(?<person_id>[0-9]+)/emails
 person_id
 get_person_emails
 
--- PARAMS: person_id to KEEP, person_id to CHANGE
-merge_person(integer, integer)
+POST	/merge/(?<keeper_id>[0-9]+)/(?<merge_id>[0-9]+)
+keeper_id, merge_id
+merge_person
 
--- PARAMS: -none-
-people_unemailed()
+GET	/people/unemailed
 
--- PARAMS: search term
-people_search(text)
+people_unemailed
 
--- PARAMS: stats.id
-get_stat(integer)
+GET	/people/search	(q)
+q
+people_search
 
--- PARAMS: stats.id, json)
-update_stat(integer, json)
+GET	/stats/(?<id>[0-9]+)
+id
+get_stat
 
--- PARAMS: stats.id
-delete_stat(integer)
+PUT	/stats/(?<id>[0-9]+)	(json)
+id, json
+update_stat
 
--- PARAMS: urls.id
-get_url(integer)
+DELETE	/stats/(?<id>[0-9]+)
+id
+delete_stat
 
--- PARAMS: urls.id
-delete_url(integer)
+GET	/urls/(?<id>[0-9]+)
+id
+get_url
 
--- PARAMS: urls.id, JSON with allowed: person_id::int, url::text, main::boolean
-update_url(integer, json)
+DELETE	/urls/(?<id>[0-9]+)
+id
+delete_url
 
--- PARAMS: -none-
-get_formletters()
+PUT	/urls/(?<id>[0-9]+)	(json)
+id, json
+update_url
 
--- PARAMS: title
-create_formletter(text)
+GET	/formletters
 
--- PARAMS: formletters.id
-get_formletter(integer)
+get_formletters
 
--- PARAMS: formletters.id, JSON keys: accesskey, title, explanation, body, subject
-update_formletter(integer, json)
+POST	/formletters	(title)
+title
+create_formletter
 
--- PARAMS: formletters.id
-delete_formletter(integer)
+GET	/formletters/(?<id>[0-9]+)
+id
+get_formletter
 
--- PARAMS: people.id, formletters.id
-parsed_formletter(integer, integer)
+PUT	/formletters/(?<id>[0-9]+)	(json)
+id, json
+update_formletter
 
--- PARAMS: people.id, formletters.id, profile
-send_person_formletter(integer, integer, text)
+DELETE	/formletters/(?<id>[0-9]+)
+id
+delete_formletter
 
--- PARAMS: formletter.id, email address
-reset_email(integer, text)
+GET	/parsed_fomletter/(?<person_id>[0-9]+)/(?<formletter_id>[0-9]+)
+person_id, formletter_id
+parsed_formletter
 
--- PARAMS: -none-
-all_countries()
+POST	/send_fomletter/(?<person_id>[0-9]+)/(?<formletter_id>[0-9]+)/(?<profile>[a-z@]+)
+person_id, formletter_id, profile
+send_person_formletter
 
--- PARAMS: -none-
-country_names()
+POST	/reset_email/(?<formletter_id>[0-9]+)	(email)
+formletter_id, email
+reset_email
 
--- PARAMS: -none-
-country_count()
+GET	/countries
 
--- PARAMS: 2-letter country code
-state_count(char(2))
+all_countries
 
--- PARAMS: 2-letter country code, state name
-city_count(char(2), text)
+GET	/country/names
 
--- PARAMS: 2-letter country code
-city_count(char(2))
+country_names
 
--- PARAMS: 2-letter country code
-people_from_country(char(2))
+GET	/country/count
 
--- PARAMS: 2-letter country code, state
-people_from_state(char(2), text)
+country_count
 
--- PARAMS: 2-letter country code, state
-people_from_city(char(2), text)
+GET	/where/(?<country>[A-Z]{2})/states
+country
+state_count
 
--- PARAMS: 2-letter country code, state, city
-people_from_state_city(char(2), text, text)
+GET	/where/(?<country>[A-Z]{2})/(?<state>[^\/]+)/cities
+country, state
+city_count
 
--- PARAMS: stats.name, stats.value
+GET	/where/(?<country>[A-Z]{2})/cities
+country
+city_count
+
+GET	/where/(?<country>[A-Z]{2})/people
+country
+people_from_country
+
+GET	/where/(?<country>[A-Z]{2})/(?<state>[^\/]+)/people
+country, state
+people_from_state
+
+GET	/where/(?<country>[A-Z]{2})/city/(?<city>[^\/]+)/people
+country, city
+people_from_city
+
+GET	/where/(?<country>[A-Z]{2})/(?<state>[^\/]+)/(?<city>[^\/]+)/people
+country, state, city
+people_from_state_city
+
+GET	/stats/(?<name>[a-z0-9._-]+)/value/(?<value>.+)
+name
 get_stats(text, text)
 
--- PARAMS: stats.name
-get_stats(text)
+GET	/stats/(?<name>[a-z0-9._-]+)
+name
+get_stats
 
--- PARAMS: stats.name
-get_stat_value_count(text)
+GET	/stats/(?<name>[a-z0-9._-]+)/count
+name
+get_stat_value_count
 
--- PARAMS: -none-
-get_stat_name_count()
+GET	/stats
 
--- KEYS: profile category message_id their_email their_name subject headers body
-import_email(json)
+get_stat_name_count
 
--- PARAMS name, email, listype ($3 should be: 'all', 'some', 'none', or 'dead')
-list_update(text, text, text)
+POST	/email/import	(json)
+json
+import_email
 
--- PARAMS: -none-
-queued_emails()
+POST	/list	(name, email, listype)
+name, email, listype
+list_update
 
--- PARAMS: emails.id
-email_is_sent(integer)
+GET	/emails/queued
 
--- PARAMS: howmany
-sent_emails(integer)
+queued_emails
 
--- PARAMS: -none-
-sent_emails_grouped()
+PUT	/emails/(?<id>[0-9]+)/sent
+id
+email_is_sent
 
--- Array of {person_id: 1234, twitter: 'username'}
-twitter_unfollowed()
+GET	/emails/sent/(?<howmany>[0-9]+)
+howmany
+sent_emails
 
--- PARAMS: person_id
-dead_email(integer)
+GET	/emails/sent
 
--- PARAMS: person_id
-tables_with_person(integer)
+sent_emails_grouped
 
--- PARAMS: key,val to be used in WHERE _key_ = _val_
-ieal_where(text, text)
+GET	/twitter/unfollowed
 
--- PARAMS person_id, schema, table, id
-log(integer, text, text, integer)
+twitter_unfollowed
+
+PUT	/person/(?<id>[0-9]+)/dead
+id
+dead_email
+
+GET	/person/(?<id>[0-9]+)/tables
+id
+tables_with_person
+
+GET	/list/(?<k>[a-z_]+)/(?<v>.+)
+k, v
+ieal_where
+
+POST	/log/(?<person_id>[0-9]+)/(?<schema>[a-z]+)/(?<table>[a-z_]+)/(?<id>[0-9]+)
+person_id, schema, table, id
+log
 
 -- awaiting changelog by group
 inspections_grouped()
