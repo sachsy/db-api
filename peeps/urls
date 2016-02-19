@@ -151,7 +151,7 @@ keeper_id, merge_id
 merge_person
 
 GET	/people/unemailed
-
+_
 people_unemailed
 
 GET	/people/search	(q)
@@ -183,7 +183,7 @@ id, json
 update_url
 
 GET	/formletters
-
+_
 get_formletters
 
 POST	/formletters	(title)
@@ -215,15 +215,15 @@ formletter_id, email
 reset_email
 
 GET	/countries
-
+_
 all_countries
 
 GET	/country/names
-
+_
 country_names
 
 GET	/country/count
-
+_
 country_count
 
 GET	/where/(?<country>[A-Z]{2})/states
@@ -267,7 +267,7 @@ name
 get_stat_value_count
 
 GET	/stats
-
+_
 get_stat_name_count
 
 POST	/email/import	(json)
@@ -279,7 +279,7 @@ name, email, listype
 list_update
 
 GET	/emails/queued
-
+_
 queued_emails
 
 PUT	/emails/(?<id>[0-9]+)/sent
@@ -291,11 +291,11 @@ howmany
 sent_emails
 
 GET	/emails/sent
-
+_
 sent_emails_grouped
 
 GET	/twitter/unfollowed
-
+_
 twitter_unfollowed
 
 PUT	/person/(?<id>[0-9]+)/dead
@@ -314,77 +314,111 @@ POST	/log/(?<person_id>[0-9]+)/(?<schema>[a-z]+)/(?<table>[a-z_]+)/(?<id>[0-9]+)
 person_id, schema, table, id
 log
 
--- awaiting changelog by group
-inspections_grouped()
+GET	/inspect
+_
+inspections_grouped
 
--- PARAMS: -none-
-inspect_peeps_people()
+GET	/inspect/people
+_
+inspect_peeps_people
 
--- PARAMS: -none-
-inspect_peeps_urls()
+GET	/inspect/urls
+_
+inspect_peeps_urls
 
--- PARAMS: -none-
-inspect_peeps_stats()
+GET	/inspect/stats
+_
+inspect_peeps_stats
 
--- PARAMS: -none-
-inspect_now_urls()
+GET	/inspect/now
+_
+inspect_now_urls
 
--- PARAMS: JSON array of integer ids: core.changelog.id
-log_approve(json)
+POST	/inspect	(json)
+json
+log_approve
 
--- PARAMS: person_id
-person_attributes(integer)
+GET	/person/(?<id>[0-9]+)/attributes
+id
+person_attributes
 
--- PARAMS: person_id
-person_interests(integer)
+GET	/person/(?<id>[0-9]+)/interests
+id
+person_interests
 
--- PARAMS: person_id, attribute, plusminus
-person_set_attribute(integer, text, boolean)
+PUT	/person/(?<id>[0-9]+)/attributes/(?<attribute>[a-z-]+)/plus
+id, attribute, true
+person_set_attribute
 
--- PARAMS: person_id, attribute
-person_delete_attribute(integer, text)
+PUT	/person/(?<id>[0-9]+)/attributes/(?<attribute>[a-z-]+)/minus
+id, attribute, false
+person_set_attribute
 
--- PARAMS: person_id, interest
+DELETE	/person/(?<id>[0-9]+)/attributes/(?<attribute>[a-z-]+)
+id, attribute
+person_delete_attribute
+
+POST	/person/(?<id>[0-9]+)/interests/(?<interest>[a-z]+)
+id, interest
 person_add_interest(integer, text)
 
--- PARAMS: person_id, interest, expert (set expert flag to existing)
-person_update_interest(integer, text, boolean)
+POST	/person/(?<id>[0-9]+)/interests/(?<interest>[a-z]+)/plus
+id, interest, true
+person_update_interest
 
--- PARAMS: person_id, interest
-person_delete_interest(integer, text)
+POST	/person/(?<id>[0-9]+)/interests/(?<interest>[a-z]+)/minus
+id, interest, false
+person_update_interest
 
--- PARAMS: -none-
-attribute_keys()
+DELETE	/person/(?<id>[0-9]+)/interests/(?<interest>[a-z]+)
+id, interest
+person_delete_interest
 
--- PARAMS: atkey
-add_attribute_key(text)
+GET	/attributes
+_
+attribute_keys
 
--- PARAMS: atkey
-delete_attribute_key(text)
+POST	/attributes/(?<attribute>[a-z-]+)
+attribute
+add_attribute_key
 
--- PARAMS: atkey, description
-update_attribute_key(text, text)
+DELETE	/attributes/(?<attribute>[a-z-]+)
+attribute
+delete_attribute_key
 
--- PARAMS: -none-
-interest_keys()
+PUT	/attributes/(?<attribute>[a-z-]+)	(description)
+attribute, description
+update_attribute_key
 
--- PARAMS: inkey
+GET	/interests
+_
+interest_keys
+
+POST	/interests/(?<interest>[a-z]+)
+interest
 add_interest_key(text)
 
--- PARAMS: inkey
-delete_interest_key(text)
+DELETE	/interests/(?<interest>[a-z]+)
+interest
+delete_interest_key
 
--- PARAMS: inkey, description
-update_interest_key(text, text)
+PUT	/interests/(?<interest>[a-z]+)	(description)
+interest, description
+update_interest_key
 
--- PARAMS: email_id
-interests_in_email(integer)
+GET	/emails/(?<id>[0-9]+)/interests
+id
+interests_in_email
 
--- PARAMS: emailer_id
-emailer_times(integer)
+GET	/emailer/(?<id>[0-9]+)/times
+id
+emailer_times
 
--- PARAMS: emailer_id, month in format '2015-12' 
-emailer_times_per_day(integer, text)
+GET	/emailer/(?<id>[0-9]+)/times/(?<month>[0-9]{4}-[0-9]{2})
+id, month
+emailer_times_per_day
 
--- PARAMS: -none-
-active_emailers()
+GET	/emailers
+_
+active_emailers
+
