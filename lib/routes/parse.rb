@@ -17,7 +17,7 @@ while startline < endline
 	bits = lines[startline].split("\t")
 	route[:method] = bits.shift
 	raise 'done' unless methods.include? route[:method]
-	route[:regex] = bits.shift
+	route[:rgx] = bits.shift
 	if p = bits.shift
 		route[:params] = p[1...-1].split(',')
 	end

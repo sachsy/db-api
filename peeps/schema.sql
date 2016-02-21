@@ -449,13 +449,13 @@ $$ LANGUAGE plpgsql;
 
 -- Once a person has correctly given their email and password, call this to create cookie info.
 -- Returns a single 65-character string, ready to be set as the cookie value
-CREATE OR REPLACE FUNCTION peeps.login_person_domain(my_person_id integer, my_domain char, OUT cookie text) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION peeps.login_person_domain(my_person_id integer, my_domain text, OUT cookie text) RETURNS text AS $$
 DECLARE
 	c_id text;
 	c_tok text;
 	c_exp integer;
 BEGIN
-	c_id := md5(my_domain || md5(my_person_id::char)); -- also in get_person_from_cookie
+	c_id := md5(my_domain || md5(my_person_id::text)); -- also in get_person_from_cookie
 	c_tok := core.random_string(32);
 	c_exp := FLOOR(EXTRACT(epoch from (NOW() + interval '1 year')));
 	INSERT INTO peeps.logins(person_id, cookie_id, cookie_tok, cookie_exp, domain) VALUES (my_person_id, c_id, c_tok, c_exp, my_domain);
@@ -480,7 +480,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- Give the cookie value returned from login_person_domain, and I'll return people.* if found and not expired
-CREATE OR REPLACE FUNCTION peeps.get_person_from_cookie(cookie char) RETURNS SETOF peeps.people AS $$
+CREATE OR REPLACE FUNCTION peeps.get_person_from_cookie(cookie text) RETURNS SETOF peeps.people AS $$
 DECLARE
 	c_id text;
 	c_tok text;
@@ -491,7 +491,7 @@ BEGIN
 	SELECT * INTO a_login FROM peeps.logins WHERE cookie_id=c_id AND cookie_tok=c_tok;
 	IF FOUND AND
 	  a_login.cookie_exp > FLOOR(EXTRACT(epoch from NOW())) AND
-	  c_id = md5(a_login.domain || md5(a_login.person_id::char)) THEN
+	  c_id = md5(a_login.domain || md5(a_login.person_id::text)) THEN
 		RETURN QUERY SELECT * FROM peeps.people WHERE id=a_login.person_id;
 	END IF;
 END;

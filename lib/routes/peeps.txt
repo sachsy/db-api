@@ -4,7 +4,7 @@ add_api
 
 GET	/auth/(?<api>[a-zA-Z]+)	(email,password)
 email, password, api
-auth_api(text, text, text)
+auth_api
 
 GET	/auth/(?<akey>[a-zA-Z0-9]{8})/(?<apass>[a-zA-Z0-9]{8})
 akey, apass
@@ -255,8 +255,8 @@ country, state, city
 people_from_state_city
 
 GET	/stats/(?<name>[a-z0-9._-]+)/value/(?<value>.+)
-name
-get_stats(text, text)
+name, value
+get_stats
 
 GET	/stats/(?<name>[a-z0-9._-]+)
 name
@@ -360,7 +360,7 @@ person_delete_attribute
 
 POST	/person/(?<id>[0-9]+)/interests/(?<interest>[a-z]+)
 id, interest
-person_add_interest(integer, text)
+person_add_interest
 
 POST	/person/(?<id>[0-9]+)/interests/(?<interest>[a-z]+)/plus
 id, interest, true
@@ -396,7 +396,7 @@ interest_keys
 
 POST	/interests/(?<interest>[a-z]+)
 interest
-add_interest_key(text)
+add_interest_key
 
 DELETE	/interests/(?<interest>[a-z]+)
 interest
