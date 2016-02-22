@@ -54,7 +54,7 @@ class TestWoodEgg < Minitest::Test
 		assert_equal 'augustus@gloop.de', res[0]['their_email']
 		assert_equal 'your Wood Egg password reset link', res[0]['subject']
 		assert_nil res[0]['outgoing']
-		assert res[0]['body'].include? 'https://woodegg.com/reset/8LLRaMwm'
+		assert res[0]['body'].include? 'https://woodegg.com/reset/'
 		assert res[0]['body'].include? 'Hi Master Gloop'
 		assert res[0]['body'].include? 'we@woodegg.com'
 		qry("woodegg.forgot($1)", ['derek@sivers.org'])
@@ -77,24 +77,28 @@ class TestWoodEgg < Minitest::Test
 	end
 
 	def test_get_customer_reset
-		qry("woodegg.get_customer_reset($1)", ['8LLRaMwm'])
+		qry("peeps.make_newpass(6)")
+		nupass = @j[:newpass]
+		qry("woodegg.get_customer_reset($1)", [nupass])
 		assert_equal 1, @j[:customer_id]
 		assert_equal 6, @j[:person_id]
-		assert_equal '8LLRaMwm', @j[:reset]
+		assert_equal nupass, @j[:reset]
 	end
 
 	def test_set_customer_password
-		qry("woodegg.set_customer_password($1, $2)", ['8LLRaMwm', 'x'])
+		qry("peeps.make_newpass(6)")
+		nupass = @j[:newpass]
+		qry("woodegg.set_customer_password($1, $2)", [nupass, 'x'])
 		assert_equal 'short_password', @j[:title]
 		nu = 'þø¿€ñ'
-		qry("woodegg.set_customer_password($1, $2)", ['8LLRaMwm', nu])
+		qry("woodegg.set_customer_password($1, $2)", [nupass, nu])
 		assert_equal 6, @j[:id]
 		assert_equal 'Augustus Gloop', @j[:name]
 		assert_equal 'augustus@gloop.de', @j[:email]
 		assert_equal 'Master Gloop', @j[:address]
 		qry("woodegg.login($1, $2)", ['augustus@gloop.de', nu])
 		assert_match /[a-zA-Z0-9]{32}:[a-zA-Z0-9]{32}/, @j[:cookie]
-		qry("woodegg.set_customer_password($1, $2)", ['8LLRaMwm', nu])
+		qry("woodegg.set_customer_password($1, $2)", [nupass, nu])
 		assert_equal({}, @j)
 	end
 
