@@ -47,7 +47,8 @@ class TestNow < Minitest::Test
 			created_at: '2015-11-10',
 			updated_at: '2015-11-10',
 			short: 'wonka.com/now',
-			long: 'http://www.wonka.com/now/'})
+			long: 'http://www.wonka.com/now/',
+			hash: nil})
 	end
 
 	def test_unknown_find
@@ -64,7 +65,8 @@ class TestNow < Minitest::Test
 			created_at: '2015-11-10',
 			updated_at: '2015-11-10',
 			short: 'salt.com/now',
-			long: 'http://salt.com/now/'})
+			long: 'http://salt.com/now/',
+			hash: nil})
 	end
 
 	def test_urls_for_person
@@ -74,7 +76,8 @@ class TestNow < Minitest::Test
 			created_at: '2015-11-10',
 			updated_at: '2015-11-10',
 			short: 'sivers.org/now',
-			long: 'http://sivers.org/now'}])
+			long: 'http://sivers.org/now',
+			hash: nil}])
 	end
 
 	def test_stats_for_person
